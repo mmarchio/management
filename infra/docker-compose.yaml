@@ -1,0 +1,10 @@
+services:
+  management:
+    image: golang:latest
+    container_name: go
+    restart: always
+    ports:
+      - "8888:8000"
+    volumes:
+      - "../src/:/go/app/src"
+    tty: true

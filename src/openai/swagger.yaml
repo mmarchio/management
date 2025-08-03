@@ -1,0 +1,746 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  version: 1.0.0
+  description: API documentation for the application
+
+paths:
+  /debug/content/view/{id}:
+    get:
+      summary: Get debug content view by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the content to be viewed
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/prompt/{id}:
+    get:
+      summary: Get prompt by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the prompt
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prompt'
+
+  /api/prompt:
+    post:
+      summary: Create a new prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Prompt'
+      responses:
+        '201':
+          description: Prompt created successfully
+
+  /api/prompts:
+    get:
+      summary: List all prompts
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Prompt'
+
+  /api/comfy/{id}:
+    get:
+      summary: Get Comfy UI Template by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the template
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComfyUITemplate'
+
+  /api/comfy:
+    post:
+      summary: Create a new Comfy UI Template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComfyUITemplate'
+      responses:
+        '201':
+          description: Template created successfully
+
+  /api/comfys:
+    get:
+      summary: List all Comfy UI Templates
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComfyUITemplate'
+
+  /api/systemprompt/{id}:
+    get:
+      summary: Get system prompt by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the system prompt
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemPrompt'
+
+  /api/systemprompt:
+    post:
+      summary: Create a new system prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemPrompt'
+      responses:
+        '201':
+          description: System prompt created successfully
+
+  /api/systemprompts:
+    get:
+      summary: List all system prompts
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SystemPrompt'
+
+  /api/job/{id}:
+    get:
+      summary: Get job by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the job
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+
+  /api/jobs:
+    get:
+      summary: List all jobs
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+
+  /api/jobs/set:
+    post:
+      summary: Save a job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Job'
+      responses:
+        '201':
+          description: Job saved successfully
+
+  /api/jobrun/{id}:
+    get:
+      summary: Get job run by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the job run
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobRun'
+
+  /api/jobruns:
+    get:
+      summary: List all job runs
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobRun'
+
+  /api/jobruns/{id}:
+    get:
+      summary: List job runs by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the job run
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobRun'
+
+  /api/jobruns/set:
+    post:
+      summary: Save a job run
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobRun'
+      responses:
+        '201':
+          description: Job run saved successfully
+
+  /api/jobruns/next:
+    get:
+      summary: Get the next job run
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobRun'
+
+  /api/jobruns/context/{id}:
+    get:
+      summary: Get job run context by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the job run context
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobRunContext'
+
+    post:
+      summary: Set job run context by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the job run context
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobRunContext'
+      responses:
+        '201':
+          description: Job run context set successfully
+
+  /api/disposition/{id}:
+    get:
+      summary: Get disposition by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the disposition
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Disposition'
+
+  /api/disposition:
+    post:
+      summary: Create a new disposition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Disposition'
+      responses:
+        '201':
+          description: Disposition created successfully
+
+  /api/dispositions:
+    get:
+      summary: List all dispositions
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Disposition'
+
+  /:
+    get:
+      summary: Get index page
+      responses:
+        '200':
+          description: Successful response
+
+  /prompts:
+    get:
+      summary: Get prompts page
+      responses:
+        '200':
+          description: Successful response
+
+  /prompts/new:
+    get:
+      summary: Get new prompt form
+      responses:
+        '200':
+          description: Successful response
+
+  /prompts/save:
+    post:
+      summary: Save a prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Prompt'
+      responses:
+        '201':
+          description: Prompt saved successfully
+
+  /prompts/save/{id}:
+    post:
+      summary: Update a prompt by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Prompt'
+      responses:
+        '201':
+          description: Prompt updated successfully
+
+  /prompts/list:
+    get:
+      summary: List all prompts
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Prompt'
+
+  /prompts/edit/{id}:
+    get:
+      summary: Edit prompt by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the prompt
+      responses:
+        '200':
+          description: Successful response
+
+  /prompts/delete/{id}:
+    get:
+      summary: Delete prompt by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the prompt
+      responses:
+        '204':
+          description: Prompt deleted successfully
+
+  /comfy:
+    get:
+      summary: Get Comfy UI Templates page
+      responses:
+        '200':
+          description: Successful response
+
+  /comfy/new:
+    get:
+      summary: Get new Comfy UI Template form
+      responses:
+        '200':
+          description: Successful response
+
+  /comfy/save:
+    post:
+      summary: Save a Comfy UI Template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComfyUITemplate'
+      responses:
+        '201':
+          description: Template saved successfully
+
+  /comfy/list:
+    get:
+      summary: List all Comfy UI Templates
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComfyUITemplate'
+
+  /comfy/{id}:
+    get:
+      summary: Get Comfy UI Template by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the template
+      responses:
+        '200':
+          description: Successful response
+
+  /comfy/delete/{id}:
+    get:
+      summary: Delete Comfy UI Template by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the template
+      responses:
+        '204':
+          description: Template deleted successfully
+
+  /systemprompts:
+    get:
+      summary: Get system prompts page
+      responses:
+        '200':
+          description: Successful response
+
+  /systemprompts/new:
+    get:
+      summary: Get new system prompt form
+      responses:
+        '200':
+          description: Successful response
+
+  /systemprompts/save:
+    post:
+      summary: Save a system prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemPrompt'
+      responses:
+        '201':
+          description: System prompt saved successfully
+
+  /systemprompts/list:
+    get:
+      summary: List all system prompts
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SystemPrompt'
+
+  /systemprompts/{id}:
+    get:
+      summary: Get system prompt by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the system prompt
+      responses:
+        '200':
+          description: Successful response
+
+  /systemprompts/delete/{id}:
+    get:
+      summary: Delete system prompt by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the system prompt
+      responses:
+        '204':
+          description: System prompt deleted successfully
+
+  /jobs:
+    get:
+      summary: Get jobs page
+      responses:
+        '200':
+          description: Successful response
+
+  /jobs/list:
+    get:
+      summary: List all jobs
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+
+  /jobruns:
+    get:
+      summary: Get job runs page
+      responses:
+        '200':
+          description: Successful response
+
+  /jobruns/list:
+    get:
+      summary: List all job runs
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobRun'
+
+  /jobruns/delete/{id}:
+    get:
+      summary: Delete job run by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the job run
+      responses:
+        '204':
+          description: Job run deleted successfully
+
+  /dispositions:
+    get:
+      summary: Get dispositions page
+      responses:
+        '200':
+          description: Successful response
+
+components:
+  schemas:
+    Prompt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ComfyUITemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        template:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    SystemPrompt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        prompt_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    JobRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    JobRunContext:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        job_run_id:
+          type: string
+          format: uuid
+        context_data:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Disposition:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time

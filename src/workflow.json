@@ -1,0 +1,312 @@
+{
+    "context": {
+        "id": "",
+        "prompt": "",
+        "domain": "",
+        "category": "",
+        "prompt_id": "",
+        "job_id": "",
+        "job_run_id": "",
+        "global_bypass": {
+            "screenwriting_start": false,
+            "screenwriting_get_prompt_input": false,
+            "screenwriting_get_prompt_output": false,
+            "screenwriting_output": false,
+            "container_swap": false,
+            "generate_audio": false,
+            "generate_lipsync": false,
+            "generate_thumbnails": false,
+            "generate_background_context": false,
+            "generate_background": false,
+            "ffmpeg_lipsync_post": false,
+            "ffmpeg_merge": false,
+            "publish_video": false,
+            "publish_thumbnail": false,
+            "publish_metadata": false
+        },
+        "settings": {
+            "id": "",
+            "name": "",
+            "recurring": false,
+            "interval": 0
+        },
+        "disposition": {
+            "min_duration": 0,
+            "max_duration": 0,
+            "advertisement_duration": 0
+        },
+        "verification": {
+            "screenwriting_start": false,
+            "screenwriting_get_prompt_input": false,
+            "screenwriting_get_prompt_output": false,
+            "screenwriting_output": false,
+            "container_swap": false,
+            "generate_audio": false,
+            "generate_lipsync": false,
+            "generate_thumbnails": false,
+            "generate_background_context": false,
+            "generate_background": false,
+            "ffmpeg_lipsync_post": false,
+            "ffmpeg_merge": false,
+            "publish_video": false,
+            "publish_thumbnail": false,
+            "publish_metadata": false
+        },
+        "bypass": {
+            "screenwriting_start": false,
+            "screenwriting_get_prompt_input": false,
+            "screenwriting_get_prompt_output": false,
+            "screenwriting_output": false,
+            "container_swap": false,
+            "generate_audio": false,
+            "generate_lipsync": false,
+            "generate_thumbnails": false,
+            "generate_background_context": false,
+            "generate_background": false,
+            "ffmpeg_lipsync_post": false,
+            "ffmpeg_merge": false,
+            "publish_video": false,
+            "publish_thumbnail": false,
+            "publish_metadata": false
+        },
+        "entitlements": {
+            "youtube": false,
+            "tiktok": false,
+            "rumble": false,
+            "patreon": false,
+            "facebook": false
+        },
+        "system_prompts": null,
+        "stats": {
+            "get_screenwriting_prompt": {
+                "output": ""
+            }
+        }
+    },
+    "name": "test",
+    "nodes": [
+        {
+            "name": "create job",
+            "type": "system_node",
+            "params": {
+
+            },
+            "enabled": true,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "container swap",
+            "type": "ssh_node",
+            "params": {
+                "command": "ollama_up.sh"
+            },
+            "enabled": true,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "get research prompt",
+            "type": "ollama_node",
+            "params": {
+                "model": "qwen2.5",
+                "system_prompt": "prompt engineer:qwen2.5",
+                "prompt": "what is a personal computer",
+                "prompt_template": "Please write a prompt for %s that will write a detailed research article on the following concept: %s. The report should be structured into the following headings: abstract, summary, overview, history, current state, components, technical details, new technologies, possible future iterations, closing statements. Return JSON, reasoning and prompt should be separate objects."
+            },
+            "enabled": true,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "get research output",
+            "type": "ollama_node",
+            "params": {
+                "model": "mistral-large",
+                "system_prompt": "researcher:mistral-large",
+                "prompt": "",
+                "prompt_template": ""
+            },
+            "enabled": true,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "get narration prompt",
+            "type": "ollama_node",
+            "params": {
+                "model": "qwen2.5",
+                "system_prompt": "prompt engineer:mistral-large",
+                "prompt": "",
+                "prompt_template": "Please write a prompt for %s that will write a narrative monolog for a youtube video based off of %s. the monolog should include a 30 second hook that youtube favors and be between 4 and 5 minutes in duration. the monolog should be split into 5 second segments, with notes regarding the context of what is being spoken about. the script for the monolog should be in JSON format."
+            },
+            "enabled": true,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "get narration output",
+            "type": "ollama_node",
+            "params": {
+                "model": "mistral-large",
+                "system_prompt": "screenwriter:mistral-large",
+                "prompt": "",
+                "prompt_template": "Please write a prompt for %s that will write a narrative monolog for a youtube video based off of %s. the monolog should include a 30 second hook that youtube favors and be between 4 and 5 minutes in duration. the monolog should be split into 5 second segments, with notes regarding the context of what is being spoken about. the script for the monolog should be in JSON format."
+            },
+            "enabled": true,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "get background context image descriptions prompt",
+            "type": "ollama_node",
+            "params": {
+                "model": "qwen2.5",
+                "system_prompt": "prompt engineer:mistral-large",
+                "prompt": "",
+                "prompt_template": "Please write a prompt for %s that will write descriptions for images to generate based off of the contextual information of what is being discussed in the narration passages provided here: %s. The output should be in JSON format with the narration passage and image description located within the same objects. Return a JSON formatted response with reasoning and prompt in separate objects."
+            },
+            "enabled": true,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "get background context image descriptions",
+            "type": "ollama_node",
+            "params": {
+                "model": "mistral-large",
+                "system_prompt": "image maker:mistral-large",
+                "prompt": "",
+                "prompt_template": ""
+            },
+            "enabled": true,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "generate audio",
+            "type": "comfy_node",
+            "params": {
+                "name": "",
+                "api_base": "",
+                "api_template": "",
+                "api_template_values": {}
+            },
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "generate background context images",
+            "type": "comfy_node",
+            "params": {
+                "name": "",
+                "api_base": "",
+                "api_template": "",
+                "api_template_values": {}
+            },
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "generate thumbnails",
+            "type": "comfy_node",
+            "params": {
+                "name": "",
+                "api_base": "",
+                "api_template": "",
+                "api_template_values": {}
+            },
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "generate lipsync",
+            "type": "comfy_node",
+            "params": {
+                "name": "",
+                "api_base": "",
+                "api_template": "",
+                "api_template_values": {}
+            },
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "generate background",
+            "type": "comfy_node",
+            "params": {
+                "name": "",
+                "api_base": "",
+                "api_template": "",
+                "api_template_values": {}
+            },
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "ffmpeg lipsync post processing",
+            "type": "ssh_node",
+            "params": {
+                "command": "lipsync_post.sh"
+            },
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "ffmpeg merge",
+            "type": "ssh_node",
+            "params": {
+                "command": "merge.sh"
+            },
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "publish youtube",
+            "type": "publish_node",
+            "params": {},
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "publish rumble",
+            "type": "publish_node",
+            "params": {},
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "publish tiktok",
+            "type": "publish_node",
+            "params": {},
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "publish patreon",
+            "type": "publish_node",
+            "params": {},
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+        {
+            "name": "publish facebook",
+            "type": "publish_node",
+            "params": {},
+            "enabled": false,
+            "bypass": false,
+            "output": ""
+        },
+    ]
+}

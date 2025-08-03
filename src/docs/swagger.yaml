@@ -1,0 +1,16 @@
+basePath: /api
+host: localhost
+info:
+  contact:
+    email: m@localhost
+    name: API Support
+    url: http://www.gofuckyourself.io/support
+  description: This is a sample server Petstore server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Management Console
+  version: "1.0"
+paths: {}
+swagger: "2.0"
