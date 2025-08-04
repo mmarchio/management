@@ -3,7 +3,6 @@ package types
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/labstack/echo/v4"
 )
@@ -27,7 +26,6 @@ func (c Template) Marshal(ctx context.Context) (string, error) {
 }
 
 func (c Template) Bind(e echo.Context) Template {
-	fmt.Printf("template bind\n")
 	if e.FormValue("template_name") != "" {
 		c.Name = e.FormValue(("template_name"))
 	}

@@ -20,7 +20,31 @@ type Content struct {
 	Content string `json:"content"`
 }
 
+type ShallowContent struct {
+	Model
+	ID string `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	ContentType string `json:"content_type"`
+	Content string `json:"content"`
+}
+
+func NewShallowContent(id *string) ShallowContent {
+	c := ShallowContent{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.CreatedAt
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "shallow_content"
+	return c
+}
+
 func (c *Content) Get(ctx context.Context) error {
+	fmt.Printf("models:content:get model.id: %s, id: %s\n", c.Model.ID, c.ID)
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)

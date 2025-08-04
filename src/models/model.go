@@ -20,7 +20,31 @@ type Model struct {
 	ContentType string `json:"content_type"`
 	Columns 	string
 	Values 		string
-	Conflict 	string	
+	Conflict 	string
+	Validated   bool	
+}
+
+type ShallowModel struct {
+	ID string `form:"id" json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	ContentType string `json:"content_type"`
+	Columns 	string
+	Values 		string
+	Conflict 	string
+	Validated   bool	
+	Manifest    []string `json:"manifest"`
+	ExpandedID  string `json:"expanded_id"`
+}
+
+func (c Model) Validate() bool {
+	if c.ID == "" {
+		return false
+	}
+	if c.CreatedAt.IsZero() || c.UpdatedAt.IsZero() {
+		return false
+	}
+	return true
 }
 
 func (c *Model) Init() {

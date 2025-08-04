@@ -2,14 +2,14 @@ package merrors
 
 import "fmt"
 
-type Merror struct{
-	Err error
-	Info string
-	Package string
-	Struct string
+type Merror struct {
+	Err      error
+	Info     string
+	Package  string
+	Struct   string
 	Function string
-	Wrapped error
-	Code ErrorCode
+	Wrapped  error
+	Code     ErrorCode
 }
 
 type ErrorCode int16
@@ -976,7 +976,6 @@ func (c JobStatusDeleteError) ErrorCode(code int16) {
 
 type JobFindByError Merror
 
-
 func (c JobFindByError) Wrap(err error) JobFindByError {
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("JobFindByError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
@@ -1135,7 +1134,7 @@ func (c AutomationWorkflowListError) BubbleCode() AutomationWorkflowListError {
 	return c
 }
 
-type AutomationWorkflowGetError Merror 
+type AutomationWorkflowGetError Merror
 
 func (c AutomationWorkflowGetError) Wrap(err error) AutomationWorkflowGetError {
 	c.Wrapped = err
@@ -1219,7 +1218,7 @@ func (c AutomationWorkflowDeleteError) BubbleCode() AutomationWorkflowDeleteErro
 	return c
 }
 
-type AutomationStepDeleteError Merror 
+type AutomationStepDeleteError Merror
 
 func (c AutomationStepDeleteError) Wrap(err error) AutomationStepDeleteError {
 	c.Wrapped = err
@@ -1829,7 +1828,6 @@ func (c GetPromptTemplateError) BubbleCode() GetPromptTemplateError {
 
 type SetContextError Merror
 
-
 func (c SetContextError) Wrap(err error) SetContextError {
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("SetContextError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
@@ -1849,6 +1847,230 @@ func (c SetContextError) GetCode() ErrorCode {
 }
 
 func (c SetContextError) BubbleCode() SetContextError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type WorkflowValidationError Merror
+
+func (c WorkflowValidationError) Wrap(err error) WorkflowValidationError {
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("WorkflowValidationError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
+func (c WorkflowValidationError) Error() string {
+	return c.Err.Error()
+}
+
+func (c WorkflowValidationError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c WorkflowValidationError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c WorkflowValidationError) BubbleCode() WorkflowValidationError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type NodeValidationError Merror
+
+func (c NodeValidationError) Wrap(err error) NodeValidationError {
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("NodeValidationError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
+func (c NodeValidationError) Error() string {
+	return c.Err.Error()
+}
+
+func (c NodeValidationError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c NodeValidationError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c NodeValidationError) BubbleCode() NodeValidationError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type ShallowWorkflowGetError Merror
+
+func (c ShallowWorkflowGetError) Wrap(err error) ShallowWorkflowGetError {
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ShallowWorkflowGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ShallowWorkflowGetError) Error() string {
+	return c.Err.Error()
+}
+
+func (c ShallowWorkflowGetError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c ShallowWorkflowGetError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c ShallowWorkflowGetError) BubbleCode() ShallowWorkflowGetError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type ShallowComfyNodeGetError Merror
+
+func (c ShallowComfyNodeGetError) Wrap(err error) ShallowComfyNodeGetError {
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ShallowComfyNodeGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ShallowComfyNodeGetError) Error() string {
+	return c.Err.Error()
+}
+
+func (c ShallowComfyNodeGetError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c ShallowComfyNodeGetError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c ShallowComfyNodeGetError) BubbleCode() ShallowComfyNodeGetError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type ShallowOllamaNodeGetError Merror
+
+func (c ShallowOllamaNodeGetError) Wrap(err error) ShallowOllamaNodeGetError {
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ShallowOllamaNodeGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ShallowOllamaNodeGetError) Error() string {
+	return c.Err.Error()
+}
+
+func (c ShallowOllamaNodeGetError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c ShallowOllamaNodeGetError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c ShallowOllamaNodeGetError) BubbleCode() ShallowOllamaNodeGetError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type ShallowSSHNodeGetError Merror
+
+func (c ShallowSSHNodeGetError) Wrap(err error) ShallowSSHNodeGetError {
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ShallowSSHNodeGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ShallowSSHNodeGetError) Error() string {
+	return c.Err.Error()
+}
+
+func (c ShallowSSHNodeGetError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c ShallowSSHNodeGetError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c ShallowSSHNodeGetError) BubbleCode() ShallowSSHNodeGetError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type ShallowOllamaResponseGetError Merror
+
+func (c ShallowOllamaResponseGetError) Wrap(err error) ShallowOllamaResponseGetError {
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ShallowOllamaResponseGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ShallowOllamaResponseGetError) Error() string {
+	return c.Err.Error()
+}
+
+func (c ShallowOllamaResponseGetError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c ShallowOllamaResponseGetError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c ShallowOllamaResponseGetError) BubbleCode() ShallowOllamaResponseGetError {
 	if c.Code == 0 {
 		c.Code = 500
 	}
@@ -1881,4 +2103,3 @@ func ErrString(Type, Info, Package, Struct, Function string, Err error) string {
 	}
 	return errString
 }
-

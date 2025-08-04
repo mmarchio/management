@@ -1,8 +1,12 @@
 package types
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -13,6 +17,33 @@ type SSHNode struct {
 	Command 	string `form:"command" json:"command"`
 	User 		string `form:"user" json:"user"`
 	Host 		string `form:"host" json:"host"`
+	WorkflowID  WorkflowID `form:"workflow_id" json:"workflow_id"`
+	Type 		string `form:"type" json:"type"`
+	Enabled 	bool   `json:"enabled"`
+	Bypass 		bool   `json:"bypass"`
+	Output 		string `form:"output" json:"output"`
+}
+
+func (c SSHNode) Validate() params {
+	valid := true
+	if !c.Model.Validate() {
+		valid = false
+	}
+	if c.Model.ContentType != "sshnode" {
+		valid = false
+	}
+	if c.ID == "" || c.Name == "" || c.Command == "" || c.User == "" || c.Host == "" {
+		valid = false
+	}
+	if c.ID != c.Model.ID {
+		valid = false
+	}
+	c.Model.Validated = valid
+	return c
+}
+
+func (c SSHNode) GetValidated() bool {
+	return c.Model.Validated
 }
 
 func (c SSHNode) GetName() string {
@@ -89,3 +120,78 @@ func (c *SSHNode) FromMSI(msi map[string]interface{}) error {
 	}
 	return nil
 }
+
+func (c *SSHNode) Get(ctx context.Context) error {
+	content := NewSSHNodeTypeContent()
+	content.Model.ID = c.Model.ID
+	content.Model.ContentType = "sshnode"
+	content, err := content.Get(ctx)
+	if err != nil {
+		return merrors.NodeGetError{Info: c.Model.ID}.Wrap(err)
+	}
+	err = json.Unmarshal([]byte(content.Content), c)
+	if err != nil {
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+	}
+	return nil
+}
+
+func NewSSHNodeTypeContent() Content {
+	c := Content{}
+	c.Model.ContentType = "sshnode"
+	return c
+}
+
+func (c SSHNode) Delete(ctx context.Context) error {
+	content := NewSSHNodeTypeContent()
+	content.FromType(c)
+	content.Model.ID = c.Model.ID
+	content.ID = c.ID
+	if err := content.Delete(ctx); err != nil {
+		return merrors.NodeDeleteError{Info: c.Model.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err)
+	}
+	return nil
+}
+
+func (c SSHNode) GetContentType() string {
+	return c.Model.ContentType
+}
+
+func (c SSHNode) GetID() string {
+	return c.Model.ID
+}
+
+func NewSSHNode(id *string) SSHNode {
+	c := SSHNode{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "sshnode"
+	if c.Model.CreatedAt.IsZero() {
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.Model.CreatedAt
+	} else {
+		c.Model.UpdatedAt = time.Now()
+	}
+	return c
+}
+
+func (c SSHNode) Set(ctx context.Context) error {
+	c.Validate()
+	if !c.Model.Validated {
+		return merrors.NodeValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+	}
+	content := NewSSHNodeTypeContent()
+	content.FromType(c)
+	content.Model.ID = c.Model.ID
+	content.ID = c.Model.ID
+	err := content.Set(ctx)
+	if err != nil {
+		return merrors.NodeSetError{Info: c.Model.ID}.Wrap(err)
+	}
+	return nil
+}
+

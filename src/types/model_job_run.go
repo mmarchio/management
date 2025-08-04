@@ -13,8 +13,6 @@ import (
 func NewJobRun(id *string) JobRun {
 	c := JobRun{}
 	c.New(id)
-	c.ID = RunID(uuid.NewString())
-	c.Model.ID = c.ID.String()
 	c.Model.ContentType = "jobrun"
 	return c
 } 
@@ -71,6 +69,7 @@ func (c JobRun) List(ctx context.Context) ([]JobRun, error) {
 		if err != nil {
 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 		}
+		cut.Context.SetCtx(ctx)
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil

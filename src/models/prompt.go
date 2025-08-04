@@ -2,12 +2,13 @@ package models
 
 import (
 	"context"
-	"encoding/base64"
+	"time"
 	// "encoding/json"
+	"github.com/google/uuid"
 	merrors "github.com/mmarchio/management/errors"
 )
 
-type Prompt struct {
+type ShallowPrompt struct {
 	Model
 	Name 		string 		`form:"name" json:"name"`
 	Prompt 		string 		`form:"prompt" json:"prompt"`
@@ -16,7 +17,21 @@ type Prompt struct {
 	Settings 	string		`form:"settings" json:"settings"`
 }
 
-type nestedPrompt struct {
+func NewShallowPrompt(id *string) ShallowPrompt {
+	c := ShallowPrompt{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.Model.CreatedAt
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "shallow_prompt"
+	return c
+}
+
+type Prompt struct {
 	Model
 	Name string
 	Prompt string
@@ -25,10 +40,6 @@ type nestedPrompt struct {
 	Settings Settings
 	JsonValue []byte
 	Base64Value string
-}
-
-func (c *Prompt) ToBase64() {
-	c.Settings = base64.StdEncoding.EncodeToString([]byte(c.Settings))
 }
 
 func (c Prompt) Scan(ctx context.Context, rows Scannable) (ITable, error) {
@@ -62,16 +73,8 @@ func (c *Prompt) New() {
 
 func (c *Prompt) Get(ctx context.Context) error {
 	var err error
-	itable, err := c.Model.Get(ctx, c)
 	if err != nil {
 		return merrors.PromptGetError{}.Wrap(err)
-	}
-	if entity, ok := itable.(Prompt); ok {
-		c = &entity
-		err = c.Unpack()
-		if err != nil {
-			return merrors.PromptUnpackError{}.Wrap(err)
-		}
 	}
 	return nil
 }
@@ -108,15 +111,6 @@ func (c Prompt) GetSlice(ctx context.Context) []Prompt {
 // 	}
 // 	return r, nil
 // }
-
-func (c *Prompt) Unpack() error {
-	var err error
-	c.Settings, err = FromBase64(c.Settings)
-	if err != nil {
-		return merrors.Base64DecodingError{Info: c.Settings}.Wrap(err)
-	}
-	return nil
-}
 
 func (c Prompt) GetID() string {
 	return c.ID

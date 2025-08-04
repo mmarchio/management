@@ -59,6 +59,7 @@ func (c Content) New(ct string) Content {
 } 
 
 func (c *Content) Get(ctx context.Context) (Content, error) {
+	fmt.Printf("types:content:get model.id: %s id: %s\n", c.Model.ID, c.ID)
 	contentModel :=  models.Content{}
 	contentModel.Model.ID = c.Model.ID
 	contentModel.ID = c.ID

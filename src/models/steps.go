@@ -3,6 +3,9 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type Steps struct {
@@ -26,6 +29,43 @@ type Steps struct {
 	PublishMetadata 				Toggle `json:"publish_metadata"`
 	Base64Value						string
 	JsonValue						[]byte
+}
+
+type ShallowSteps struct {
+	Model
+	GetResearchOutput				string `json:"get_research_output"`
+	GetResearchPrompt				string `json:"get_research_prompt"`
+	ScreenwritingStart 				string `json:"screenwriting_start"`
+	ScreenwritingGetPromptInput 	string `json:"screenwriting_get_prompt_input"`
+	ScreenwritingGetPromptOutput 	string `json:"screenwriting_get_prompt_output"`
+	ScreenwritingOutput 			string `json:"screenwriting_output"`
+	ContainerSwap 					string `json:"container_swap"`
+	GenerateAudio 					string `json:"generate_audio"`
+	GenerateLipsync 				string `json:"generate_lipsync"`
+	GenerateThumbnails 				string `json:"generate_thumbnails"`
+	GenerateBackgroundCountext 		string `json:"generate_background_context"`
+	GenerateBackground 				string `json:"generate_background"`
+	FFMPEGLipsyncPost 				string `json:"ffmpeg_lipsync_post"`
+	FFMPEGMerge 					string `json:"ffmpeg_merge"`
+	PublishVideo 					string `json:"publish_video"`
+	PublishThumbnail 				string `json:"publish_thumbnail"`
+	PublishMetadata 				string `json:"publish_metadata"`
+	Base64Value						string
+	JsonValue						[]byte
+}
+
+func NewShallowSteps(id *string) ShallowSteps {
+	c := ShallowSteps{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.Model.CreatedAt
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "shallow_steps"
+	return c
 }
 
 func (c *Steps) Unmarshal(ctx context.Context, j string) error {

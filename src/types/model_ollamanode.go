@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/strrep"
 )
@@ -19,11 +20,59 @@ type OllamaNode struct {
 	Model
 	ID 				string `json:"id"`
 	Name 			string `form:"name" json:"name"`
-	OllamaModel 	string `form:"ollama_model" json:"ollama_model"`
+	OllamaModel 	string `form:"model" json:"model"`
 	SystemPrompt 	string `form:"system_prompt" json:"system_prompt"`
 	Prompt 			string `form:"prompt" json:"prompt"`
 	PromptTemplate  string `form:"prompt_template" json:"prompt_template"`
 	Response        OllamaResponse `json:"response"`
+	WorkflowID  	WorkflowID `form:"workflow_id" json:"workflow_id"`
+	Enabled 		bool   `json:"enabled"`
+	Bypass 			bool   `json:"bypass"`
+	Output 			string `form:"output" json:"output"`
+	Context			Context
+}
+
+func (c OllamaNode) Validate() params {
+	valid := true
+	if !c.Model.Validate() {
+		valid = false
+	}
+	if c.Model.ContentType != "ollamanode" {
+		valid = false
+	}
+	if c.ID == "" || c.ID != c.Model.ID {
+		valid = false
+	}
+	if c.Name == "" || c.OllamaModel == "" {
+		valid = false
+	}
+	if c.Prompt == "" && c.PromptTemplate == "" {
+		valid = false
+	}
+	c.Model.Validated = valid
+	return c
+}
+
+func (c OllamaNode) GetValidated() bool {
+	return c.Model.Validated
+}
+
+func NewOllamaNode(id *string) OllamaNode {
+	c := OllamaNode{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "ollamanode"
+	if c.Model.CreatedAt.IsZero() {
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.Model.CreatedAt
+	} else {
+		c.Model.UpdatedAt = time.Now()
+	}
+	return c
 }
 
 func (c OllamaNode) GetName() string {
@@ -130,7 +179,7 @@ func (c *OllamaNode) FromMSI(msi map[string]interface{}) error {
 func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponse, errchan chan error) error {
 	start := time.Now()
 	if c.OllamaModel == "" {
-		return fmt.Errorf("OllamaNode:OllamaModel is nil\n")
+		errchan <- fmt.Errorf("OllamaNode:OllamaModel is nil\n")
 	}
 	oreq := OllamaRequest{
 		Model: c.OllamaModel,
@@ -192,3 +241,106 @@ func worker(c *OllamaNode, req *http.Request, respchan chan OllamaResponse, errc
 	}
 }
 
+func (c *OllamaNode) Get(ctx context.Context) error {
+	content := NewComfyNodeTypeContent()
+	content.Model.ID = c.Model.ID
+	content, err := content.Get(ctx)
+	if err != nil {
+		return merrors.NodeGetError{Info: c.Model.ID}.Wrap(err)
+	}
+	err = json.Unmarshal([]byte(content.Content), c)
+	if err != nil {
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ollamanode", Function: "Get"}.Wrap(err)
+	}
+	return nil
+}
+
+func NewOllamaNodeTypeContent() Content {
+	c := Content{}
+	c.Model.ContentType = "ollamanode"
+	return c
+}
+
+func (c OllamaNode) Delete(ctx context.Context) error {
+	content := NewSSHNodeTypeContent()
+	content.FromType(c)
+	content.Model.ID = c.Model.ID
+	content.ID = c.ID
+	if err := content.Delete(ctx); err != nil {
+		return merrors.NodeDeleteError{Info: c.Model.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err)
+	}
+	return nil
+}
+
+func (c OllamaNode) GetContentType() string {
+	return c.Model.ContentType
+}
+
+func (c OllamaNode) GetID() string {
+	return c.Model.ID
+}
+
+func (c OllamaNode) Set(ctx context.Context) error {
+	c.Validate()
+	if !c.Model.Validated {
+		return merrors.NodeValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+	}
+	content := NewOllamaNodeTypeContent()
+	content.FromType(c)
+	content.Model.ID = c.Model.ID
+	content.ID = c.Model.ID
+	err := content.Set(ctx)
+	if err != nil {
+		return merrors.NodeSetError{Info: c.Model.ID}.Wrap(err)
+	}
+	return nil
+}
+
+func (c *OllamaNode) GetNodeFromWorkflow(id string, wf Workflow) {
+	for _, v := range wf.OllamaNodes {
+		if id == v.Model.ID {
+			c = &v
+			break
+		}
+	}
+}
+
+func (c OllamaNode) Exec(ctx context.Context) error {
+	fmt.Printf("ollama node found: %s\n", c.Name)
+	start := time.Now()
+	if c.SystemPrompt != "" && len(c.SystemPrompt) == 36 {
+		spid := c.SystemPrompt
+		sp := NewSystemPrompt(&spid)
+		if err := sp.Get(ctx); err != nil {
+			return err
+		}
+		c.SystemPrompt = sp.Prompt
+	}
+	Response := make(chan OllamaResponse, 1000)
+	Error := make(chan error, 1)
+	go c.Call(ctx, Response, Error)
+	go func(){
+		if len(Error) > 0 {
+			err := <- Error
+			fmt.Printf("err from errchan: %s\n", err.Error())
+		}
+	}()
+	wg.Add(1)
+	// var resp types.OllamaResponse
+	// go run(c, resp, Response, Error, 1, semaphore)
+	// wg.Add(1)
+	wg.Wait()
+
+	wf.Nodes[i].Params = p
+	if err := wf.Set(ctx); err != nil {
+		return err
+	}
+	end := time.Now()
+	c.Context.GetResearchPrompt.Start = start
+	c.Context.GetResearchPrompt.End = end 
+	c.Context.GetResearchPrompt.Status = "done"
+	c.Context.GetResearchPrompt.Output = c.Response.Response
+	if err := c.Set(ctx); err != nil {
+		return err
+	}
+}

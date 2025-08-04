@@ -103,34 +103,34 @@ func HandleWorkflowDelete(c echo.Context) error {
 
 func HandleWorkflowSave(c echo.Context) error {
 	ctx := GetEchoCtx(c)
+	entity := types.NewWorkflow(nil)
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
 		if err := entity.Get(ctx); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		if err := c.Bind(&entity); err != nil {
-				return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		if entity.Name == "" && c.FormValue("name") != "" {
-			entity.Name = c.FormValue("name")
-		}
-		if entity.Name == "" {
-			fmt.Printf(c.FormValue("name"))
-		}
-		if err := entity.Set(ctx); err != nil {
-				return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		dt := DisplayWorkflow{
-			Workflow: types.Workflow{},
-			DisplayType: "new",
-			Menu: Menu{
-				Href: "workflow",
-				Title: "Workflow",
-			},
-		}
-		return c.Render(http.StatusOK, "workflow.tpl", dt)
 	}
-	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+	if err := c.Bind(&entity); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if entity.Name == "" && c.FormValue("name") != "" {
+		entity.Name = c.FormValue("name")
+	}
+	if entity.Name == "" {
+		fmt.Printf(c.FormValue("name"))
+	}
+	if err := entity.Set(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	dt := DisplayWorkflow{
+		Workflow: types.Workflow{},
+		DisplayType: "new",
+		Menu: Menu{
+			Href: "workflow",
+			Title: "Workflow",
+		},
+	}
+	return c.Render(http.StatusOK, "workflow.tpl", dt)
 }
 
 func HandleWorkflowNew(c echo.Context) error {

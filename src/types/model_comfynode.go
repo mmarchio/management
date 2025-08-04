@@ -1,8 +1,12 @@
 package types
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -14,6 +18,33 @@ type ComfyNode struct {
 	APIBase 		string 					`form:"api_base" json:"api_base"`
 	APITemplate 	string 					`form:"api_template" json:"api_template"`
 	TemplateValues  map[string]interface{} 	`json:"template_values"`
+	WorkflowID  	WorkflowID 				`form:"workflow_id" json:"workflow_id"`
+	Type 			string 					`form:"type" json:"type"`
+	Enabled 		bool   					`json:"enabled"`
+	Bypass 			bool   					`json:"bypass"`
+	Output 			string 					`form:"output" json:"output"`
+}
+
+func (c ComfyNode) Validate() params {
+	valid := true
+	if !c.Model.Validate() {
+		valid = false
+	}
+	if c.Model.ContentType != "comfynode" {
+		valid = false
+	}
+	if c.ID == "" || c.ID != c.Model.ID {
+		valid = false
+	}
+	if c.Name == "" || c.APIBase == "" || c.APITemplate == "" {
+		valid = false
+	}
+	c.Model.Validated = valid
+	return c
+}
+
+func (c ComfyNode) GetValidated() bool {
+	return c.Model.Validated
 }
 
 func (c ComfyNode) GetName() string {
@@ -90,3 +121,78 @@ func (c *ComfyNode) FromMSI(msi map[string]interface{}) error {
 	}
 	return nil
 }
+
+func (c *ComfyNode) Get(ctx context.Context) error {
+	content := NewComfyNodeTypeContent()
+	content.Model.ID = c.Model.ID
+	content.Model.ContentType = "comfynode"
+	content, err := content.Get(ctx)
+	if err != nil {
+		return merrors.NodeGetError{Info: c.Model.ID}.Wrap(err)
+	}
+	err = json.Unmarshal([]byte(content.Content), c)
+	if err != nil {
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+	}
+	return nil
+}
+
+func NewComfyNodeTypeContent() Content {
+	c := Content{}
+	c.Model.ContentType = "comfynode"
+	return c
+}
+
+func (c ComfyNode) Delete(ctx context.Context) error {
+	content := NewSSHNodeTypeContent()
+	content.FromType(c)
+	content.Model.ID = c.Model.ID
+	content.ID = c.ID
+	if err := content.Delete(ctx); err != nil {
+		return merrors.NodeDeleteError{Info: c.Model.ID, Package: "types", Struct: "comfynode", Function: "delete"}.Wrap(err)
+	}
+	return nil
+}
+
+func (c ComfyNode) GetContentType() string {
+	return c.Model.ContentType
+}
+
+func (c ComfyNode) GetID() string {
+	return c.Model.ID
+}
+
+func NewComfyNode(id *string) ComfyNode {
+	c := ComfyNode{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "comfynode"
+	if c.Model.CreatedAt.IsZero() {
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.Model.CreatedAt
+	} else {
+		c.Model.UpdatedAt = time.Now()
+	}
+	return c
+}
+
+func (c ComfyNode) Set(ctx context.Context) error {
+	c.Validate()
+	if !c.Model.Validated {
+		return merrors.NodeValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+	}
+	content := NewComfyNodeTypeContent()
+	content.FromType(c)
+	content.Model.ID = c.Model.ID
+	content.ID = c.Model.ID
+	err := content.Set(ctx)
+	if err != nil {
+		return merrors.NodeSetError{Info: c.Model.ID}.Wrap(err)
+	}
+	return nil
+}
+

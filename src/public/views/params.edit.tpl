@@ -9,7 +9,7 @@
             <ul>
                 <li><input type="text" name="name" id="name" placeholder="name" value="{{if .Params.Name}}{{.Params.Name}}{{end}}"></li>
                 {{if eq .Type "ollama_node"}}
-                <li><input type="text" name="model" id="model" placeholder="model" value="{{if .Params.OllamaModel}}{{.Params.OllamaModel}}{{end}}"></li>
+                <li><input type="text" name="ollama_model" id="ollama_model" placeholder="model" value="{{if .Params.OllamaModel}}{{.Params.OllamaModel}}{{end}}"></li>
                 <li>
                     <select name="system_prompt">
                     {{range .SystemPrompts}}

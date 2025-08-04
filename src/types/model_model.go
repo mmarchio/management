@@ -21,6 +21,18 @@ type Model struct {
 	Columns 	string
 	Values 		string
 	Conflict 	string
+	Validated   bool
+}
+
+func (c Model) Validate() bool {
+	valid := true
+	if c.ID == "" {
+		valid = false
+	}
+	if c.CreatedAt.IsZero() || c.UpdatedAt.IsZero() {
+		valid = false
+	}
+	return valid
 }
 
 func (c *Model) New(id *string) {

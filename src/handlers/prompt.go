@@ -78,6 +78,11 @@ func HandlePromptsNew(c echo.Context) error {
 	var err error
 	ctx := GetEchoCtx(c)
 	prompt := types.NewPrompt(nil)
+	prompt.ID = types.PromptID("")
+	prompt.Model.ID = ""
+	if id := c.Param("id"); err != nil {
+		prompt = types.NewPrompt(&id)
+	}
 	prompt, err = prompt.GetDispositions(ctx)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
@@ -102,39 +107,40 @@ func HandlePromptsNew(c echo.Context) error {
 func HandlePromptSave(c echo.Context) error {
 	var err error
 	ctx := database.GetDatabaseCtx()
+	prompt := types.NewPrompt(nil)
 	if id := c.Param("id"); id != "" {
-		prompt := types.NewPrompt(&id)
+		//existing entity
+		prompt = types.NewPrompt(&id)
 		if err := prompt.Get(ctx); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		if err = c.Bind(&prompt); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(err))
-		}
-		prompt, err = prompt.GetDispositions(ctx)
-		if err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		prompt, err = prompt.Bind(c)
-		if err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		if err = prompt.Set(ctx); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		prompt.Settings.Template.AvailableDispositions = reconcileDispositions(prompt)
-
-		existingJob := types.NewJob(nil)
-		existingJob.PromptID = prompt.ID
-		job, err := findExistingJob(ctx, existingJob.PromptID.String(), prompt)
-		if err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		if err = createPromptJobRuns(ctx, job, prompt); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		return HandlePromptsList(c)
 	}
-	return c.Render(http.StatusBadRequest, "error.tpl", "missing id")
+	if err = c.Bind(&prompt); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(err))
+	}
+	prompt, err = prompt.GetDispositions(ctx)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	prompt, err = prompt.Bind(c)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if err = prompt.Set(ctx); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	prompt.Settings.Template.AvailableDispositions = reconcileDispositions(prompt)
+
+	existingJob := types.NewJob(nil)
+	existingJob.PromptID = prompt.ID
+	job, err := findExistingJob(ctx, existingJob.PromptID.String(), prompt)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if err = createPromptJobRuns(ctx, job, prompt); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	return HandlePromptsList(c)
 }
 
 func reconcileDispositions(prompt types.Prompt) []types.Disposition {
@@ -237,7 +243,6 @@ func createPromptJob(ctx context.Context, prompt types.Prompt) (*types.Job, erro
 	if err := newJob.Set(ctx); err != nil {
 		return nil, err
 	}
-	fmt.Printf("new job created: %#v\n", newJob)
 	return &newJob, nil
 }
 
