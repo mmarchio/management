@@ -62,42 +62,26 @@ func (c ShallowWorkflow) Get(ctx context.Context, mode string) (*Workflow, *Shal
 		return nil, &c, nil
 	}
 	if mode == "full" {
-		msi := make(map[string]interface{})
-		if err := json.Unmarshal([]byte(content.Content), &msi); err != nil {
-			return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		list, err := content.GetIn(ctx, c.ShallowModel.Manifest)
+		if err != nil {
+			return nil, nil, err
 		}
-		if manifest, ok := msi["manifest"].([]string); ok {
-			contentList, err := content.GetIn(ctx, manifest)
-			if err != nil {
-				return nil, nil, err
-			}
-			hasChildren := false
-			for _, v := range contentList {
-				if strings.Contains(v, "manifest") {
-					hasChildren = true
-				}
-			}
-		} 
+		mss := make(map[string]string)
+		for _, v := range list {
+			mss[v.ID] = v.Content
+		}
+		hydrated, err := HydrateShallowJson(content.Content, mss)
+		if err != nil {
+			return nil, nil, err
+		}
+		full := Workflow{}
+		if err := json.Unmarshal([]byte(hydrated), &full); err != nil {
+			return nil, nil, err
+		}
+		return &full, nil, nil
 	}
 	return nil, nil, merrors.ShallowWorkflowGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
 } 
-
-func recursiveSet(m map[string]interface{}, id string) (map[string]interface{}, error) {
-	for k, v := range m {
-		if s, ok := v.(string); ok {
-			if strings.Contains(s, "manifest") {
-				msi := make(map[string]interface{})
-				if err := json.Unmarshal([]byte(s), &msi); err != nil {
-					return nil, err
-				}
-				m[k], err = recursiveSet(msi, id)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-	}
-}
 
 func (c ShallowWorkflow) SetName(ctx context.Context, id string) error {
 	c.Name = id

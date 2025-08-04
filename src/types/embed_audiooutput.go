@@ -9,8 +9,8 @@ import (
 type AudioOutput struct {
 	EmbedModel
 	ID AudioOutputID `json:"id"`
-	Stats Stats `json:"stats"`
-	Files []File `json:"files"`
+	StatsModel Stats `json:"stats_model"`
+	FilesArrayModel []File `json:"files_array_model"`
 }
 
 func (c *AudioOutput) Unmarshal(ctx context.Context, j string) error {

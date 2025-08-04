@@ -336,10 +336,10 @@ func (c OllamaNode) Exec(ctx context.Context) error {
 		return err
 	}
 	end := time.Now()
-	c.Context.GetResearchPrompt.Start = start
-	c.Context.GetResearchPrompt.End = end 
-	c.Context.GetResearchPrompt.Status = "done"
-	c.Context.GetResearchPrompt.Output = c.Response.Response
+	c.Context.GetResearchPromptModel.Start = start
+	c.Context.GetResearchPromptModel.End = end 
+	c.Context.GetResearchPromptModel.Status = "done"
+	c.Context.GetResearchPromptModel.Output = c.Response.Response
 	if err := c.Set(ctx); err != nil {
 		return err
 	}
