@@ -127,6 +127,34 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	return r, nil
 }
 
+func (c ShallowContent) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]ShallowContent, error) {
+	if write {
+		contentModel := c.ToModel()
+		contentModel.ShallowModel.ID = c.ShallowModel.ID
+		contentModel.ID = contentModel.ShallowModel.ID
+		contentModel.ContentType = c.ContentType
+		_, err := contentModel.CustomQuery(ctx, write, q, vars...)
+		if err != nil {
+			return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+		}
+		return nil, nil
+	}
+	contentModel := models.ShallowContent{}
+	contentModel.ShallowModel.ID = c.ShallowModel.ID
+	contentModel.ID = contentModel.ShallowModel.ID
+	contentModel.ContentType = c.ContentType
+	res, err := contentModel.CustomQuery(ctx, write, q, vars...)
+	if err != nil {
+		return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).BubbleCode()
+	}
+	r := make([]ShallowContent, 0)
+	for _, t := range res {
+		d := c.FromModel(t)
+		r = append(r, d)
+	}
+	return r, nil
+}
+
 func (c Content) Set(ctx context.Context) error {
 	contentModel := c.ToModel()
 	contentModel.Model.ID = c.Model.ID
@@ -157,6 +185,19 @@ func (c *Content) FindBy(ctx context.Context, key, value string) (Content, error
 	}
 	if contentModel.Content == "" {
 		return *c, merrors.NilContentError{Package: "types", Struct: "Content", Function: "FindBy"}.Wrap(fmt.Errorf("nil content error")).BubbleCode()
+	}
+	d := c.FromModel(contentModel)
+	return d, nil
+}
+
+func (c *ShallowContent) FindBy(ctx context.Context, key, value string) (ShallowContent, error) {
+	contentModel := models.ShallowContent{}
+	contentModel.ShallowModel.ID = c.ShallowModel.ID
+	if err := contentModel.FindBy(ctx, key, value); err != nil {
+		return *c, merrors.ContentFindByError{Info: c.ShallowModel.ID}.Wrap(err)
+	}
+	if contentModel.Content == "" {
+		return *c, merrors.NilContentError{Package: "types", Struct: "ShallowContent", Function: "FindBy"}.Wrap(fmt.Errorf("nil content error")).BubbleCode()
 	}
 	d := c.FromModel(contentModel)
 	return d, nil

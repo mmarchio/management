@@ -1,9 +1,11 @@
 package types
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
+	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
 
@@ -57,12 +59,72 @@ func (c *Model) New(id *string) {
 	c.UpdatedAt = c.CreatedAt
 }
 
+func (c Model) GetCtx(ctx context.Context) (*Context, error) {
+	typesContext := Context{}
+	systemContext, err := models.Context{}.GetCtx(ctx)
+	if err != nil {
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+	}
+	typesContext.FromModel(systemContext)
+	return &typesContext, nil
+}
+
+func (c Model) SetCtx(ctx context.Context) (context.Context, error) {
+	systemContext := Context{}
+	s, err := systemContext.ToModel()
+	if err != nil {
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+	}
+	ctx = s.SetCtx(ctx)
+	return ctx, nil
+}
+
+func (c ShallowModel) GetCtx(ctx context.Context) (*Context, error) {
+	typesContext := Context{}
+	systemContext, err := models.Context{}.GetCtx(ctx)
+	if err != nil {
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+	}
+	typesContext.FromModel(systemContext)
+	return &typesContext, nil
+}
+
+func (c ShallowModel) SetCtx(ctx context.Context) (context.Context, error) {
+	systemContext := Context{}
+	s, err := systemContext.ToModel()
+	if err != nil {
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+	}
+	ctx = s.SetCtx(ctx)
+	return ctx, nil
+}
+
 type EmbedModel struct {
 	ID string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	TokenCount int64
 	ContentType string
+}
+
+func (c EmbedModel) GetCtx(ctx context.Context) (*Context, error) {
+	typesContext := Context{}
+	systemContext, err := models.Context{}.GetCtx(ctx)
+	if err != nil {
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+	}
+	typesContext.FromModel(systemContext)
+	return &typesContext, nil
+}
+
+func (c EmbedModel) SetCtx(ctx context.Context) (context.Context, error) {
+	systemContext := Context{}
+	s, err := systemContext.ToModel()
+	if err != nil {
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+	}
+	ctx = s.SetCtx(ctx)
+	return ctx, nil
 }
 
 func (c *EmbedModel) New(contentType string) {

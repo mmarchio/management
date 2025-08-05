@@ -170,6 +170,35 @@ func (c *Content) FindBy(ctx context.Context, key, value string) error {
 	return nil
 }
 
+func (c *ShallowContent) FindBy(ctx context.Context, key, value string) error {
+	c.Init()
+	ctx = database.GetPQContext(ctx)
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
+	q := fmt.Sprintf("SELECT %s FROM content WHERE content @> '{\"%s\":\"%s\"}'", c.Columns, key, value)
+	rows, err := db.Query(q)
+	if err != nil {
+		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(err)
+	}
+	var t ShallowContent
+	ctr := 0
+	for rows.Next() {
+		ctr++
+		t, err = c.Scan(ctx, rows)
+		if err != nil {
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(err)
+		}
+	}
+	if ctr == 0 {
+		return merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}
+	}
+	if t.Content == "" {
+		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(err).BubbleCode()
+	}
+	*c = t
+	return nil
+}
+
 func (c Content) Set(ctx context.Context) error {
 	c.Init()
 	ctx = database.GetPQContext(ctx)
@@ -346,6 +375,65 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	}
 	ctr := 0
 	r := make([]Content, 0)
+	for rows.Next() {
+		ctr++
+		content, err := c.Scan(ctx, rows)
+		if err != nil {
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+		}
+		r = append(r, content)
+	}
+	if rows.Err() != nil {
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(rows.Err())
+	}
+	if ctr == 0 {
+		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(err).BubbleCode()
+	}
+	for _, t := range r {
+		if t.Content == "" {
+			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500}.Wrap(err)
+		}
+	}
+	return r, nil
+}
+
+func (c ShallowContent) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]ShallowContent, error) {
+	c.Init()
+	ctx = database.GetPQContext(ctx)
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
+	if write {
+		tx := database.GetPQTx(ctx)
+		vals := make([]any, 0)
+		vals = append(vals, c.ShallowModel.Columns)
+		vals = append(vals, c.ShallowModel.Values)
+		vals = append(vals, c.ShallowModel.Conflict)
+		vals = append(vals, vars)
+		_, err := tx.Exec(q, vals...)
+		if err != nil {
+			if err = tx.Rollback(); err != nil {
+				panic(fmt.Errorf("rollback error: %w", err))
+			}
+			if err = tx.Commit(); err != nil {
+				panic(fmt.Errorf("commit error: %w", err))
+			}
+			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+		}
+		if err = tx.Commit(); err != nil {
+			panic(fmt.Errorf("commit error: %w", err))
+		}
+		return nil, nil
+	}
+	// vals = append(vals, c.Model.Columns)
+	// vals = append(vals, vars)
+	// TODO: fix error when another use case arises
+	// rows, err := db.Query(q, vals...)
+	rows, err := db.Query(q)
+	if err != nil {
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)			
+	}
+	ctr := 0
+	r := make([]ShallowContent, 0)
 	for rows.Next() {
 		ctr++
 		content, err := c.Scan(ctx, rows)
