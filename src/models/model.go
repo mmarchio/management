@@ -21,7 +21,8 @@ type Model struct {
 	Columns 	string
 	Values 		string
 	Conflict 	string
-	Validated   bool	
+	Validated   bool
+	Manifest	[]string	
 }
 
 type ShallowModel struct {

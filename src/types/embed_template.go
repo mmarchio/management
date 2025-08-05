@@ -31,7 +31,7 @@ func (c Template) Bind(e echo.Context) Template {
 	}
 	for _, ad := range c.AvailableDispositions {
 		if e.FormValue(ad.Model.ID) == "on" {
-			c.Dispositions = append(c.Dispositions, ad)
+			c.DispositionsArrayModel = append(c.DispositionsArrayModel, ad)
 		}
 	}
 	return c

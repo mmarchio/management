@@ -95,7 +95,7 @@ func main() {
 
 
 	handlers.RegisterWorkflowRoutes(e)
-	handlers.RegisterNodesRoutes(e)
+	// handlers.RegisterNodesRoutes(e)
 	handlers.RegisterPromptsRoutes(e)
 	handlers.RegisterComfyUITemplatesRoutes(e)
 	handlers.RegisterSystemPromptsRoutes(e)

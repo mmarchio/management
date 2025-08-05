@@ -131,7 +131,7 @@ func (c Prompt) Delete(ctx context.Context) error {
 func (c Prompt) GetDispositions(ctx context.Context) (Prompt, error) {
 	var err error
 	disposition := NewDisposition(nil)
-	c.SettingsModel.Template.AvailableDispositions, err = disposition.List(ctx)
+	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(ctx)
 	if err != nil {
 		return c, merrors.DispositionListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
 	}
@@ -161,8 +161,8 @@ func (c Prompt) SetID() (Prompt, error) {
 
 func ValidatePrompt(p Prompt) (Prompt, error) {
 	var err error
-	p.SettingsModel.GlobalBypass, err = ValidateSteps(p.SettingsModel.GlobalBypass, "global_bypass_")
-	p.SettingsModel.Recurring = ValidateToggle(p.SettingsModel.Recurring, uuid.NewString(), "prompt_settings_", "recurring", "recurring")
+	p.SettingsModel.GlobalBypassModel, err = ValidateSteps(p.SettingsModel.GlobalBypassModel, "global_bypass_")
+	p.SettingsModel.RecurringModel = ValidateToggle(p.SettingsModel.RecurringModel, uuid.NewString(), "prompt_settings_", "recurring", "recurring")
 	return p, err
 }
 

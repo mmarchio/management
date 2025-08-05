@@ -31,6 +31,10 @@ func NewShallowPrompt(id *string) ShallowPrompt {
 	return c
 }
 
+func (c ShallowPrompt) Get(ctx context.Context, mode string) (*Prompt, *ShallowPrompt, error) {
+	return nil, nil, nil
+}
+
 type Prompt struct {
 	Model
 	Name string

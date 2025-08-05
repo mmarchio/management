@@ -61,7 +61,7 @@ func (c ShallowWorkflow) Get(ctx context.Context, mode string) (*Workflow, *Shal
 		return nil, &c, nil
 	}
 	if mode == "full" {
-		list, err := content.GetIn(ctx, c.ShallowModel.Manifest)
+		list, err := content.GetIn(ctx)
 		if err != nil {
 			return nil, nil, err
 		}

@@ -44,6 +44,21 @@ func NewShallowOllamaResponse(id *string) ShallowOllamaResponse {
 	return c
 }
 
+func NewOllamaResponse(id *string) OllamaResponse {
+	c := OllamaResponse{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.Model.CreatedAt
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "ollamaresponse"
+	return c
+}
+
+
 func (c ShallowOllamaResponse) Get(ctx context.Context, mode string) (*OllamaResponse, *ShallowOllamaResponse, error) {
 	content := Content{ID: c.Model.ID}
 	if err := content.Get(ctx); err != nil {

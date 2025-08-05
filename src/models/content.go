@@ -43,8 +43,49 @@ func NewShallowContent(id *string) ShallowContent {
 	return c
 }
 
+func (c Content) ShallowGetIn(ctx context.Context) ([]ShallowContent, error) {
+	c.Init()
+	ctx = database.GetPQContext(ctx)
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
+	q := fmt.Sprintf("SELECT %s FROM content WHERE id IN ('%s'::uuid)", c.Columns, strings.Join(c.Model.Manifest, "'::uuid, '"))
+	rows, err := db.Query(q)
+	if err != nil {
+		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "ShallowGetIn"}.Wrap(err)
+	}
+	ta := make([]ShallowContent, 0)
+	for rows.Next() {
+		t, err := c.ShallowScan(ctx, rows)
+		if err != nil {
+			return nil, err
+		}
+		ta = append(ta, t)
+	}
+	return ta, nil
+}
+
+func (c Content) GetIn(ctx context.Context) ([]Content, error) {
+	c.Init()
+	ctx = database.GetPQContext(ctx)
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
+	q := fmt.Sprintf("SELECT %s FROM content WHERE id IN ('%s'::uuid)", c.Columns, strings.Join(c.Model.Manifest, "'::uuid, '"))
+	rows, err := db.Query(q)
+	if err != nil {
+		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "GetIn"}.Wrap(err)
+	}
+	ta := make([]Content, 0)
+	for rows.Next() {
+		t, err := c.Scan(ctx, rows)
+		if err != nil {
+			return nil, err
+		}
+		ta = append(ta, t)
+	}
+	return ta, nil
+}
+
 func (c *Content) Get(ctx context.Context) error {
-	fmt.Printf("models:content:get model.id: %s, id: %s\n", c.Model.ID, c.ID)
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -174,9 +215,7 @@ func (c Content) ListBy(ctx context.Context, key, value interface{}) ([]Content,
 		if err != nil {
 			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
 		}
-		if content != c {
-			r = append(r, content)
-		}
+		r = append(r, content)
 	}
 	return r, nil
 }
@@ -244,9 +283,7 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 		if err != nil {
 			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
 		}
-		if content != c {
-			r = append(r, content)
-		}
+		r = append(r, content)
 	}
 	if rows.Err() != nil {
 			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(rows.Err())
@@ -268,6 +305,15 @@ func (c Content) Scan(ctx context.Context, rows Scannable) (Content, error) {
 		return c, err
 	}
 	return c, nil
+}
+
+func (c Content) ShallowScan(ctx context.Context, rows Scannable) (ShallowContent, error) {
+	sc := ShallowContent{}
+	err := rows.Scan(&sc.Model.ID, &sc.Model.CreatedAt, &sc.Model.UpdatedAt, &sc.Model.ContentType, &sc.Content)
+	if err != nil {
+		return sc, err
+	}
+	return sc, nil
 }
 
 func (c Content) Values() []any {

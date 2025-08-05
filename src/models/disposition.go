@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,9 +13,9 @@ type Disposition struct {
 	MinDuration 			int64			`json:"min_duration"`
 	MaxDuration 			int64			`json:"max_duration"`
 	AdvertisementDuration 	int64			`json:"advertisement_duration"`
-	Entitlements 			Entitlements	`json:"entitlements"`
-	Verification 			Steps			`json:"verification"`
-	Bypass 					Steps			`json:"bypass"`
+	EntitlementsModel 			Entitlements	`json:"entitlements_model"`
+	VerificationModel 			Steps			`json:"verification_model"`
+	BypassModel 					Steps			`json:"bypass_model"`
 	JsonValue				[]byte
 	Base64Value				string
 }
@@ -25,9 +26,9 @@ type ShallowDisposition struct {
 	MinDuration 			int64			`json:"min_duration"`
 	MaxDuration 			int64			`json:"max_duration"`
 	AdvertisementDuration 	int64			`json:"advertisement_duration"`
-	Entitlements 			string			`json:"entitlements"`
-	Verification 			string			`json:"verification"`
-	Bypass 					string			`json:"bypass"`
+	EntitlementsModel 			string			`json:"entitlements_model"`
+	VerificationModel 			string			`json:"verification_model"`
+	BypassModel 					string			`json:"bypass_model"`
 	JsonValue				[]byte
 	Base64Value				string
 }
@@ -44,4 +45,8 @@ func NewShallowDisposition(id *string) ShallowDisposition {
 	c.ID = c.Model.ID
 	c.Model.ContentType = "shallow_disposition"
 	return c
+}
+
+func (c ShallowDisposition) Get(ctx context.Context, mode string) (*Disposition, *ShallowDisposition, error) {
+	return nil, nil, nil 
 }

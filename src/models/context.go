@@ -405,7 +405,7 @@ func (c ShallowContext) Get(ctx context.Context, mode string) (*Context, *Shallo
 		m.Model.CreatedAt = c.ShallowModel.CreatedAt
 		m.Model.UpdatedAt = c.ShallowModel.UpdatedAt
 		m.Model.ContentType = c.ShallowModel.ContentType
-		
+
 		promptptr, _, err := NewShallowPrompt(&c.PromptModel).Get(ctx, "full")
 		if err != nil {
 			return nil, nil, err
@@ -658,6 +658,20 @@ func NewShallowContext(id *string) ShallowContext {
 	}
 	c.ID = c.ShallowModel.ID
 	c.ShallowModel.ContentType = "shallow_context"
+	return c
+}
+
+func NewContext(id *string) Context {
+	c := Context{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.CreatedAt
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "context"
 	return c
 }
 

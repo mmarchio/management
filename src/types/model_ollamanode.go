@@ -176,7 +176,7 @@ func (c *OllamaNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponseModel, errchan chan error) error {
+func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponse, errchan chan error) error {
 	start := time.Now()
 	if c.OllamaModel == "" {
 		errchan <- fmt.Errorf("OllamaNode:OllamaModel is nil\n")
@@ -194,7 +194,7 @@ func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponseModel
 		return merrors.JSONMarshallingError{Package: "types", Struct:"OllamaNode", Function: "Call"}.Wrap(err)
 	}
 	fmt.Printf("req data %#v\n", oreq)
-	c.ResponseModel = OllamaResponseModel{}
+	c.ResponseModel = OllamaResponse{}
 	semaphore := make(chan struct{}, 1)
 	ctr := 1
 	for !c.ResponseModel.Done {
@@ -207,7 +207,7 @@ func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponseModel
 		go worker(c, req, respchan, errchan, semaphore)
 		workerResp := <- respchan
 		c.ResponseModel.Done = workerResp.Done
-		c.ResponseModel.ResponseModel = workerResp.ResponseModel
+		c.ResponseModel.Response = workerResp.Response
 		time.Sleep(5*time.Second)
 		ctr++
 	}
@@ -219,13 +219,13 @@ func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponseModel
 	return nil
 }
 
-func worker(c *OllamaNode, req *http.Request, respchan chan OllamaResponseModel, errchan chan error, semaphore chan struct{}) {
+func worker(c *OllamaNode, req *http.Request, respchan chan OllamaResponse, errchan chan error, semaphore chan struct{}) {
 	defer wg.Done()
 	defer func() { <-semaphore }()
 
 	semaphore <- struct{}{}
 	var err error
-	cresp := OllamaResponseModel{}
+	cresp := OllamaResponse{}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fmt.Printf("request err: %s\n", err.Error())
@@ -235,7 +235,7 @@ func worker(c *OllamaNode, req *http.Request, respchan chan OllamaResponseModel,
 		if err != nil {
 			errchan <- err
 		}
-		c.ResponseModel.ResponseModel = cresp.ResponseModel
+		c.ResponseModel.Response = cresp.Response
 		c.ResponseModel.Done = cresp.Done
 		respchan <- c.ResponseModel
 	}
@@ -297,7 +297,7 @@ func (c OllamaNode) Set(ctx context.Context) error {
 }
 
 func (c *OllamaNode) GetNodeFromWorkflow(id string, wf Workflow) {
-	for _, v := range wf.OllamaNodes {
+	for _, v := range wf.OllamaNodesArrayModel {
 		if id == v.Model.ID {
 			c = &v
 			break
@@ -316,9 +316,9 @@ func (c OllamaNode) Exec(ctx context.Context) error {
 		}
 		c.SystemPrompt = sp.Prompt
 	}
-	ResponseModel := make(chan OllamaResponseModel, 1000)
+	Response := make(chan OllamaResponse, 1000)
 	Error := make(chan error, 1)
-	go c.Call(ctx, ResponseModel, Error)
+	go c.Call(ctx, Response, Error)
 	go func(){
 		if len(Error) > 0 {
 			err := <- Error
@@ -330,17 +330,15 @@ func (c OllamaNode) Exec(ctx context.Context) error {
 	// go run(c, resp, ResponseModel, Error, 1, semaphore)
 	// wg.Add(1)
 	wg.Wait()
-
-	wf.Nodes[i].Params = p
-	if err := wf.Set(ctx); err != nil {
-		return err
-	}
+	resp := <-Response
+	c.Output = resp.Response
 	end := time.Now()
 	c.Context.GetResearchPromptModel.Start = start
 	c.Context.GetResearchPromptModel.End = end 
 	c.Context.GetResearchPromptModel.Status = "done"
-	c.Context.GetResearchPromptModel.Output = c.ResponseModel.ResponseModel
+	c.Context.GetResearchPromptModel.Output = c.ResponseModel.Response
 	if err := c.Set(ctx); err != nil {
 		return err
 	}
+	return nil
 }

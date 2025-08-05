@@ -23,7 +23,7 @@ type Steps struct {
 	GenerateAudioModel 					Toggle `json:"generate_audio_model"`
 	GenerateLipsyncModel 				Toggle `json:"generate_lipsync_model"`
 	GenerateThumbnailsModel 			Toggle `json:"generate_thumbnails_model"`
-	GenerateBackgroundCountextModel 	Toggle `json:"generate_background_context_model"`
+	GenerateBackgroundContextModel 	Toggle `json:"generate_background_context_model"`
 	GenerateBackgroundModel 			Toggle `json:"generate_background_model"`
 	FFMPEGLipsyncPostModel 				Toggle `json:"ffmpeg_lipsync_post_model"`
 	FFMPEGMergeModel 					Toggle `json:"ffmpeg_merge_model"`
@@ -64,8 +64,8 @@ func (c *Steps) New(parent ITable, contentType string) (string, error) {
 	c.GenerateLipsyncModel.New(*c)
 	c.GenerateThumbnailsModel.init()
 	c.GenerateThumbnailsModel.New(*c)
-	c.GenerateBackgroundCountextModel.init()
-	c.GenerateBackgroundCountextModel.New(*c)
+	c.GenerateBackgroundContextModel.init()
+	c.GenerateBackgroundContextModel.New(*c)
 	c.GenerateBackgroundModel.init()
 	c.GenerateBackgroundModel.New(*c)
 	c.FFMPEGLipsyncPostModel.init()
@@ -116,7 +116,7 @@ func (c Steps) FromModel(model models.Steps) Steps {
 	c.GenerateAudioModel = toggle.FromModel(model.GenerateAudioModel)
 	c.GenerateLipsyncModel = toggle.FromModel(model.GenerateLipsyncModel)
 	c.GenerateThumbnailsModel = toggle.FromModel(model.GenerateThumbnailsModel)
-	c.GenerateBackgroundCountextModel = toggle.FromModel(model.GenerateBackgroundModelCountextModel)
+	c.GenerateBackgroundContextModel = toggle.FromModel(model.GenerateBackgroundContextModel)
 	c.GenerateBackgroundModel = toggle.FromModel(model.GenerateBackgroundModel)
 	c.FFMPEGLipsyncPostModel = toggle.FromModel(model.FFMPEGLipsyncPostModel)
 	c.FFMPEGMergeModel = toggle.FromModel(model.FFMPEGMergeModel)
@@ -157,8 +157,8 @@ func (c Steps) Bind(e echo.Context) (Steps, error) {
 	if e.FormValue(c.GenerateThumbnailsModel.NamePrefix+c.GenerateThumbnailsModel.Suffix) == "on" {
 		c.GenerateThumbnailsModel.Value = true
 	}
-	if e.FormValue(c.GenerateBackgroundCountextModel.NamePrefix+c.GenerateBackgroundCountextModel.Suffix) == "on" {
-		c.GenerateBackgroundCountextModel.Value = true
+	if e.FormValue(c.GenerateBackgroundContextModel.NamePrefix+c.GenerateBackgroundContextModel.Suffix) == "on" {
+		c.GenerateBackgroundContextModel.Value = true
 	}
 	if e.FormValue(c.GenerateBackgroundModel.NamePrefix+c.GenerateBackgroundModel.Suffix) == "on" {
 		c.GenerateBackgroundModel.Value = true
@@ -193,7 +193,7 @@ func (c Steps) Truncate() map[string]interface{} {
 	msi["generate_audio"] = c.GenerateAudioModel.Value
 	msi["generate_lipsync"] = c.GenerateLipsyncModel.Value
 	msi["generate_thumbnails"] = c.GenerateThumbnailsModel.Value
-	msi["generate_background_context"] = c.GenerateBackgroundCountextModel.Value
+	msi["generate_background_context"] = c.GenerateBackgroundContextModel.Value
 	msi["generate_background"] = c.GenerateBackgroundModel.Value
 	msi["ffmpeg_lipsync_post"] = c.FFMPEGLipsyncPostModel.Value
 	msi["ffmpeg_merge"] = c.FFMPEGMergeModel.Value
@@ -214,7 +214,7 @@ func ValidateSteps(s Steps, prefix string) (Steps, error) {
 	s.GenerateAudioModel = ValidateToggle(s.GenerateAudioModel, uuid.NewString(), prefix, "generate_audio", "generate audio")
 	s.GenerateLipsyncModel = ValidateToggle(s.GenerateLipsyncModel, uuid.NewString(), prefix, "generate_lipsync", "generate audio")
 	s.GenerateThumbnailsModel = ValidateToggle(s.GenerateThumbnailsModel, uuid.NewString(), prefix, "generate_thumbnails", "generate thumbnails")
-	s.GenerateBackgroundCountextModel = ValidateToggle(s.GenerateBackgroundCountextModel, uuid.NewString(), prefix, "generate_background_context_images", "generate background context images")
+	s.GenerateBackgroundContextModel = ValidateToggle(s.GenerateBackgroundContextModel, uuid.NewString(), prefix, "generate_background_context_images", "generate background context images")
 	s.GenerateBackgroundModel = ValidateToggle(s.GenerateBackgroundModel, uuid.NewString(), prefix, "generate_background", "generate background")
 	s.FFMPEGLipsyncPostModel = ValidateToggle(s.FFMPEGLipsyncPostModel, uuid.NewString(), prefix, "ffmpeg_lipsync_post", "ffmpeg lipsync post")
 	s.FFMPEGMergeModel = ValidateToggle(s.FFMPEGMergeModel, uuid.NewString(), prefix, "ffmpeg_merge", "ffmpeg merge")

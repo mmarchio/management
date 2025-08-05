@@ -90,7 +90,13 @@ func (c ShallowOllamaNode) Get(ctx context.Context, mode string) (*OllamaNode, *
 		m.Enabled = c.Enabled
 		m.Bypass = c.Bypass
 		m.Output = c.Output
-		m.Context = NewShallowContext(&c.Context).Get(ctx, "full")
+		contextptr, _, err := NewShallowContext(&c.Context).Get(ctx, "full")
+		if err != nil {
+			return nil, nil, err
+		}
+		if contextptr != nil {
+			m.Context = *contextptr
+		}
 		return &m, nil, nil
 	}
 	return nil, nil, merrors.ShallowOllamaNodeGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))

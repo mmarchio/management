@@ -20,7 +20,7 @@ type Steps struct {
 	GenerateAudioModel 					Toggle `json:"generate_audio_model"`
 	GenerateLipsyncModel 				Toggle `json:"generate_lipsync_model"`
 	GenerateThumbnailsModel 			Toggle `json:"generate_thumbnails_model"`
-	GenerateBackgroundModelContextModel Toggle `json:"generate_background_context_model"`
+	GenerateBackgroundContextModel Toggle `json:"generate_background_context_model"`
 	GenerateBackgroundModel 			Toggle `json:"generate_background_model"`
 	FFMPEGLipsyncPostModel 				Toggle `json:"ffmpeg_lipsync_post_model"`
 	FFMPEGMergeModel 					Toggle `json:"ffmpeg_merge_model"`
@@ -43,7 +43,7 @@ type ShallowSteps struct {
 	GenerateAudioModel 					string `json:"generate_audio_model"`
 	GenerateLipsyncModel 				string `json:"generate_lipsync_model"`
 	GenerateThumbnailsModel 			string `json:"generate_thumbnails_model"`
-	GenerateBackgroundModelContextModel	string `json:"generate_background_context_model"`
+	GenerateBackgroundContextModel		string `json:"generate_background_context_model"`
 	GenerateBackgroundModel 			string `json:"generate_background_model"`
 	FFMPEGLipsyncPostModel 				string `json:"ffmpeg_lipsync_post_model"`
 	FFMPEGMergeModel 					string `json:"ffmpeg_merge_model"`
