@@ -21,7 +21,7 @@ type Content struct {
 }
 
 type ShallowContent struct {
-	Model
+	ShallowModel
 	ID string `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -32,14 +32,14 @@ type ShallowContent struct {
 func NewShallowContent(id *string) ShallowContent {
 	c := ShallowContent{}
 	if id != nil {
-		c.Model.ID = *id
+		c.ShallowModel.ID = *id
 	} else {
-		c.Model.ID = uuid.NewString()
-		c.Model.CreatedAt = time.Now()
-		c.Model.UpdatedAt = c.CreatedAt
+		c.ShallowModel.ID = uuid.NewString()
+		c.ShallowModel.CreatedAt = time.Now()
+		c.ShallowModel.UpdatedAt = c.CreatedAt
 	}
-	c.ID = c.Model.ID
-	c.Model.ContentType = "shallow_content"
+	c.ID = c.ShallowModel.ID
+	c.ShallowModel.ContentType = "shallow_content"
 	return c
 }
 
@@ -149,6 +149,26 @@ func (c Content) Set(ctx context.Context) error {
 	defer db.Close()
 	tx := database.GetPQTx(database.GetPQContext(ctx))
 	q := fmt.Sprintf("INSERT INTO content (%s) VALUES (%s) ON CONFLICT(id) %s RETURNING id", c.Model.Columns, c.Model.Values, c.Model.Conflict)
+	_, err := tx.Exec(q, c.Values()...)
+	if err != nil {
+		tx.Rollback()
+		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0])}.Wrap(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return merrors.TransactionCommitError{Info: "content set"}.Wrap(err)
+	}
+	return nil
+}
+
+func (c ShallowContent) Set(ctx context.Context) error {
+	c.Init()
+	ctx = database.GetPQContext(ctx)
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
+	tx := database.GetPQTx(ctx)
+	q := fmt.Sprintf("INSERT INTO content (%s) VALUES (%s) ON CONFLICT(id) %s RETURNING id", c.ShallowModel.Columns, c.ShallowModel.Values, c.ShallowModel.Conflict)
 	_, err := tx.Exec(q, c.Values()...)
 	if err != nil {
 		tx.Rollback()
@@ -309,7 +329,7 @@ func (c Content) Scan(ctx context.Context, rows Scannable) (Content, error) {
 
 func (c Content) ShallowScan(ctx context.Context, rows Scannable) (ShallowContent, error) {
 	sc := ShallowContent{}
-	err := rows.Scan(&sc.Model.ID, &sc.Model.CreatedAt, &sc.Model.UpdatedAt, &sc.Model.ContentType, &sc.Content)
+	err := rows.Scan(&sc.ShallowModel.ID, &sc.ShallowModel.CreatedAt, &sc.ShallowModel.UpdatedAt, &sc.ShallowModel.ContentType, &sc.Content)
 	if err != nil {
 		return sc, err
 	}
@@ -328,6 +348,22 @@ func (c Content) Values() []any {
 	r = append(r, c.Model.CreatedAt.Format(time.RFC3339))
 	r = append(r, c.Model.UpdatedAt.Format(time.RFC3339))
 	r = append(r, c.Model.ContentType)
+	r = append(r, c.Content)
+	return r
+}
+
+func (c ShallowContent) Values() []any {
+	r := make([]any, 0)
+	if c.ShallowModel.ID != "" {
+		r = append(r, c.ShallowModel.ID)
+	} else if c.ID != "" {
+		r = append(r, c.ID)
+	} else {
+		r = append(r, uuid.NewString())
+	}
+	r = append(r, c.ShallowModel.CreatedAt.Format(time.RFC3339))
+	r = append(r, c.ShallowModel.UpdatedAt.Format(time.RFC3339))
+	r = append(r, c.ShallowModel.ContentType)
 	r = append(r, c.Content)
 	return r
 }

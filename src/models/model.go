@@ -54,6 +54,12 @@ func (c *Model) Init() {
 	c.Conflict = "DO UPDATE SET updated_at = $3, content = $5"
 }
 
+func (c *ShallowModel) Init() {
+	c.Columns = "id, created_at, updated_at, content_type, content"
+	c.Values = "$1, $2, $3, $4, $5"
+	c.Conflict = "DO UPDATE SET updated_at = $3, content = $5"
+}
+
 func (c Model) Get(ctx context.Context, table ITable) (ITable, error) {
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)

@@ -12,6 +12,18 @@ type IID interface {
 	IsNil() bool
 }
 
+type ShallowModel struct {
+	ID 			string
+	CreatedAt 	time.Time
+	UpdatedAt 	time.Time
+	ContentType string
+	Table 		string
+	Columns 	string
+	Values 		string
+	Conflict 	string
+	Validated   bool
+}
+
 type Model struct {
 	ID 			string
 	CreatedAt 	time.Time

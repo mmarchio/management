@@ -27,6 +27,11 @@ type Content struct {
 	Content string `json:"content"`
 }
 
+type ShallowContent struct {
+	ShallowModel
+	Content string `json:"content"`
+}
+
 
 func (c Content) Scan(ctx context.Context, rows Scannable) (Content, error) {
 	err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Model.ContentType, &c.Content)

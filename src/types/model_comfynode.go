@@ -137,9 +137,30 @@ func (c *ComfyNode) Get(ctx context.Context) error {
 	return nil
 }
 
+func (c *ComfyNode) GetShallow(ctx context.Context) error {
+	content := NewComfyNodeTypeContent()
+	content.Model.ID = c.Model.ID
+	content.Model.ContentType = "comfynode"
+	content, err := content.Get(ctx)
+	if err != nil {
+		return merrors.NodeGetError{Info: c.Model.ID}.Wrap(err)
+	}
+	err = json.Unmarshal([]byte(content.Content), c)
+	if err != nil {
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+	}
+	return nil
+}
+
 func NewComfyNodeTypeContent() Content {
 	c := Content{}
 	c.Model.ContentType = "comfynode"
+	return c
+}
+
+func NewShallowComfyNodeTypeContent() ShallowContent {
+	c := ShallowContent{}
+	c.ShallowModel.ContentType = "comfynode"
 	return c
 }
 
