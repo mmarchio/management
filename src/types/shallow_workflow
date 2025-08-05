@@ -67,14 +67,14 @@ func NewShallowWorkflow(id *string) ShallowWorkflow {
 	return c
 } 
 
-func NewShallowWorkflowModelContent() models.Content {
-	c := models.Content{}
+func NewShallowWorkflowModelContent() models.ShallowContent {
+	c := models.ShallowContent{}
 	c.ShallowModel.ContentType = "shallowworkflow"
 	return c
 }
 
-func NewShallowWorkflowTypeContent() Content {
-	c := Content{}
+func NewShallowWorkflowTypeContent() ShallowContent {
+	c := ShallowContent{}
 	c.ShallowModel.ContentType = "shallowworkflow"
 	return c
 }

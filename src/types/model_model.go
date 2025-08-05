@@ -59,6 +59,16 @@ func (c *Model) New(id *string) {
 	c.UpdatedAt = c.CreatedAt
 }
 
+func (c *ShallowModel) New(id *string) {
+	if id != nil {
+		c.ID = *id
+	} else {
+		c.ID = uuid.NewString()
+	}
+	c.CreatedAt = time.Now()
+	c.UpdatedAt = c.CreatedAt
+}
+
 func (c Model) GetCtx(ctx context.Context) (*Context, error) {
 	typesContext := Context{}
 	systemContext, err := models.Context{}.GetCtx(ctx)

@@ -276,6 +276,43 @@ func (c Content) List(ctx context.Context) ([]Content, error) {
 	return r, nil
 }
 
+func (c ShallowContent) List(ctx context.Context) ([]ShallowContent, error) {
+	c.Init()
+	ctx = database.GetPQContext(ctx)
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
+	if db == nil {
+		return nil, merrors.DBConnectionError{}.Wrap(fmt.Errorf("db is nil"))
+	}
+
+	textOut := strings.Replace(c.ShallowModel.Columns, "e, content", "e, content::text", 1)
+	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1", textOut)
+	stmt, err := db.Prepare(q)
+	if err != nil {
+		return nil, merrors.DBPrepareStatementError{Info: q}.Wrap(err)
+	}
+	rows, err := stmt.Query(c.ShallowModel.ContentType)
+	if err != nil {
+		return nil, merrors.DBStatementQueryQueryError{Info: q}.Wrap(err)
+	}
+	r := make([]ShallowContent, 0)
+	for rows.Next() {
+		content, err := c.Scan(ctx, rows)
+		r = append(r, content)
+		if err != nil {
+			return nil, merrors.DBContentScanError{}.Wrap(err)
+		}
+		if rows.Err() != nil {
+			return nil, merrors.DBConnectionError{}.Wrap(err)
+		}
+	}
+	if rows.Err() != nil {
+		return nil, merrors.DBContentScanError{}.Wrap(err)
+	}
+	rows.Close()
+	return r, nil
+}
+
 func (c Content) ListBy(ctx context.Context, key, value interface{}) ([]Content, error) {
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
