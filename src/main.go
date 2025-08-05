@@ -121,21 +121,8 @@ func main() {
 
 	t := &Template{
 		Templates: template.Must(template.New("").Funcs(template.FuncMap{
-			"prettyJSON": func(v any)(template.HTML, error){
-				b, err := json.MarshalIndent(v, "", "  ")
-				if err != nil {
-					return "", err
-				}
-				return template.HTML(fmt.Sprintf("<pre>%s</pre>", strings.Replace(string(b), "\\\"", "\"", -1))), nil
-			},
-			"contains": func(needle any, haystack []types.Disposition) bool {
-				for _, h := range haystack {
-					if needle == h.Model.ID {
-						return true
-					}
-				}
-				return false
-			},
+			"prettyJSON": PrettyJSON,
+			"contains": Contains,
 		}).ParseGlob("public/views/*.tpl")),
 	}
 
@@ -149,7 +136,7 @@ func handleIndex(c echo.Context) error {
 }
 
 
-func prettyJSON(v interface{}) (template.HTML, error) {
+func PrettyJSON(v interface{}) (template.HTML, error) {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return "", err
@@ -157,7 +144,7 @@ func prettyJSON(v interface{}) (template.HTML, error) {
 	return template.HTML(fmt.Sprintf("<pre>%s</pre>", strings.Replace(string(b), "\\\"", "\"", -1))), nil
 }
 
-func contains(needle string, haystack []types.Disposition) bool {
+func Contains(needle string, haystack []types.Disposition) bool {
 	for _, h := range haystack {
 		if needle == h.Model.ID {
 			return true
