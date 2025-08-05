@@ -83,8 +83,24 @@ func (c *Model) FromModel(m models.Model) {
 	c.ContentType = m.ContentType
 }
 
+func (c *ShallowModel) FromModel(m models.ShallowModel) {
+	c.ID = m.ID
+	c.CreatedAt = m.CreatedAt
+	c.UpdatedAt = m.UpdatedAt
+	c.ContentType = m.ContentType
+}
+
 func (c Model) ToModel() models.Model {
 	m := models.Model{}
+	m.ID = c.ID
+	m.CreatedAt = c.CreatedAt
+	m.UpdatedAt = c.UpdatedAt
+	m.ContentType = c.ContentType
+	return m
+}
+
+func (c ShallowModel) ToModel() models.ShallowModel {
+	m := models.ShallowModel{}
 	m.ID = c.ID
 	m.CreatedAt = c.CreatedAt
 	m.UpdatedAt = c.UpdatedAt

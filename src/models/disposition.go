@@ -21,7 +21,7 @@ type Disposition struct {
 }
 
 type ShallowDisposition struct {
-	Model
+	ShallowModel
 	Name 					string			`json:"name"`
 	MinDuration 			int64			`json:"min_duration"`
 	MaxDuration 			int64			`json:"max_duration"`
@@ -36,14 +36,14 @@ type ShallowDisposition struct {
 func NewShallowDisposition(id *string) ShallowDisposition {
 	c := ShallowDisposition{}
 	if id != nil {
-		c.Model.ID = *id
+		c.ShallowModel.ID = *id
 	} else {
-		c.Model.ID = uuid.NewString()
-		c.Model.CreatedAt = time.Now()
-		c.Model.UpdatedAt = c.CreatedAt
+		c.ShallowModel.ID = uuid.NewString()
+		c.ShallowModel.CreatedAt = time.Now()
+		c.ShallowModel.UpdatedAt = c.CreatedAt
 	}
-	c.ID = c.Model.ID
-	c.Model.ContentType = "shallow_disposition"
+	c.ID = c.ShallowModel.ID
+	c.ShallowModel.ContentType = "shallow_disposition"
 	return c
 }
 

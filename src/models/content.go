@@ -113,6 +113,34 @@ func (c *Content) Get(ctx context.Context) error {
 	return nil
 }
 
+func (c *ShallowContent) Get(ctx context.Context) error {
+	c.Init()
+	ctx = database.GetPQContext(ctx)
+	db := database.GetPQDatabase(ctx)
+	var id string
+	if c.ShallowModel.ID != "" {
+		id = c.ShallowModel.ID
+	}
+	if c.ID != "" {
+		id = c.ID
+	}
+	defer db.Close()
+	q := fmt.Sprintf("SELECT %s FROM content WHERE id = '%s'::uuid OR content @> '{\"id\":\"%s\"}'", c.Columns, id, id)
+	rows, err := db.Query(q)
+	if err != nil {
+		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(err)
+	}
+	var t ShallowContent
+	for rows.Next() {
+		t, err = c.Scan(ctx, rows)
+		if err != nil {
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(err)
+		}
+		*c = t
+	}
+	return nil
+}
+
 func (c *Content) FindBy(ctx context.Context, key, value string) error {
 	c.Init()
 	ctx = database.GetPQContext(ctx)
@@ -240,6 +268,27 @@ func (c Content) ListBy(ctx context.Context, key, value interface{}) ([]Content,
 	return r, nil
 }
 
+func (c ShallowContent) ListBy(ctx context.Context, key, value interface{}) ([]ShallowContent, error) {
+	ctx = database.GetPQContext(ctx)
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
+	c.Init()
+	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1 AND content @> '{\"%s\":\"%v\"}'", c.ShallowModel.Columns, key, value)
+	rows, err := db.Query(q, c.ShallowModel.ContentType)
+	if err != nil {
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
+	}
+	r := make([]ShallowContent, 0)
+	for rows.Next() {
+		content, err := c.Scan(ctx, rows)
+		if err != nil {
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
+		}
+		r = append(r, content)
+	}
+	return r, nil
+}
+
 func (c Content) Delete(ctx context.Context) error {
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -321,6 +370,14 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 
 func (c Content) Scan(ctx context.Context, rows Scannable) (Content, error) {
 	err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Model.ContentType, &c.Content)
+	if err != nil {
+		return c, err
+	}
+	return c, nil
+}
+
+func (c ShallowContent) Scan(ctx context.Context, rows Scannable) (ShallowContent, error) {
+	err := rows.Scan(&c.ShallowModel.ID, &c.ShallowModel.CreatedAt, &c.ShallowModel.UpdatedAt, &c.ShallowModel.ContentType, &c.Content)
 	if err != nil {
 		return c, err
 	}
