@@ -11,14 +11,14 @@ import (
 
 type Stats struct {
 	EmbedModel
-	ID StatsID `json:"stats_id"`
-	Start time.Time `json:"start"`
-	End time.Time `json:"end"`
-	Input string `json:"input"`
-	Output string `json:"output"`
-	Duration time.Duration `json:"duration"`
-	Files []File `json:"files"`
-	Status string `json:"status"`
+	ID 				StatsID `json:"stats_id"`
+	Start 			time.Time `json:"start"`
+	End 			time.Time `json:"end"`
+	Input 			string `json:"input"`
+	Output 			string `json:"output"`
+	Duration 		time.Duration `json:"duration"`
+	FilesArrayModel []File `json:"files_array_model"`
+	Status 			string `json:"status"`
 }
 
 func (c *Stats) Unmarshal(ctx context.Context, j string) error {

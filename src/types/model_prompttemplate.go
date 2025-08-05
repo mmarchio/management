@@ -11,10 +11,10 @@ import (
 
 type PromptTemplate struct {
 	Model
-	ID PromptTemplateID `form:"id" json:"id"`
-	Name string `form:"name" json:"name"`
-	Template string `form:"template" json:"template"`
-	Vars string `form:"vars" json:"vars"`
+	ID 			PromptTemplateID `form:"id" json:"id"`
+	Name 		string `form:"name" json:"name"`
+	Template 	string `form:"template" json:"template"`
+	Vars 		string `form:"vars" json:"vars"`
 }
 
 

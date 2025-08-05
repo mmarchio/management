@@ -9,9 +9,9 @@ import (
 
 type ImageBackgroundContextOutput struct {
 	EmbedModel
-	ID ImageBackgroundContextOutputID `json:"id"`
-	Stats Stats `json:"stats"`
-	Files []File `json:"files"`
+	ID 					ImageBackgroundContextOutputID `json:"id"`
+	StatsModel 			Stats `json:"stats_model"`
+	FilesArrayModel 	[]File `json:"files_array_model"`
 }
 
 func (c *ImageBackgroundContextOutput) Unmarshal(ctx context.Context, j string) error {
@@ -25,6 +25,6 @@ func (c ImageBackgroundContextOutput) Marshal(ctx context.Context) (string, erro
 
 func (c ImageBackgroundContextOutput) New() ImageBackgroundContextOutput {
 	c.ID = ImageBackgroundContextOutputID(uuid.NewString())
-	c.Stats = c.Stats.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(c.ID.String())
 	return c
 }

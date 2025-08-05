@@ -8,9 +8,9 @@ import (
 
 type VideoOutput struct {
 	EmbedModel
-	ID VideoOutputID `json:"id"`
-	Stats Stats `json:"stats"`
-	Files []File `json:"files"`
+	ID 				VideoOutputID `json:"id"`
+	StatsModel 		Stats `json:"stats_model"`
+	FilesArrayModel []File `json:"files_model"`
 }
 
 func (c *VideoOutput) Unmarshal(ctx context.Context, j string) error {
@@ -19,6 +19,7 @@ func (c *VideoOutput) Unmarshal(ctx context.Context, j string) error {
 
 func (c VideoOutput) Marshal(ctx context.Context) (string, error) {
 	b, err := json.Marshal(c)
+	c.StatsModel = c.StatsModel.New(c.ID.String())
 	return string(b), err
 }
 

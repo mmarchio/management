@@ -123,7 +123,7 @@ func HandleJobRunsContextGet(c echo.Context) error {
 		if err := entity.Get(ctx); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		b, err := json.MarshalIndent(entity.TruncatedContext, "", "  ")
+		b, err := json.MarshalIndent(entity.TruncatedContextModel, "", "  ")
 		if err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.JSONMarshallingError{}.Wrap(err))
 		}
@@ -139,16 +139,16 @@ func HandleAPIJobRunsContextGet(c echo.Context) error {
 		if err := entity.Get(ctx); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		if entity.TruncatedContext.ID == "" {
-			tc, err := entity.Context.Truncate()
+		if entity.TruncatedContextModel.ID == "" {
+			tc, err := entity.ContextModel.Truncate()
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, err.Error())
 			}
 			if tc != nil {
-				entity.TruncatedContext = *tc
+				entity.TruncatedContextModel = *tc
 			}
 		}
-		return c.JSON(http.StatusOK, entity.TruncatedContext)
+		return c.JSON(http.StatusOK, entity.TruncatedContextModel)
 	}
 	return c.JSON(http.StatusBadRequest, "bad request: missing id")
 }
@@ -160,13 +160,13 @@ func HandleAPIJobRunsContextSet(c echo.Context) error {
 		if err := entity.Get(ctx); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		if entity.TruncatedContext.ID == "" {
-			tc, err := entity.Context.Truncate()
+		if entity.TruncatedContextModel.ID == "" {
+			tc, err := entity.ContextModel.Truncate()
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, err.Error())
 			}
 			if tc != nil {
-				entity.TruncatedContext = *tc
+				entity.TruncatedContextModel = *tc
 			}
 		}
 		tc := types.TruncatedContext{}
@@ -188,7 +188,7 @@ func HandleJobRunsContextSet(c echo.Context) error {
 		if err := jobRun.Get(ctx); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		Ctx, err := jobRun.Context.Truncate()
+		Ctx, err := jobRun.ContextModel.Truncate()
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}

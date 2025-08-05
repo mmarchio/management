@@ -39,7 +39,7 @@ type Prompt struct {
 	Domain 		string 		`form:"domain" json:"domain"`
 	Category 	string 		`form:"category" json:"category"`
 	Characters 	[]Character `form:"characters" json:"characters"`
-	Settings 	Settings 	`form:"settings" json:"settings"`
+	SettingsModel 	Settings 	`form:"settings" json:"settings_model"`
 }
 
 func (c *Prompt) New(id *string) {
@@ -51,7 +51,7 @@ func (c *Prompt) New(id *string) {
 	c.ID = PromptID(c.Model.ID)
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
-	c.Settings.New()
+	c.SettingsModel.New()
 }
 
 
@@ -131,7 +131,7 @@ func (c Prompt) Delete(ctx context.Context) error {
 func (c Prompt) GetDispositions(ctx context.Context) (Prompt, error) {
 	var err error
 	disposition := NewDisposition(nil)
-	c.Settings.Template.AvailableDispositions, err = disposition.List(ctx)
+	c.SettingsModel.Template.AvailableDispositions, err = disposition.List(ctx)
 	if err != nil {
 		return c, merrors.DispositionListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
 	}
@@ -161,14 +161,14 @@ func (c Prompt) SetID() (Prompt, error) {
 
 func ValidatePrompt(p Prompt) (Prompt, error) {
 	var err error
-	p.Settings.GlobalBypass, err = ValidateSteps(p.Settings.GlobalBypass, "global_bypass_")
-	p.Settings.Recurring = ValidateToggle(p.Settings.Recurring, uuid.NewString(), "prompt_settings_", "recurring", "recurring")
+	p.SettingsModel.GlobalBypass, err = ValidateSteps(p.SettingsModel.GlobalBypass, "global_bypass_")
+	p.SettingsModel.Recurring = ValidateToggle(p.SettingsModel.Recurring, uuid.NewString(), "prompt_settings_", "recurring", "recurring")
 	return p, err
 }
 
 func (c Prompt) Bind(e echo.Context) (Prompt, error) {
 	var err error
-	c.Settings = c.Settings.Bind(e)
+	c.SettingsModel = c.SettingsModel.Bind(e)
 	return c, err
 }
 

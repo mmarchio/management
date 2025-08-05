@@ -13,12 +13,12 @@ import (
 
 type Workflow struct {
 	Model
-	ID 			WorkflowID 		`form: "id" json:"id"`
-	Name 		string 			`form: "name" json:"name"`
-	ComfyNodes 	[]ComfyNode 	`form: "comfy_nodes" json: "comfy_nodes"`
-	OllamaNodes []OllamaNode 	`form: "ollama_nodes" json: "ollama_nodes"`
-	SSHNodes 	[]SSHNode 		`form: "ssh_nodes" json: "ssh_nodes"`
-	NodeOrder 	map[string]int 	`form: "node_order" "json: "node_order"`
+	ID 						WorkflowID 		`form: "id" json:"id"`
+	Name 					string 			`form: "name" json:"name"`
+	ComfyNodesArrayModel 	[]ComfyNode 	`form: "comfy_nodes" json: "comfy_nodes_array_model"`
+	OllamaNodesArrayModel 	[]OllamaNode 	`form: "ollama_nodes" json: "ollama_nodes_array_model"`
+	SSHNodesArrayModel 		[]SSHNode 		`form: "ssh_nodes" json: "ssh_nodes_array_model"`
+	NodeOrder 				map[string]int 	`form: "node_order" "json: "node_order"`
 }
 
 func (c *Workflow) Validate() {
@@ -35,21 +35,21 @@ func (c *Workflow) Validate() {
 		fmt.Printf("types.workflow.name is nil")
 		valid = false
 	}
-	for _, node := range c.ComfyNodes {
+	for _, node := range c.ComfyNodesArrayModel {
 		node.Validate()
 		if !node.Model.Validated {
 			fmt.Printf("types.workflow.node[%s] failed validation\n", node.Model.ID)
 			valid = false
 		}
 	}
-	for _, node := range c.OllamaNodes {
+	for _, node := range c.OllamaNodesArrayModel {
 		node.Validate()
 		if !node.Model.Validated {
 			fmt.Printf("types.workflow.node[%s] failed validation\n", node.Model.ID)
 			valid = false
 		}
 	}
-	for _, node := range c.SSHNodes {
+	for _, node := range c.SSHNodesArrayModel {
 		node.Validate()
 		if !node.Model.Validated {
 			fmt.Printf("types.workflow.node[%s] failed validation\n", node.Model.ID)
@@ -225,35 +225,35 @@ func (c *Workflow) CutNode(id string) {
 	found := false
 	if !found {
 		comfynodes := make([]ComfyNode, 0)
-		for _, v := range c.ComfyNodes {
+		for _, v := range c.ComfyNodesArrayModel {
 			if v.Model.ID == id {
 				found = true
 				continue
 			}
 			comfynodes = append(comfynodes, v)
 		}
-		c.ComfyNodes = comfynodes
+		c.ComfyNodesArrayModel = comfynodes
 	}
 	if !found {
 		ollamanodes := make([]OllamaNode, 0)
-		for _, v := range c.OllamaNodes {
+		for _, v := range c.OllamaNodesArrayModel {
 			if v.Model.ID == id {
 				found = true
 				continue
 			}
 			ollamanodes = append(ollamanodes, v)
 		}
-		c.OllamaNodes = ollamanodes
+		c.OllamaNodesArrayModel = ollamanodes
 	}
 	if !found {
 		sshnodes := make([]SSHNode, 0)
-		for _, v := range c.SSHNodes {
+		for _, v := range c.SSHNodesArrayModel {
 			if v.Model.ID == id {
 				found = true
 				continue
 			}
 			sshnodes = append(sshnodes, v)
 		}
-		c.SSHNodes = sshnodes
+		c.SSHNodesArrayModel = sshnodes
 	}
 }

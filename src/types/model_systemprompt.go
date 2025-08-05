@@ -32,10 +32,10 @@ func NewSystemPromptTypeContent() Content {
 
 type SystemPrompt struct {
 	Model
-	ID SystemPromptID `form:"id" json:"id"`
-	Name string `form:"name" json:"name"`
-	Domain string `form:"domain" json:"domain"`
-	Prompt string `form:"prompt" json:"prompt"`
+	ID 		SystemPromptID `form:"id" json:"id"`
+	Name 	string `form:"name" json:"name"`
+	Domain 	string `form:"domain" json:"domain"`
+	Prompt 	string `form:"prompt" json:"prompt"`
 }
 
 func (c *SystemPrompt) New(id *string) {

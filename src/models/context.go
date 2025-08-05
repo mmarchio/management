@@ -17,73 +17,73 @@ var contextKey ContextKeyT = 3
 
 type Context struct {
 	Model
-	Prompt 							Prompt `json:"prompt"`
-	Disposition 					Disposition `json:"disposition"`
-	JobRunID 						string `json:"job_run_id"`
-	Settings 						Settings `json:"settings"`
-	GetResearchPrompt 				Stats `json:"get_research_prompt"`
-	GetResearchOutput 				Stats `json:"get_research_output"`
-	ScreenwritingPrompt 			Stats `json:"screenwriting_prompt"`
-	ScreenWritingOutput 			Stats `json:"screenwriting_output"`
-	VideoPrompt 					Stats `json:"video_prompt"`
-	AudioPrompt 					Stats `json:"audio_prompt"`
-	AudioOutput 					AudioOutput `json:"audio_output"`
-	VideoLipsyncOutput 				VideoLipsyncOutput `json:"video_lipsync_output"`
-	VideoTransparencyOutput 		VideoTransparancyOutput `json:"video_transparency_output"`
-	VideoBackgroundOutput 			VideoBackgroundOutput `json:"video_background_output"`
-	VideoLayerMerge 				VideoLayerMergeOutput `json:"video_layer_merge"`
-	VideoJoin 						[]Scene `json:"video_join"`
-	ImageThumbnailPrompt 			Stats `json:"image_thumbnail_prompt"`
-	ImageThumbnailOutput 			ImageThumbnailOutput `json:"image_thumbnail_output"`
-	ImageBackgroundContextOutput 	ImageBackgroundContextOutput `json:"image_background_context_output"`
-	PublishVideoYoutube 			Stats `json:"publish_video_youtube"`
-	PublishVideoTiktok 				Stats `json:"publish_video_tiktok"`
-	PublishVideoRumble 				Stats `json:"publish_video_rumble"`
-	PublishVideoFacebook 			Stats `json:"publish_video_facebook"`
-	PublishSocialFacebook 			Stats `json:"publish_social_facebook"`
-	PublishSocialX 					Stats `json:"publish_social_x"`
-	PublishSocialYoutube 			Stats `json:"publish_social_youtube"`
-	PublishSocialTruth 				Stats `json:"publish_social_truth"`
+	PromptModel 						Prompt `json:"prompt_model"`
+	DispositionModel 					Disposition `json:"disposition_model"`
+	JobRunID 							string `json:"job_run_id"`
+	SettingsModel 						Settings `json:"settings_model"`
+	GetResearchPromptModel 				Stats `json:"get_research_prompt_model"`
+	GetResearchOutputModel 				Stats `json:"get_research_output_model"`
+	ScreenwritingPromptModel 			Stats `json:"screenwriting_prompt_model"`
+	ScreenWritingOutputModel 			Stats `json:"screenwriting_output_model"`
+	VideoPromptModel 					Stats `json:"video_prompt_model"`
+	AudioPromptModel 					Stats `json:"audio_prompt_model"`
+	AudioOutputModel 					AudioOutputModel `json:"audio_output_model"`
+	VideoLipsyncOutputModel 			VideoLipsyncOutputModel `json:"video_lipsync_output_model"`
+	VideoTransparencyOutputModel 		VideoTransparancyOutput `json:"video_transparency_output_model"`
+	VideoBackgroundOutputModel 			VideoBackgroundOutputModel `json:"video_background_output_model"`
+	VideoLayerMergeModel 				VideoLayerMergeModelOutput `json:"video_layer_merge_model"`
+	VideoJoinArrayModel 				[]Scene `json:"video_join_array_model"`
+	ImageThumbnailPromptModel 			Stats `json:"image_thumbnail_prompt_model"`
+	ImageThumbnailOutputModel 			ImageThumbnailOutputModel `json:"image_thumbnail_output_model"`
+	ImageBackgroundContextOutputModel 	ImageBackgroundContextOutputModel `json:"image_background_context_output_model"`
+	PublishVideoYoutubeModel 			Stats `json:"publish_video_youtube_model"`
+	PublishVideoTiktokModel 			Stats `json:"publish_video_tiktok_model"`
+	PublishVideoRumbleModel 			Stats `json:"publish_video_rumble_model"`
+	PublishVideoFacebookModel 			Stats `json:"publish_video_facebook_model"`
+	PublishSocialFacebookModel 			Stats `json:"publish_social_facebook_model"`
+	PublishSocialXModel 				Stats `json:"publish_social_x_model"`
+	PublishSocialYoutubeModel 			Stats `json:"publish_social_youtube_model"`
+	PublishSocialTruthModel 			Stats `json:"publish_social_truth_model"`
 }
 
 type ShallowContext struct {
 	ShallowModel
-	Prompt 							string `json:"prompt"`
-	Disposition 					string `json:"disposition"`
-	JobRunID 						string `json:"job_run_id"`
-	Settings 						string `json:"settings"`
-	GetResearchPrompt 				string `json:"get_research_prompt"`
-	GetResearchOutput 				string `json:"get_research_output"`
-	ScreenwritingPrompt 			string `json:"screenwriting_prompt"`
-	ScreenWritingOutput 			string `json:"screenwriting_output"`
-	VideoPrompt 					string `json:"video_prompt"`
-	AudioPrompt 					string `json:"audio_prompt"`
-	AudioOutput 					string `json:"audio_output"`
-	VideoLipsyncOutput 				string `json:"video_lipsync_output"`
-	VideoTransparencyOutput 		string `json:"video_transparency_output"`
-	VideoBackgroundOutput 			string `json:"video_background_output"`
-	VideoLayerMerge 				string `json:"video_layer_merge"`
-	VideoJoin 						[]string `json:"video_join"`
-	ImageThumbnailPrompt 			string `json:"image_thumbnail_prompt"`
-	ImageThumbnailOutput 			string `json:"image_thumbnail_output"`
-	ImageBackgroundContextOutput 	string `json:"image_background_context_output"`
-	PublishVideoYoutube 			string `json:"publish_video_youtube"`
-	PublishVideoTiktok 				string `json:"publish_video_tiktok"`
-	PublishVideoRumble 				string `json:"publish_video_rumble"`
-	PublishVideoFacebook 			string `json:"publish_video_facebook"`
-	PublishSocialFacebook 			string `json:"publish_social_facebook"`
-	PublishSocialX 					string `json:"publish_social_x"`
-	PublishSocialYoutube 			string `json:"publish_social_youtube"`
-	PublishSocialTruth 				string `json:"publish_social_truth"`
+	PromptModel 						string `json:"prompt_model"`
+	DispositionModel 					string `json:"disposition_model"`
+	JobRunID 							string `json:"job_run_id"`
+	SettingsModel 						string `json:"settings_model"`
+	GetResearchPromptModel 				string `json:"get_research_prompt_model"`
+	GetResearchOutputModel 				string `json:"get_research_output_model"`
+	ScreenwritingPromptModel 			string `json:"screenwriting_prompt_model"`
+	ScreenWritingOutputModel 			string `json:"screenwriting_output_model"`
+	VideoPromptModel 					string `json:"video_prompt_model"`
+	AudioPromptModel 					string `json:"audio_prompt_model"`
+	AudioOutputModel 					string `json:"audio_output_model"`
+	VideoLipsyncOutputModel 			string `json:"video_lipsync_output_model"`
+	VideoTransparencyOutputModel 		string `json:"video_transparency_output_model"`
+	VideoBackgroundOutputModel 			string `json:"video_background_output_model"`
+	VideoLayerMergeModel 				string `json:"video_layer_merge_model"`
+	VideoJoinArrayModel 				[]string `json:"video_join_array_model"`
+	ImageThumbnailPromptModel 			string `json:"image_thumbnail_prompt_model"`
+	ImageThumbnailOutputModel 			string `json:"image_thumbnail_output_model"`
+	ImageBackgroundContextOutputModel 	string `json:"image_background_context_output_model"`
+	PublishVideoYoutubeModel 			string `json:"publish_video_youtube_model"`
+	PublishVideoTiktokModel 			string `json:"publish_video_tiktok_model"`
+	PublishVideoRumbleModel 			string `json:"publish_video_rumble_model"`
+	PublishVideoFacebookModel 			string `json:"publish_video_facebook_model"`
+	PublishSocialFacebookModel 			string `json:"publish_social_facebook_model"`
+	PublishSocialXModel 				string `json:"publish_social_x_model"`
+	PublishSocialYoutubeModel 			string `json:"publish_social_youtube_model"`
+	PublishSocialTruthModel 			string `json:"publish_social_truth_model"`
 }
 
 func (c ShallowContext) Set(ctx context.Context) error {
 	return nil
 }
 
-func (c ShallowContext) SetPrompt(ctx context.Context, id string) error {
+func (c ShallowContext) SetPromptModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.Prompt = id
+	c.PromptModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -92,9 +92,9 @@ func (c ShallowContext) SetPrompt(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c ShallowContext) SetDisposition(ctx context.Context, id string) error {
+func (c ShallowContext) SetDispositionModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.Disposition = id
+	c.DispositionModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -103,9 +103,9 @@ func (c ShallowContext) SetDisposition(ctx context.Context, id string) error {
 	return nil	
 }
 
-func (c ShallowContext) SetSettings(ctx context.Context, id string) error {
+func (c ShallowContext) SetSettingsModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.Settings = id
+	c.SettingsModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -114,9 +114,9 @@ func (c ShallowContext) SetSettings(ctx context.Context, id string) error {
 	return nil	
 }
 
-func (c ShallowContext) SetGetResearchPrompt(ctx context.Context, id string) error {
+func (c ShallowContext) SetGetResearchPromptModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.GetResearchPrompt = id
+	c.GetResearchPromptModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -125,9 +125,9 @@ func (c ShallowContext) SetGetResearchPrompt(ctx context.Context, id string) err
 	return nil	
 }
 
-func (c ShallowContext) SetGetResearchOutput(ctx context.Context, id string) error {
+func (c ShallowContext) SetGetResearchOutputModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.GetResearchOutput = id
+	c.GetResearchOutputModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -148,7 +148,7 @@ func (c ShallowContext) SetJobRunID(ctx context.Context, id string) error {
 
 func (c ShallowContext) SetScreenwritingOutput(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.ScreenWritingOutput = id
+	c.ScreenWritingOutputModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -157,9 +157,9 @@ func (c ShallowContext) SetScreenwritingOutput(ctx context.Context, id string) e
 	return nil	
 }
 
-func (c ShallowContext) SetScreenwritingPrompt(ctx context.Context, id string) error {
+func (c ShallowContext) SetScreenwritingPromptModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.ScreenwritingPrompt = id
+	c.ScreenwritingPromptModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -168,9 +168,9 @@ func (c ShallowContext) SetScreenwritingPrompt(ctx context.Context, id string) e
 	return nil	
 }
 
-func (c ShallowContext) SetVideoPrompt(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoPromptModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.VideoPrompt = id
+	c.VideoPromptModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -179,9 +179,9 @@ func (c ShallowContext) SetVideoPrompt(ctx context.Context, id string) error {
 	return nil	
 }
 
-func (c ShallowContext) SetAudioPrompt(ctx context.Context, id string) error {
+func (c ShallowContext) SetAudioPromptModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.AudioPrompt = id
+	c.AudioPromptModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -190,9 +190,9 @@ func (c ShallowContext) SetAudioPrompt(ctx context.Context, id string) error {
 	return nil	
 }
 
-func (c ShallowContext) SetAudioOutput(ctx context.Context, id string) error {
+func (c ShallowContext) SetAudioOutputModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.AudioOutput = id
+	c.AudioOutputModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -201,9 +201,9 @@ func (c ShallowContext) SetAudioOutput(ctx context.Context, id string) error {
 	return nil	
 }
 
-func (c ShallowContext) SetVideoLipsyncOutput(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoLipsyncOutputModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.VideoLipsyncOutput = id
+	c.VideoLipsyncOutputModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -212,9 +212,9 @@ func (c ShallowContext) SetVideoLipsyncOutput(ctx context.Context, id string) er
 	return nil	
 }
 
-func (c ShallowContext) SetVideoTransparencyOutput(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoTransparencyOutputModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.VideoTransparencyOutput = id
+	c.VideoTransparencyOutputModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -223,9 +223,9 @@ func (c ShallowContext) SetVideoTransparencyOutput(ctx context.Context, id strin
 	return nil	
 }
 
-func (c ShallowContext) SetVideoBackgroundOutput(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoBackgroundOutputModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.VideoBackgroundOutput = id
+	c.VideoBackgroundOutputModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -234,9 +234,9 @@ func (c ShallowContext) SetVideoBackgroundOutput(ctx context.Context, id string)
 	return nil	
 }
 
-func (c ShallowContext) SetVideoLayerMerge(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoLayerMergeModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.VideoLayerMerge = id
+	c.VideoLayerMergeModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -245,9 +245,9 @@ func (c ShallowContext) SetVideoLayerMerge(ctx context.Context, id string) error
 	return nil	
 }
 
-func (c ShallowContext) SetVideoJoin(ctx context.Context, ids []string) error {
+func (c ShallowContext) SetVideoJoinArrayModel(ctx context.Context, ids []string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, ids...)
-	c.VideoJoin = ids
+	c.VideoJoinArrayModel = ids
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -256,9 +256,9 @@ func (c ShallowContext) SetVideoJoin(ctx context.Context, ids []string) error {
 	return nil	
 }
 
-func (c ShallowContext) AppendVideoJoin(ctx context.Context, id string) error {
+func (c ShallowContext) AppendVideoJoinArrayModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.VideoJoin = append(c.VideoJoin, id)
+	c.VideoJoinArrayModel = append(c.VideoJoinArrayModel, id)
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -267,9 +267,9 @@ func (c ShallowContext) AppendVideoJoin(ctx context.Context, id string) error {
 	return nil	
 }
 
-func (c ShallowContext) SetImageThumbnailPrompt(ctx context.Context, id string) error {
+func (c ShallowContext) SetImageThumbnailPromptModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.ImageThumbnailPrompt = id
+	c.ImageThumbnailPromptModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -278,9 +278,9 @@ func (c ShallowContext) SetImageThumbnailPrompt(ctx context.Context, id string) 
 	return nil	
 }
 
-func (c ShallowContext) SetImageThumbnailOutput(ctx context.Context, id string) error {
+func (c ShallowContext) SetImageThumbnailOutputModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.ImageThumbnailOutput = id
+	c.ImageThumbnailOutputModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -289,9 +289,9 @@ func (c ShallowContext) SetImageThumbnailOutput(ctx context.Context, id string) 
 	return nil	
 }
 
-func (c ShallowContext) SetImageBackgroundContextOutput(ctx context.Context, id string) error {
+func (c ShallowContext) SetImageBackgroundContextOutputModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.ImageBackgroundContextOutput = id
+	c.ImageBackgroundContextOutputModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -300,9 +300,9 @@ func (c ShallowContext) SetImageBackgroundContextOutput(ctx context.Context, id 
 	return nil	
 }
 
-func (c ShallowContext) SetPublishVideoYoutube(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishVideoYoutubeModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.PublishVideoYoutube = id
+	c.PublishVideoYoutubeModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -311,9 +311,9 @@ func (c ShallowContext) SetPublishVideoYoutube(ctx context.Context, id string) e
 	return nil	
 }
 
-func (c ShallowContext) SetPublishVideoTiktok(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishVideoTiktokModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.PublishVideoTiktok = id
+	c.PublishVideoTiktokModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -322,9 +322,9 @@ func (c ShallowContext) SetPublishVideoTiktok(ctx context.Context, id string) er
 	return nil	
 }
 
-func (c ShallowContext) SetPublishVideoRumble(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishVideoRumbleModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.PublishVideoRumble = id
+	c.PublishVideoRumbleModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -333,9 +333,9 @@ func (c ShallowContext) SetPublishVideoRumble(ctx context.Context, id string) er
 	return nil	
 }
 
-func (c ShallowContext) SetPublishVideoFacebook(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishVideoFacebookModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.PublishVideoFacebook = id
+	c.PublishVideoFacebookModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -344,9 +344,9 @@ func (c ShallowContext) SetPublishVideoFacebook(ctx context.Context, id string) 
 	return nil	
 }
 
-func (c ShallowContext) SetPublishSocialFacebook(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishSocialFacebookModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.PublishSocialFacebook = id
+	c.PublishSocialFacebookModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -355,9 +355,9 @@ func (c ShallowContext) SetPublishSocialFacebook(ctx context.Context, id string)
 	return nil	
 }
 
-func (c ShallowContext) SetPublishSocialTruth(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishSocialTruthModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.PublishSocialTruth = id
+	c.PublishSocialTruthModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -366,9 +366,9 @@ func (c ShallowContext) SetPublishSocialTruth(ctx context.Context, id string) er
 	return nil	
 }
 
-func (c ShallowContext) SetPublishSocialX(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishSocialXModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.PublishSocialX = id
+	c.PublishSocialXModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -377,9 +377,9 @@ func (c ShallowContext) SetPublishSocialX(ctx context.Context, id string) error 
 	return nil	
 }
 
-func (c ShallowContext) SetPublishSocialYoutube(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishSocialYoutubeModel(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.PublishSocialYoutube = id
+	c.PublishSocialYoutubeModel = id
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -387,13 +387,11 @@ func (c ShallowContext) SetPublishSocialYoutube(ctx context.Context, id string) 
 	}
 	return nil	
 }
-
-
 
 func (c ShallowContext) Get(ctx context.Context, mode string) (*Context, *ShallowContext, error) {
-	content := Content{ID: c.Model.ID}
+	content := Content{ID: c.ShallowModel.ID}
 	if err := content.Get(ctx); err != nil {
-		return nil, nil, merrors.ShallowWorkflowGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ShallowWorkflowGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
 		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
@@ -403,20 +401,24 @@ func (c ShallowContext) Get(ctx context.Context, mode string) (*Context, *Shallo
 	}
 	if mode == "full" {
 		m := Context{}
-		m.Model = c.Model
-		promptptr, _, err := NewShallowPrompt(&c.Prompt).Get(ctx, "full")
+		m.Model.ID = c.ShallowModel.ID
+		m.Model.CreatedAt = c.ShallowModel.CreatedAt
+		m.Model.UpdatedAt = c.ShallowModel.UpdatedAt
+		m.Model.ContentType = c.ShallowModel.ContentType
+		
+		promptptr, _, err := NewShallowPrompt(&c.PromptModel).Get(ctx, "full")
 		if err != nil {
 			return nil, nil, err
 		}
 		if promptptr != nil {
-			m.Prompt = *promptptr
+			m.PromptModel = *promptptr
 		}
-		dispositionptr, _, err := NewShallowDisposition(&c.Disposition).Get(ctx, "full")
+		dispositionptr, _, err := NewShallowDisposition(&c.DispositionModel).Get(ctx, "full")
 		if err != nil {
 			return nil, nil, err
 		}
 		if dispositionptr != nil {
-			m.Disposition = *dispositionptr
+			m.DispositionModel = *dispositionptr
 		}
 
 	}
@@ -431,20 +433,20 @@ type Stats struct {
 	Input 		string `json:"input"`
 	Output 		string `json:"output"`
 	Duration 	time.Duration `json:"duration"`
-	Files 		[]File `json:"files"`
-	Status 		string `json:"status"`
+	FilesArrayModel	[]File `json:"files_array_model"`
+	Status		string `json:"status"`
 }
 
 type ShallowStats struct {
 	ShallowModel
-	ID 			string `json:"stats_id"`
-	Start 		time.Time `json:"start"`
-	End 		time.Time `json:"end"`
-	Input 		string `json:"input"`
-	Output 		string `json:"output"`
-	Duration 	time.Duration `json:"duration"`
-	Files 		[]string `json:"files"`
-	Status 		string `json:"status"`
+	ID 				string `json:"stats_id"`
+	Start 			time.Time `json:"start"`
+	End 			time.Time `json:"end"`
+	Input 			string `json:"input"`
+	Output 			string `json:"output"`
+	Duration 		time.Duration `json:"duration"`
+	FilesArrayModel	[]string `json:"files_array_model"`
+	Status			string `json:"status"`
 }
 
 func (c ShallowStats) Set(ctx context.Context) error {
@@ -503,7 +505,7 @@ func (c ShallowStats) SetDuration(ctx context.Context, id time.Duration) error {
 
 func (c ShallowStats) SetFiles(ctx context.Context, ids []string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, ids...)
-	c.Files = ids
+	c.FilesArrayModel = ids
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -514,7 +516,7 @@ func (c ShallowStats) SetFiles(ctx context.Context, ids []string) error {
 
 func (c ShallowStats) AppendFiles(ctx context.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
-	c.Files = append(c.Files, id)
+	c.FilesArrayModel = append(c.FilesArrayModel, id)
 	if c.ShallowModel.ID != "" {
 		if err := c.Set(ctx); err != nil {
 			return err
@@ -584,15 +586,15 @@ func NewShallowFile(id *string) ShallowFile {
 type Output struct {
 	Model
 	ID string `json:"id"`
-	Stats Stats `json:"stats"`
-	Files []File `json:"files"`
+	FilesModel	[]File `json:"files_array_model"`
+	StatusModel	string `json:"status_model"`
 }
 
 type ShallowOutput struct {
 	ShallowModel
 	ID string `json:"id"`
-	Stats string `json:"stats"`
-	Files []string `json:"files"`
+	FilesModel	[]File `json:"files_array_model"`
+	StatusModel	string `json:"status_model"`
 }
 
 func NewShallowOutput(id *string) ShallowOutput {
@@ -616,8 +618,8 @@ type Scene struct {
 	End time.Time `json:"end"`
 	SceneNumber int64 `json:"scene_number"`
 	Path string `json:"path"`
-	Files []File `json:"files"`
-	SceneFile File `json:"scene_file"`
+	FilesArrayModel []File `json:"files_array_model"`
+	SceneFileModel File `json:"scene_file_model"`
 }
 
 type ShallowScene struct {
@@ -627,8 +629,8 @@ type ShallowScene struct {
 	End time.Time `json:"end"`
 	SceneNumber int64 `json:"scene_number"`
 	Path string `json:"path"`
-	Files []string `json:"files"`
-	SceneFile string `json:"scene_file"`
+	FilesArrayModel []string `json:"files_array_model"`
+	SceneFile string `json:"scene_file_model"`
 }
 
 func NewShallowScene(id *string) ShallowScene {
@@ -659,11 +661,11 @@ func NewShallowContext(id *string) ShallowContext {
 	return c
 }
 
-type AudioOutput Output
-type ShallowAudioOutput ShallowOutput
+type AudioOutputModel Output
+type ShallowAudioOutputModel ShallowOutput
 
-func NewShallowAudioOutput(id *string) ShallowAudioOutput {
-	c := ShallowAudioOutput{}
+func NewShallowAudioOutputModel(id *string) ShallowAudioOutputModel {
+	c := ShallowAudioOutputModel{}
 	if id != nil {
 		c.ShallowModel.ID = *id
 	} else {
@@ -677,11 +679,11 @@ func NewShallowAudioOutput(id *string) ShallowAudioOutput {
 }
 
 
-type VideoLipsyncOutput Output
-type ShallowVideoLipsyncOutput ShallowOutput
+type VideoLipsyncOutputModel Output
+type ShallowVideoLipsyncOutputModel ShallowOutput
 
-func NewShallowVideoLipsyncOutput(id *string) ShallowVideoLipsyncOutput {
-	c := ShallowVideoLipsyncOutput{}
+func NewShallowVideoLipsyncOutputModel(id *string) ShallowVideoLipsyncOutputModel {
+	c := ShallowVideoLipsyncOutputModel{}
 	if id != nil {
 		c.ShallowModel.ID = *id
 	} else {
@@ -697,7 +699,7 @@ func NewShallowVideoLipsyncOutput(id *string) ShallowVideoLipsyncOutput {
 type VideoTransparancyOutput Output
 type ShallowVideoTransparancyOutput ShallowOutput
 
-func NewShallowVideoTransparencyOutput(id *string) ShallowVideoTransparancyOutput {
+func NewShallowVideoTransparencyOutputModel(id *string) ShallowVideoTransparancyOutput {
 	c := ShallowVideoTransparancyOutput{}
 	if id != nil {
 		c.ShallowModel.ID = *id
@@ -711,11 +713,11 @@ func NewShallowVideoTransparencyOutput(id *string) ShallowVideoTransparancyOutpu
 	return c
 }
 
-type VideoBackgroundOutput Output
-type ShallowVideoBackgroundOutput ShallowOutput
+type VideoBackgroundOutputModel Output
+type ShallowVideoBackgroundOutputModel ShallowOutput
 
-func NewShallowVideoBackgroundOutput(id *string) ShallowVideoBackgroundOutput {
-	c := ShallowVideoBackgroundOutput{}
+func NewShallowVideoBackgroundOutputModel(id *string) ShallowVideoBackgroundOutputModel {
+	c := ShallowVideoBackgroundOutputModel{}
 	if id != nil {
 		c.ShallowModel.ID = *id
 	} else {
@@ -728,11 +730,11 @@ func NewShallowVideoBackgroundOutput(id *string) ShallowVideoBackgroundOutput {
 	return c
 }
 
-type VideoLayerMergeOutput Output
-type ShallowVideoLayerMergeOutput ShallowOutput
+type VideoLayerMergeModelOutput Output
+type ShallowVideoLayerMergeModelOutput ShallowOutput
 
-func NewShallowVideoLayerMergeOutput(id *string) ShallowVideoLayerMergeOutput {
-	c := ShallowVideoLayerMergeOutput{}
+func NewShallowVideoLayerMergeModelOutput(id *string) ShallowVideoLayerMergeModelOutput {
+	c := ShallowVideoLayerMergeModelOutput{}
 	if id != nil {
 		c.ShallowModel.ID = *id
 	} else {
@@ -745,11 +747,11 @@ func NewShallowVideoLayerMergeOutput(id *string) ShallowVideoLayerMergeOutput {
 	return c
 }
 
-type ImageThumbnailOutput Output
-type ShallowImageThumbnailOutput ShallowOutput
+type ImageThumbnailOutputModel Output
+type ShallowImageThumbnailOutputModel ShallowOutput
 
-func NewShallowImageThumbnailOutput(id *string) ShallowImageThumbnailOutput {
-	c := ShallowImageThumbnailOutput{}
+func NewShallowImageThumbnailOutputModel(id *string) ShallowImageThumbnailOutputModel {
+	c := ShallowImageThumbnailOutputModel{}
 	if id != nil {
 		c.ShallowModel.ID = *id
 	} else {
@@ -762,11 +764,11 @@ func NewShallowImageThumbnailOutput(id *string) ShallowImageThumbnailOutput {
 	return c
 }
 
-type ImageBackgroundContextOutput Output
-type ShallowImageBackgroundContextOutput ShallowOutput
+type ImageBackgroundContextOutputModel Output
+type ShallowImageBackgroundContextOutputModel ShallowOutput
 
-func NewShallowImageBackgroundContextOutput(id *string) ShallowImageBackgroundContextOutput {
-	c := ShallowImageBackgroundContextOutput{}
+func NewShallowImageBackgroundContextOutputModel(id *string) ShallowImageBackgroundContextOutputModel {
+	c := ShallowImageBackgroundContextOutputModel{}
 	if id != nil {
 		c.ShallowModel.ID = *id
 	} else {

@@ -163,9 +163,6 @@ func HandleWorkflowEdit(c echo.Context) error {
 				Title: "Workflow",
 			},
 		}
-		if err := dt.GetNodes(ctx); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
 		return c.Render(http.StatusOK, "workflow.tpl", dt)
 	}
 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")

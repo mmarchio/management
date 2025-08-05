@@ -9,11 +9,11 @@ import (
 
 type Template struct {
 	EmbedModel
-	ID TemplateID `form:"id" json:"id"`
-	Name string `form:"name" json:"name"`
-	Dispositions []Disposition `form:"dispositions" json:"dispositions"`
-	CurrentDisposition int64
-	AvailableDispositions []Disposition
+	ID 						TemplateID `form:"id" json:"id"`
+	Name 					string `form:"name" json:"name"`
+	DispositionsArrayModel 	[]Disposition `form:"dispositions" json:"dispositions_array_model"`
+	CurrentDisposition 		int64
+	AvailableDispositions 	[]Disposition
 }
 
 func (c *Template) Unmarshal(ctx context.Context, j string) error {

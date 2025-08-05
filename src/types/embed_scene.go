@@ -9,13 +9,13 @@ import (
 
 type Scene struct {
 	EmbedModel
-	ID SceneID `json:"id"`
-	Start time.Time `json:"start"`
-	End time.Time `json:"end"`
-	SceneNumber int64 `json:"scene_number"`
-	Path string `json:"path"`
-	Files []File `json:"files"`
-	SceneFile File `json:"scene_file"`
+	ID 					SceneID `json:"id"`
+	Start 				time.Time `json:"start"`
+	End 				time.Time `json:"end"`
+	SceneNumber 		int64 `json:"scene_number"`
+	Path 				string `json:"path"`
+	FilesArrayModel 	[]File `json:"files_array_model"`
+	SceneFileModel 		File `json:"scene_file_model"`
 }
 
 func (c *Scene) Unmarshal(ctx context.Context, j string) error {

@@ -31,11 +31,11 @@ func NewComfyUITypeContent() Content {
 
 type ComfyUITemplate struct {
 	Model
-	ID ComfyUITemplateID 	`form:"id" json:"id"`
-	Name string 			`form:"name" json:"name"`
-	Endpoint string 		`form:"enpoint" json:"endpoint"`
-	Base string 			`form:"base"json:"base"`
-	Template string 		`form:"template" json:"template"`
+	ID 			ComfyUITemplateID 	`form:"id" json:"id"`
+	Name 		string 			`form:"name" json:"name"`
+	Endpoint 	string 		`form:"enpoint" json:"endpoint"`
+	Base 		string 			`form:"base"json:"base"`
+	Template 	string 		`form:"template" json:"template"`
 }
 
 func (c *ComfyUITemplate) New() {

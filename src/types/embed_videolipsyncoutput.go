@@ -9,9 +9,9 @@ import (
 
 type VideoLipsyncOutput struct {
 	EmbedModel
-	ID VideoLipsyncOutputID `json:"id"`
-	Stats Stats `json:"stats"`
-	Files []File `json:"files"`
+	ID 				VideoLipsyncOutputID `json:"id"`
+	StatsModel 		Stats `json:"stats_model"`
+	FilesArrayModel []File `json:"files_array_model"`
 }
 
 func (c *VideoLipsyncOutput) Unmarshal(ctx context.Context, j string) error {
@@ -25,7 +25,7 @@ func (c VideoLipsyncOutput) Marshal(ctx context.Context) (string, error) {
 
 func (c VideoLipsyncOutput) New() VideoLipsyncOutput {
 	c.ID = VideoLipsyncOutputID(uuid.NewString())
-	c.Stats = c.Stats.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(c.ID.String())
 	return c
 }
 

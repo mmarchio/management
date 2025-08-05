@@ -9,9 +9,9 @@ import (
 
 type ImageThumbnailOutput struct {
 	EmbedModel
-	ID ImageThumbnailOutputID `json:"id"`
-	Stats Stats `json:"stats"`
-	Files []File `json:"files"`
+	ID 					ImageThumbnailOutputID `json:"id"`
+	StatsModel 			Stats `json:"stats_model"`
+	FilesArrayModel 	[]File `json:"files_array_model"`
 }
 
 func (c *ImageThumbnailOutput) Unmarshal(ctx context.Context, j string) error {
@@ -25,6 +25,6 @@ func (c ImageThumbnailOutput) Marshal(ctx context.Context) (string, error) {
 
 func (c ImageThumbnailOutput) New() ImageThumbnailOutput {
 	c.ID = ImageThumbnailOutputID(uuid.NewString())
-	c.Stats = c.Stats.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(c.ID.String())
 	return c
 }

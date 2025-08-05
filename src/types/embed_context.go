@@ -48,7 +48,7 @@ func NewContext(prompt Prompt, jobRunID RunID, disposition Disposition) Context 
 	c.PromptModel = prompt
 	c.DispositionModel = disposition
 	c.JobRunID = jobRunID
-	c.SettingsModel = prompt.Settings
+	c.SettingsModel = prompt.SettingsModel
 	c.GetResearchPromptModel = c.GetResearchPromptModel.New("")
 	c.GetResearchOutputModel = c.GetResearchOutputModel.New("")
 	c.ScreenwritingPromptModel = c.ScreenwritingPromptModel.New("")
@@ -146,7 +146,7 @@ func (c Context) Truncate() (*TruncatedContext, error) {
 	truncated.Prompt = c.PromptModel.Prompt
 	truncated.Domain = c.PromptModel.Domain
 	truncated.Category = c.PromptModel.Category
-	gb := c.PromptModel.Settings.GlobalBypass.Truncate()
+	gb := c.PromptModel.SettingsModel.GlobalBypassModel.Truncate()
 	if v, ok := gb["get_research_prompt"].(bool); ok {
 		truncated.GlobalBypass.GetResearchPrompt = v
 	}
@@ -198,7 +198,7 @@ func (c Context) Truncate() (*TruncatedContext, error) {
 	if v, ok := gb["screenwriting_start"].(bool); ok {
 		truncated.GlobalBypass.ScreenwritingStart = v
 	}
-	en := c.DispositionModel.Entitlements
+	en := c.DispositionModel.EntitlementsModel
 	truncated.Entitlements.Youtube = en.YouTubeModel.Value
 	truncated.Entitlements.Tiktok = en.TikTokModel.Value
 	truncated.Entitlements.Rumble = en.RumbleModel.Value
@@ -208,10 +208,10 @@ func (c Context) Truncate() (*TruncatedContext, error) {
 	truncated.Disposition.MinDuration = c.DispositionModel.MinDuration
 	truncated.Disposition.MaxDuration = c.DispositionModel.MaxDuration
 	truncated.Disposition.AdvertisementDuration = c.DispositionModel.AdvertisementDuration
-	truncated.Settings.ID = c.PromptModel.Settings.ID
-	truncated.Settings.Name = c.PromptModel.Settings.Name
-	truncated.Settings.Recurring = c.PromptModel.Settings.Recurring.Value
-	truncated.Settings.Interval = c.PromptModel.Settings.Interval
+	truncated.Settings.ID = c.PromptModel.SettingsModel.ID
+	truncated.Settings.Name = c.PromptModel.SettingsModel.Name
+	truncated.Settings.Recurring = c.PromptModel.SettingsModel.RecurringModel.Value
+	truncated.Settings.Interval = c.PromptModel.SettingsModel.Interval
 
 	stats := make(map[string]Stats)
 	stats["get_research_prompt"] = c.GetResearchPromptModel
@@ -220,13 +220,13 @@ func (c Context) Truncate() (*TruncatedContext, error) {
 	stats["screenwriting_output"] = c.ScreenWritingOutputModel
 	stats["video_prompt"] = c.VideoPromptModel
 	stats["audio_prompt"] = c.AudioPromptModel
-	stats["video_lipsync_output"] = c.VideoLipsyncOutputModel.Stats
-	stats["video_transparency_output"] = c.VideoTransparencyOutputModel.Stats
-	stats["video_background_output"] = c.VideoBackgroundOutputModel.Stats
-	stats["video_merge"] = c.VideoLayerMergeModel.Stats
+	stats["video_lipsync_output"] = c.VideoLipsyncOutputModel.StatsModel
+	stats["video_transparency_output"] = c.VideoTransparencyOutputModel.StatsModel
+	stats["video_background_output"] = c.VideoBackgroundOutputModel.StatsModel
+	stats["video_merge"] = c.VideoLayerMergeModel.StatsModel
 	stats["image_thumbnail_prompt"] = c.ImageThumbnailPromptModel
-	stats["image_thumbnail_output"] = c.ImageThumbnailOutputModel.Stats
-	stats["image_background_context_output"] = c.ImageBackgroundContextOutputModel.Stats
+	stats["image_thumbnail_output"] = c.ImageThumbnailOutputModel.StatsModel
+	stats["image_background_context_output"] = c.ImageBackgroundContextOutputModel.StatsModel
 	stats["publish_video_youtube"] = c.PublishVideoYoutubeModel
 	stats["publish_video_tiktok"] = c.PublishVideoTiktokModel
 	stats["publish_video_rumble"] = c.PublishVideoRumbleModel

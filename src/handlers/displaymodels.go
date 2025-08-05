@@ -90,16 +90,9 @@ type DisplayWorkflow struct {
 	Menu
 	DisplayType string
 	List []types.Workflow
-}
-
-func (c *DisplayWorkflow) GetNodes(ctx context.Context) error {
-	n := types.NewNode(nil)
-	list, err := n.List(ctx)
-	if err != nil {
-		return err
-	}
-	c.Nodes = list
-	return nil
+	ComfyNodes []types.ComfyNode
+	OllamaNodes []types.OllamaNode
+	SSHNodes []types.SSHNode
 }
 
 type DisplayPromptTemplate struct {
