@@ -25,6 +25,6 @@ func (c VideoBackgroundOutput) Marshal(ctx context.Context) (string, error) {
 
 func (c VideoBackgroundOutput) New() VideoBackgroundOutput {
 	c.ID = VideoBackgroundOutputID(uuid.NewString())
-	c.StatsModel = c.StatsModel.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }

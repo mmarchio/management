@@ -32,7 +32,7 @@ type Steps struct {
 }
 
 type ShallowSteps struct {
-	Model
+	ShallowModel
 	GetResearchOutputModel				string `json:"get_research_output_model"`
 	GetResearchPromptModel				string `json:"get_research_prompt_model"`
 	ScreenwritingStartModel 			string `json:"screenwriting_start_model"`
@@ -56,15 +56,17 @@ type ShallowSteps struct {
 
 func NewShallowSteps(id *string) ShallowSteps {
 	c := ShallowSteps{}
+	ct := "shallowsteps"
+	c.ShallowModel = c.ShallowModel.New(nil, &ct)
 	if id != nil {
-		c.Model.ID = *id
+		c.ShallowModel.ID = *id
 	} else {
-		c.Model.ID = uuid.NewString()
-		c.Model.CreatedAt = time.Now()
-		c.Model.UpdatedAt = c.Model.CreatedAt
+		c.ShallowModel.ID = uuid.NewString()
+		c.ShallowModel.CreatedAt = time.Now()
+		c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 	}
-	c.ID = c.Model.ID
-	c.Model.ContentType = "shallow_steps"
+	c.ID = c.ShallowModel.ID
+	c.ShallowModel.ContentType = "shallowsteps"
 	return c
 }
 

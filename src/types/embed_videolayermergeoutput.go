@@ -25,6 +25,6 @@ func (c VideoLayerMergeOutput) Marshal(ctx context.Context) (string, error) {
 
 func (c VideoLayerMergeOutput) New() VideoLayerMergeOutput {
 	c.ID = VideoLayerMergeOutputID(uuid.NewString())
-	c.StatsModel = c.StatsModel.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }

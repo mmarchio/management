@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
 
 type ShallowWorkflow struct {
-	Model
+	ShallowModel
 	ID 						WorkflowID 		`form: "id" json:"id"`
 	Name 					string 			`form: "name" json:"name"`
 	ComfyNodesArrayModel 	[]string 	`form: "comfy_nodes" json: "comfy_nodes_array_model"`
@@ -22,6 +23,7 @@ type ShallowWorkflow struct {
 }
 
 func (c *ShallowWorkflow) Validate() {
+	var err error
 	valid := true
 	if !c.ShallowModel.Validate() {
 		fmt.Printf("types.shallowworkflow.model is not valid\n")
@@ -35,24 +37,21 @@ func (c *ShallowWorkflow) Validate() {
 		fmt.Printf("types.shallowworkflow.name is nil")
 		valid = false
 	}
-	for _, node := range c.ComfyNodesArrayModel {
-		node.Validate()
-		if !node.ShallowModel.Validated {
-			fmt.Printf("types.shallowworkflow.node[%s] failed validation\n", node.ShallowModel.ID)
+	for _, cn := range c.ComfyNodesArrayModel {
+		_, err = uuid.Parse(cn)
+		if err != nil {
 			valid = false
 		}
 	}
-	for _, node := range c.OllamaNodesArrayModel {
-		node.Validate()
-		if !node.ShallowModel.Validated {
-			fmt.Printf("types.shallowworkflow.node[%s] failed validation\n", node.ShallowModel.ID)
+	for _, on := range c.OllamaNodesArrayModel {
+		_, err = uuid.Parse(on)
+		if err != nil {
 			valid = false
 		}
 	}
-	for _, node := range c.SSHNodesArrayModel {
-		node.Validate()
-		if !node.ShallowModel.Validated {
-			fmt.Printf("types.shallowworkflow.node[%s] failed validation\n", node.ShallowModel.ID)
+	for _, sn := range c.SSHNodesArrayModel {
+		_, err = uuid.Parse(sn)
+		if err != nil {
 			valid = false
 		}
 	}
@@ -224,9 +223,9 @@ func (c *ShallowWorkflow) CutNodeOrder(index string) {
 func (c *ShallowWorkflow) CutNode(id string) {
 	found := false
 	if !found {
-		comfynodes := make([]ComfyNode, 0)
+		comfynodes := make([]string, 0)
 		for _, v := range c.ComfyNodesArrayModel {
-			if v.ShallowModel.ID == id {
+			if v == id {
 				found = true
 				continue
 			}
@@ -235,9 +234,9 @@ func (c *ShallowWorkflow) CutNode(id string) {
 		c.ComfyNodesArrayModel = comfynodes
 	}
 	if !found {
-		ollamanodes := make([]OllamaNode, 0)
+		ollamanodes := make([]string, 0)
 		for _, v := range c.OllamaNodesArrayModel {
-			if v.ShallowModel.ID == id {
+			if v == id {
 				found = true
 				continue
 			}
@@ -246,9 +245,9 @@ func (c *ShallowWorkflow) CutNode(id string) {
 		c.OllamaNodesArrayModel = ollamanodes
 	}
 	if !found {
-		sshnodes := make([]SSHNode, 0)
+		sshnodes := make([]string, 0)
 		for _, v := range c.SSHNodesArrayModel {
-			if v.ShallowModel.ID == id {
+			if v == id {
 				found = true
 				continue
 			}

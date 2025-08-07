@@ -49,6 +49,17 @@ func (c Model) Validate() bool {
 	return valid
 }
 
+func (c ShallowModel) Validate() bool {
+	valid := true
+	if c.ID == "" {
+		valid = false
+	}
+	if c.CreatedAt.IsZero() || c.UpdatedAt.IsZero() {
+		valid = false
+	}
+	return valid
+}
+
 func (c *Model) New(id *string) {
 	if id != nil {
 		c.ID = *id
@@ -59,11 +70,14 @@ func (c *Model) New(id *string) {
 	c.UpdatedAt = c.CreatedAt
 }
 
-func (c *ShallowModel) New(id *string) {
+func (c *ShallowModel) New(id *string, contentType *string) {
 	if id != nil {
 		c.ID = *id
 	} else {
 		c.ID = uuid.NewString()
+	}
+	if contentType != nil {
+		c.ContentType = *contentType
 	}
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = c.CreatedAt

@@ -25,7 +25,7 @@ func (c VideoTransparancyOutput) Marshal(ctx context.Context) (string, error) {
 
 func (c VideoTransparancyOutput) New() VideoTransparancyOutput {
 	c.ID = VideoTransparancyOutputID(uuid.NewString())
-	c.StatsModel = c.StatsModel.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }
 

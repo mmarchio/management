@@ -25,7 +25,7 @@ func (c VideoLipsyncOutput) Marshal(ctx context.Context) (string, error) {
 
 func (c VideoLipsyncOutput) New() VideoLipsyncOutput {
 	c.ID = VideoLipsyncOutputID(uuid.NewString())
-	c.StatsModel = c.StatsModel.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }
 

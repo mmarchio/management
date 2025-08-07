@@ -19,7 +19,7 @@ func (c *VideoOutput) Unmarshal(ctx context.Context, j string) error {
 
 func (c VideoOutput) Marshal(ctx context.Context) (string, error) {
 	b, err := json.Marshal(c)
-	c.StatsModel = c.StatsModel.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(nil)
 	return string(b), err
 }
 

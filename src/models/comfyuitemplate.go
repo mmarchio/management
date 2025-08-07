@@ -18,7 +18,7 @@ func (c *ComfyUITemplate) New() {
 }
 
 type ShallowComfyUITemplate struct {
-	Model
+	ShallowModel
 	Name 		string `form:"name" json:"name"`
 	Endpoint 	string `form:"endpoint" json:"endpoint"`
 	Base 		string `form:"base" json:"base"`
@@ -28,13 +28,13 @@ type ShallowComfyUITemplate struct {
 func NewShallowComfyUITemplate(id *string) ShallowComfyUITemplate {
 	c := ShallowComfyUITemplate{}
 	if id != nil {
-		c.Model.ID = *id
+		c.ShallowModel.ID = *id
 	} else {
-		c.Model.ID = uuid.NewString()
-		c.Model.CreatedAt = time.Now()
-		c.Model.UpdatedAt = c.CreatedAt
+		c.ShallowModel.ID = uuid.NewString()
+		c.ShallowModel.CreatedAt = time.Now()
+		c.ShallowModel.UpdatedAt = c.CreatedAt
 	}
-	c.ID = c.Model.ID
-	c.Model.ContentType = "shallow_comfyuitemplate"
+	c.ID = c.ShallowModel.ID
+	c.ShallowModel.ContentType = "shallow_comfyuitemplate"
 	return c
 }

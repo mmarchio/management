@@ -15,7 +15,7 @@ type PromptTemplate struct {
 }
 
 type ShallowPromptTemplate struct {
-	Model
+	ShallowModel
 	ID 			string 	`form:"id" json:"id"`
 	Name		string  `form:"name" json:"name"`
 	Template 	string 	`form:"template" json:"template"`
@@ -25,13 +25,13 @@ type ShallowPromptTemplate struct {
 func NewShallowPromptTemplate(id *string) ShallowPromptTemplate {
 	c := ShallowPromptTemplate{}
 	if id != nil {
-		c.Model.ID = *id
+		c.ShallowModel.ID = *id
 	} else {
-		c.Model.ID = uuid.NewString()
-		c.Model.CreatedAt = time.Now()
-		c.Model.UpdatedAt = c.Model.CreatedAt
+		c.ShallowModel.ID = uuid.NewString()
+		c.ShallowModel.CreatedAt = time.Now()
+		c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 	}
-	c.ID = c.Model.ID
-	c.Model.ContentType = "shallow_prompttemplate"
+	c.ID = c.ShallowModel.ID
+	c.ShallowModel.ContentType = "shallow_prompttemplate"
 	return c
 }

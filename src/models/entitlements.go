@@ -20,7 +20,7 @@ type Entitlements struct {
 }
 
 type ShallowEntitlements struct {
-	Model
+	ShallowModel
 	YouTube 	string `form:"youtube" json:"youtube"`
 	TikTok 		string `form:"tiktok" json:"tiktok"`
 	Rumble 		string `form:"rumble" json:"rumble"`
@@ -33,13 +33,13 @@ type ShallowEntitlements struct {
 func NewShallowEntitlements(id *string) ShallowEntitlements {
 	c := ShallowEntitlements{}
 	if id != nil {
-		c.Model.ID = *id
+		c.ShallowModel.ID = *id
 	} else {
-		c.Model.ID = uuid.NewString()
-		c.Model.CreatedAt = time.Now()
-		c.Model.UpdatedAt = c.CreatedAt
+		c.ShallowModel.ID = uuid.NewString()
+		c.ShallowModel.CreatedAt = time.Now()
+		c.ShallowModel.UpdatedAt = c.CreatedAt
 	}
-	c.ID = c.Model.ID
-	c.Model.ContentType = "shallow_entitlements"
+	c.ID = c.ShallowModel.ID
+	c.ShallowModel.ContentType = "shallowentitlements"
 	return c
 }

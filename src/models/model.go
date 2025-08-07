@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
 )
@@ -36,6 +37,19 @@ type ShallowModel struct {
 	Validated   bool	
 	Manifest    []string `json:"manifest"`
 	ExpandedID  string `json:"expanded_id"`
+}
+
+func (c ShallowModel) New(id, ct *string) ShallowModel {
+	if id != nil {
+		c.ID = *id
+	} else {
+		c.ID = uuid.NewString()
+	}
+	if ct != nil {
+		c.ContentType = *ct
+	}
+	c.Init()
+	return c
 }
 
 func (c Model) Validate() bool {

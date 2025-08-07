@@ -10,9 +10,9 @@ import (
 	"github.com/mmarchio/management/models"
 )
 
-func NewShallowSystemPrompt(id *string) ShallowSystemPrompt {
+func NewShallowSystemPrompt(id, ct *string) ShallowSystemPrompt {
 	c := ShallowSystemPrompt{}
-	c.ShallowModel.New(id)
+	c.ShallowModel.New(id, ct)
 	c.ID = SystemPromptID(c.ShallowModel.ID)
 	c.ShallowModel.ContentType = "systemprompt"
 	return c
@@ -58,9 +58,10 @@ func (c ShallowSystemPrompt) List(ctx context.Context) ([]ShallowSystemPrompt, e
 	if err != nil {
 		return nil, merrors.SystemPromptListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
+	ct := "shallowsystemprompt"
 	cuts := make([]ShallowSystemPrompt, 0)
 	for _, model := range contents {
-		cut := NewShallowSystemPrompt(nil)
+		cut := NewShallowSystemPrompt(nil, &ct)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "List"}.Wrap(err)
@@ -76,9 +77,10 @@ func (c ShallowSystemPrompt) ListBy(ctx context.Context, key string, value inter
 	if err != nil {
 		return nil, merrors.SystemPromptListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
+	ct := "shallowsystemprompt"
 	cuts := make([]ShallowSystemPrompt, 0)
 	for _, model := range contents {
-		cut := NewShallowSystemPrompt(nil)
+		cut := NewShallowSystemPrompt(nil, &ct)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "ListBy"}.Wrap(err)

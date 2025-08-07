@@ -19,15 +19,6 @@ type Entitlements struct {
 	FacebookModel 	Toggle `form:"facebook" json:"facebook"`
 }
 
-type ShallowEntitlements struct {
-	ShallowModel
-	YouTubeModel 	string `form:"youtube" json:"youtube"`
-	TikTokModel 	string `form:"tiktok" json:"tiktok"`
-	RumbleModel 	string `form:"rumble" json:"rumble"`
-	PatreonModel 	string `form:"patreon" json:"patreon"`
-	FacebookModel 	string `form:"facebook" json:"facebook"`
-}
-
 func (c *Entitlements) Unmarshal(ctx context.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
@@ -110,40 +101,5 @@ func ValidateEntitlements(c Entitlements, prefix string) (Entitlements, error) {
 	c.RumbleModel = ValidateToggle(c.RumbleModel, uuid.NewString(), prefix, "rumble", "rumble")
 	c.PatreonModel = ValidateToggle(c.PatreonModel, uuid.NewString(), prefix, "patreon", "patreon")
 	c.FacebookModel = ValidateToggle(c.FacebookModel, uuid.NewString(), prefix, "facebook", "facebook")
-	return c, nil
-}
-
-func ValidateShallowEntitlements(c ShallowEntitlements, prefix string) (ShallowEntitlements, error) {
-	if c.YouTubeModel != "" {
-		_, err := uuid.Parse(c.YouTubeModel)
-		if err != nil {
-			return c, err
-		}
-	}
-	if c.TikTokModel != "" {
-		_, err := uuid.Parse(c.TikTokModel)
-		if err != nil {
-			return c, err
-		}
-	}
-	if c.RumbleModel != "" {
-		_, err := uuid.Parse(c.RumbleModel)
-		if err != nil {
-			return c, err
-		}
-	}
-	if c.PatreonModel != "" {
-		_, err := uuid.Parse(c.PatreonModel)
-		if err != nil {
-			return c, err
-		}
-	}
-	if c.FacebookModel != "" {
-		_, err := uuid.Parse(c.FacebookModel)
-		if err != nil {
-			return c, err
-		}
-	}
-
 	return c, nil
 }

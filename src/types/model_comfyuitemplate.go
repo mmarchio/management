@@ -28,7 +28,6 @@ func NewComfyUITypeContent() Content {
 	return c
 }
 
-
 type ComfyUITemplate struct {
 	Model
 	ID 			ComfyUITemplateID 	`form:"id" json:"id"`

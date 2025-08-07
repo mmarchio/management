@@ -25,6 +25,6 @@ func (c ImageBackgroundContextOutput) Marshal(ctx context.Context) (string, erro
 
 func (c ImageBackgroundContextOutput) New() ImageBackgroundContextOutput {
 	c.ID = ImageBackgroundContextOutputID(uuid.NewString())
-	c.StatsModel = c.StatsModel.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }
