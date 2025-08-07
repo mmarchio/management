@@ -26,6 +26,14 @@ type Model struct {
 	Validated   bool
 }
 
+func (c Model) FromShallowModel(m ShallowModel) Model {
+	c.ID = m.ID
+	c.CreatedAt = m.CreatedAt
+	c.UpdatedAt = m.UpdatedAt
+	c.ContentType = m.ContentType
+	return c
+}
+
 func (c Model) Validate() bool {
 	valid := true
 	if c.ID == "" {
