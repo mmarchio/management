@@ -129,7 +129,7 @@ func (c *ShallowComfyNode) Get(ctx context.Context) error {
 	content.Model.ContentType = "shallowcomfynode"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.NodeGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -144,7 +144,7 @@ func (c *ShallowComfyNode) GetShallow(ctx context.Context) error {
 	content.Model.ContentType = "shallowcomfynode"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.NodeGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -171,7 +171,7 @@ func (c ShallowComfyNode) Delete(ctx context.Context) error {
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ID = c.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.NodeDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ShallowComfyNode", Function: "delete"}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ShallowComfyNode", Function: "delete"}.Wrap(err)
 	}
 	return nil
 }
@@ -205,7 +205,7 @@ func NewShallowComfyNode(id *string) ShallowComfyNode {
 func (c ShallowComfyNode) Set(ctx context.Context) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
-		return merrors.NodeValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
 	}
 	content := NewComfyNodeTypeContent()
 	content.FromType(c)
@@ -213,7 +213,7 @@ func (c ShallowComfyNode) Set(ctx context.Context) error {
 	content.ID = c.ShallowModel.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.NodeSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }

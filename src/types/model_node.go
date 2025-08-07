@@ -140,7 +140,7 @@ func (c Node) List(ctx context.Context) ([]Node, error) {
 	content.Model.ContentType = "node"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.NodeListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Node, 0)
 	for _, model := range contents {
@@ -160,7 +160,7 @@ func (c Node) ListBy(ctx context.Context, key string, value interface{}) ([]Node
 	content := NewNodeModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.NodeListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Node, 0)
 	for _, model := range contents {
@@ -182,7 +182,7 @@ func (c *Node) Get(ctx context.Context) error {
 	content.Model.ContentType = "node"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.NodeGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	msi := make(map[string]interface{})
 	err = json.Unmarshal([]byte(content.Content), &msi)
@@ -198,7 +198,7 @@ func (c *Node) Get(ctx context.Context) error {
 func (c Node) Set(ctx context.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.NodeValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
 	}
 	content := NewNodeTypeContent()
 	content.FromType(c)
@@ -206,7 +206,7 @@ func (c Node) Set(ctx context.Context) error {
 	content.ID = c.ID.String()
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.NodeSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -217,7 +217,7 @@ func (c Node) Delete(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID.String()
 	if err := content.Delete(ctx); err != nil {
-		return merrors.NodeDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

@@ -60,7 +60,7 @@ func (c JobRun) List(ctx context.Context) ([]JobRun, error) {
 	content.Model.ContentType = "jobrun"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.JobRunListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 	}
 	cuts := make([]JobRun, 0)
 	for _, model := range contents {
@@ -79,7 +79,7 @@ func (c JobRun) ListBy(ctx context.Context, key string, value interface{}) ([]Jo
 	content := NewJobRunModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.JobRunListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(err)
 	}
 	cuts := make([]JobRun, 0)
 	for _, model := range contents {
@@ -99,7 +99,7 @@ func (c *JobRun) Get(ctx context.Context) error {
 	content.Model.ContentType = "jobrun"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.JobRunGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -121,7 +121,7 @@ func (c *JobRun) FindBy(ctx context.Context) error {
 		content, err = content.FindBy(ctx, "workflow_id", c.WorkflowID.String())
 	}
 	if err != nil {
-		return merrors.JobRunGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -139,14 +139,14 @@ func (c *JobRun) CustomQuery(ctx context.Context, write bool, q string, vars ...
 		content.FromType(c)
 		_, err := content.CustomQuery(ctx, write, q, vars)
 		if err != nil {
-			return nil, merrors.JobRunCustomQueryError{Info: c.Model.ID}.Wrap(err)
+			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(err)
 		}
 		return nil, nil
 	}
 	res, err := content.CustomQuery(ctx, write, q, vars)
 	if err != nil {
 		if err != nil {
-			return nil, merrors.JobRunCustomQueryError{Info: c.Model.ID}.Wrap(err).BubbleCode()
+			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(err).BubbleCode()
 		}
 	}
 	r := make([]JobRun, 0)
@@ -167,7 +167,7 @@ func (c JobRun) Set(ctx context.Context) error {
 	content.ID = c.Model.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.JobRunSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -177,7 +177,7 @@ func (c JobRun) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.JobRunDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

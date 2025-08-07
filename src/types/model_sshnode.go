@@ -127,7 +127,7 @@ func (c *SSHNode) Get(ctx context.Context) error {
 	content.Model.ContentType = "sshnode"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.NodeGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -148,7 +148,7 @@ func (c SSHNode) Delete(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.NodeDeleteError{Info: c.Model.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err)
 	}
 	return nil
 }
@@ -182,7 +182,7 @@ func NewSSHNode(id *string) SSHNode {
 func (c SSHNode) Set(ctx context.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.NodeValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
 	}
 	content := NewSSHNodeTypeContent()
 	content.FromType(c)
@@ -190,7 +190,7 @@ func (c SSHNode) Set(ctx context.Context) error {
 	content.ID = c.Model.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.NodeSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

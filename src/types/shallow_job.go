@@ -64,7 +64,7 @@ func (c ShallowJob) List(ctx context.Context) ([]ShallowJob, error) {
 	content.Model.ContentType = "job"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.JobListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowJob, 0)
 	for _, model := range contents {
@@ -82,7 +82,7 @@ func (c ShallowJob) ListBy(ctx context.Context, key string, value interface{}) (
 	content := NewShallowJobModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.JobListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowJob, 0)
 	for _, model := range contents {
@@ -104,7 +104,7 @@ func (c *ShallowJob) Get(ctx context.Context) error {
 	content.ShallowModel.ContentType = "job"
 	content, err = content.Get(ctx)
 	if err != nil {
-		return merrors.JobGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
 		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Job", Function: "Get"}.Wrap(err)
@@ -119,7 +119,7 @@ func (c *ShallowJob) FindBy(ctx context.Context, key, value string) (ShallowJob,
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content, err = content.FindBy(ctx, key, value) 
 	if err != nil {
-		return job, merrors.JobFindByError{Info: fmt.Sprintf("key: %s, value: %s", key, value)}.Wrap(err)
+		return job, merrors.ContentFindByError{Info: fmt.Sprintf("key: %s, value: %s", key, value)}.Wrap(err)
 	}
 	if err = json.Unmarshal([]byte(content.Content), &job); err != nil {
 		if _, ok := err.(merrors.WrappedError); ok {
@@ -138,7 +138,7 @@ func (c ShallowJob) Set(ctx context.Context) error {
 	content.ID = c.ShallowModel.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.JobSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -148,7 +148,7 @@ func (c ShallowJob) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.ShallowModel.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.JobDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }

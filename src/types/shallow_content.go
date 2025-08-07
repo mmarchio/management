@@ -112,7 +112,11 @@ func (c *ShallowContent) FromModel(m models.ShallowContent) ShallowContent {
 
 func (c ShallowContent) ToModel() models.ShallowContent {
 	m := models.ShallowContent{}
-	m.ShallowModel = c.ShallowModel.ToModel()
+	m.ID = c.ID
+	m.CreatedAt = c.CreatedAt
+	m.UpdatedAt = c.UpdatedAt
+	m.ContentType = c.ContentType
+	m.TokenCount = c.TokenCount
 	m.Content = c.Content
 	return m
 }
@@ -124,4 +128,11 @@ func (c *ShallowContent) FromType(m ITable) error {
 	}
 	c.Content = string(b)
 	return nil
+}
+
+func (c ShallowContent) Expand() Content {
+	r := Content{}
+	r.Model = c.ShallowModel.Expand()
+	r.Content = c.Content
+	return r
 }

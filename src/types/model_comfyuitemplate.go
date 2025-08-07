@@ -48,7 +48,7 @@ func (c ComfyUITemplate) List(ctx context.Context) ([]ComfyUITemplate, error) {
 	content := NewComfyUIModelContent()
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.ComfyUITemplateListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]ComfyUITemplate, 0)
 	for _, model := range contents {
@@ -66,7 +66,7 @@ func (c ComfyUITemplate) ListBy(ctx context.Context, key string, value interface
 	content := NewComfyUIModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.ComfyUITemplateListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]ComfyUITemplate, 0)
 	for _, model := range contents {
@@ -86,7 +86,7 @@ func (c *ComfyUITemplate) Get(ctx context.Context) error {
 	content.Model.ContentType = "comfyuitemplate"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.ComfyUITemplateGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -100,7 +100,7 @@ func (c ComfyUITemplate) Set(ctx context.Context) error {
 	content.FromType(c)
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.ComfyUITemplateSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -110,7 +110,7 @@ func (c ComfyUITemplate) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.ComfyUITemplateDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

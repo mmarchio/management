@@ -30,6 +30,75 @@ type ShallowSteps struct {
 	PublishMetadataModel 				string `json:"publish_metadata_model"`
 }
 
+func (c ShallowSteps) Expand(ctx context.Context) (*Steps, error) {
+	f := func(ctx context.Context, c string, r *Toggle) error {
+		t := ShallowToggle{}
+		t.ShallowModel.ID = c
+		tog, err := t.Expand(ctx)
+		if err != nil {
+			return merrors.ContentGetError{}.Wrap(err)
+		}
+		if tog != nil {
+			r = tog
+		}
+		return nil
+	}
+	r := Steps{}
+	r.EmbedModel = r.EmbedModel.FromShallowModel(c.ShallowModel)
+	if err := f(ctx, c.GetResearchOutputModel, &r.GetResearchOutputModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.GetResearchPromptModel, &r.GetResearchPromptModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.ScreenwritingStartModel, &r.ScreenwritingStartModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.ScreenwritingGetPromptInputModel, &r.ScreenwritingGetPromptInputModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.ScreenwritingGetPromptOutputModel, &r.ScreenwritingGetPromptOutputModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.ScreenwritingOutputModel, &r.ScreenwritingOutputModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.ContainerSwapModel, &r.ContainerSwapModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.GenerateAudioModel, &r.GenerateAudioModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.GenerateLipsyncModel, &r.GenerateLipsyncModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.GenerateThumbnailsModel, &r.GenerateThumbnailsModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.GenerateBackgroundContextModel, &r.GenerateBackgroundContextModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.GenerateBackgroundModel, &r.GenerateBackgroundModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.FFMPEGLipsyncPostModel, &r.FFMPEGLipsyncPostModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.FFMPEGMergeModel, &r.FFMPEGMergeModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.PublishVideoModel, &r.PublishVideoModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.PublishThumbnailModel, &r.PublishThumbnailModel); err != nil {
+		return nil, err
+	}
+	if err := f(ctx, c.PublishMetadataModel, &r.PublishMetadataModel); err != nil {
+		return nil, err
+	}
+	return &r, nil
+}
+
 func (c *ShallowSteps) Unmarshal(ctx context.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }

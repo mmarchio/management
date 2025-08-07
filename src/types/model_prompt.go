@@ -60,7 +60,7 @@ func (c Prompt) List(ctx context.Context) ([]Prompt, error) {
 	content.Model.ContentType = "prompt"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.PromptListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
@@ -78,7 +78,7 @@ func (c Prompt) ListBy(ctx context.Context, key string, value interface{}) ([]Pr
 	content := NewPromptModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.PromptListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
@@ -98,7 +98,7 @@ func (c *Prompt) Get(ctx context.Context) error {
 	content.Model.ContentType = "prompt"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.PromptGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -113,7 +113,7 @@ func (c Prompt) Set(ctx context.Context) error {
 	content.Model.ID = c.ID.String()
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.PromptSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -123,7 +123,7 @@ func (c Prompt) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.PromptDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -133,7 +133,7 @@ func (c Prompt) GetDispositions(ctx context.Context) (Prompt, error) {
 	disposition := NewDisposition(nil)
 	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(ctx)
 	if err != nil {
-		return c, merrors.DispositionListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
+		return c, merrors.ContentListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
 	}
 	return c, nil
 }

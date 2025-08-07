@@ -12,6 +12,7 @@ import (
 )
 
 type Toggle struct {
+	Model
 	ID 			string `json:"id"`
 	NamePrefix 	string `json:"name_prefix"`
 	IdPrefix 	string `json:"id_suffix"`

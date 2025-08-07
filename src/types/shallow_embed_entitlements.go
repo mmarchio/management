@@ -18,6 +18,43 @@ type ShallowEntitlements struct {
 	FacebookModel 	string `form:"facebook" json:"facebook"`
 }
 
+func (c ShallowEntitlements) Expand(ctx context.Context) (*Entitlements, error) {
+	r := Entitlements{}
+	r.EmbedModel.FromShallowModel(c.ShallowModel)
+	t := ShallowToggle{}
+	t.ShallowModel.ID = c.YouTubeModel
+	youTubeModel, err := t.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.YouTubeModel = *youTubeModel
+	t.ShallowModel.ID = c.TikTokModel
+	tikTokModel, err := t.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.TikTokModel = *tikTokModel
+	t.ShallowModel.ID = c.RumbleModel
+	rumbleModel, err := t.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.RumbleModel = *rumbleModel
+	t.ShallowModel.ID = c.PatreonModel
+	patreonModel, err := t.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.PatreonModel = *patreonModel
+	t.ShallowModel.ID = c.FacebookModel
+	facebookModel, err := t.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.FacebookModel = *facebookModel
+	return &r, nil
+}
+
 func (c *ShallowEntitlements) Unmarshal(ctx context.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }

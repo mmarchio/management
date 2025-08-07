@@ -96,7 +96,7 @@ func (c Workflow) List(ctx context.Context) ([]Workflow, error) {
 	content.Model.ContentType = "workflow"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.WorkflowListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Workflow, 0)
 	for _, model := range contents {
@@ -113,7 +113,7 @@ func (c Workflow) ListBy(ctx context.Context, key string, value interface{}) ([]
 	content := NewWorkflowModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.WorkflowListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Workflow, 0)
 	for _, model := range contents {
@@ -135,7 +135,7 @@ func (c *Workflow) Get(ctx context.Context) error {
 	content.Model.ContentType = "workflow"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.WorkflowGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
 		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Workflow", Function: "Get"}.Wrap(err)
@@ -146,14 +146,14 @@ func (c *Workflow) Get(ctx context.Context) error {
 func (c Workflow) Set(ctx context.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.WorkflowValidationError{Package: "types", Struct: "workflow", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "workflow", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
 	}
 	content := NewWorkflowTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ID.String()
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.WorkflowSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -163,7 +163,7 @@ func (c Workflow) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.WorkflowDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

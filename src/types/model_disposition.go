@@ -60,7 +60,7 @@ func (c Disposition) List(ctx context.Context) ([]Disposition, error) {
 	content := NewDispositionModelContent()
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.DispositionListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Disposition, 0)
 	for _, model := range contents {
@@ -78,7 +78,7 @@ func (c Disposition) ListBy(ctx context.Context, key string, value interface{}) 
 	content := NewDispositionModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.DispositionListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Disposition, 0)
 	for _, model := range contents {
@@ -98,7 +98,7 @@ func (c *Disposition) Get(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.DispositionGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -113,7 +113,7 @@ func (c Disposition) Set(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.DispositionSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -123,7 +123,7 @@ func (c Disposition) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.DispositionDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

@@ -27,10 +27,11 @@ type Model struct {
 }
 
 type ShallowModel struct {
-	ID string `form:"id" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID 			string `form:"id" json:"id"`
+	CreatedAt 	time.Time `json:"created_at"`
+	UpdatedAt 	time.Time `json:"updated_at"`
 	ContentType string `json:"content_type"`
+	TokenCount 	int64
 	Columns 	string
 	Values 		string
 	Conflict 	string

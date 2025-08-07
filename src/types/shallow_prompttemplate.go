@@ -49,7 +49,7 @@ func (c ShallowPromptTemplate) List(ctx context.Context) ([]ShallowPromptTemplat
 	content := NewShallowPromptTemplateModelContent()
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.PromptTemplateListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowPromptTemplate, 0)
 	for _, model := range contents {
@@ -67,7 +67,7 @@ func (c ShallowPromptTemplate) ListBy(ctx context.Context, key string, value int
 	content := NewShallowPromptTemplateModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.PromptTemplateListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowPromptTemplate, 0)
 	for _, model := range contents {
@@ -87,7 +87,7 @@ func (c *ShallowPromptTemplate) Get(ctx context.Context) error {
 	content.ShallowModel.ContentType = "shallowprompttemplate"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.PromptTemplateError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -101,7 +101,7 @@ func (c ShallowPromptTemplate) Set(ctx context.Context) error {
 	content.FromType(c)
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.PromptTemplateSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -111,7 +111,7 @@ func (c ShallowPromptTemplate) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.PromptTemplateDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }

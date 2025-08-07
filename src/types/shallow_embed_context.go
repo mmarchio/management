@@ -115,7 +115,7 @@ func GetShallowSystemPrompts() ([]string, error) {
 	systemPrompt := NewShallowSystemPrompt(nil, &ct)
 	systemPrompts, err := systemPrompt.List(ctx)
 	if err != nil {
-		return nil, merrors.SystemPromptListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
+		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
 	}
 	list := make([]string, 0)
 	for _, sp := range systemPrompts {

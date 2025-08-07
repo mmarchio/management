@@ -124,7 +124,7 @@ func (c *OllamaNode) ParsePromptTemplate(ctx context.Context) error {
 			id := c.PromptTemplate
 			pt := NewPromptTemplate(&id)
 			if err := pt.Get(ctx); err != nil {
-				return merrors.GetPromptTemplateError{Package: "types", Struct:"OllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
+				return merrors.ContentGetError{Package: "types", Struct:"OllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
 			}
 			msi := make(map[string]interface{})
 			if err := json.Unmarshal([]byte(pt.Vars), &msi); err != nil {
@@ -246,7 +246,7 @@ func (c *OllamaNode) Get(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.NodeGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -267,7 +267,7 @@ func (c OllamaNode) Delete(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.NodeDeleteError{Info: c.Model.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err)
 	}
 	return nil
 }
@@ -283,7 +283,7 @@ func (c OllamaNode) GetID() string {
 func (c OllamaNode) Set(ctx context.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.NodeValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
 	}
 	content := NewOllamaNodeTypeContent()
 	content.FromType(c)
@@ -291,7 +291,7 @@ func (c OllamaNode) Set(ctx context.Context) error {
 	content.ID = c.Model.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.NodeSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

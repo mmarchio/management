@@ -95,7 +95,7 @@ func (c ShallowWorkflow) List(ctx context.Context) ([]ShallowWorkflow, error) {
 	content.ShallowModel.ContentType = "shallowworkflow"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.WorkflowListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowWorkflow, 0)
 	for _, model := range contents {
@@ -112,7 +112,7 @@ func (c ShallowWorkflow) ListBy(ctx context.Context, key string, value interface
 	content := NewShallowWorkflowModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.WorkflowListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowWorkflow, 0)
 	for _, model := range contents {
@@ -134,7 +134,7 @@ func (c *ShallowWorkflow) Get(ctx context.Context) error {
 	content.ShallowModel.ContentType = "shallowworkflow"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.WorkflowGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
 		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(err)
@@ -145,14 +145,14 @@ func (c *ShallowWorkflow) Get(ctx context.Context) error {
 func (c ShallowWorkflow) Set(ctx context.Context) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
-		return merrors.WorkflowValidationError{Package: "types", Struct: "shallowworkflow", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "shallowworkflow", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
 	}
 	content := NewShallowWorkflowTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ID.String()
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.WorkflowSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -162,7 +162,7 @@ func (c ShallowWorkflow) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.WorkflowDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }

@@ -60,7 +60,7 @@ func (c ShallowPrompt) List(ctx context.Context) ([]ShallowPrompt, error) {
 	content.Model.ContentType = "shallowprompt"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.PromptListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowPrompt, 0)
 	for _, model := range contents {
@@ -78,7 +78,7 @@ func (c ShallowPrompt) ListBy(ctx context.Context, key string, value interface{}
 	content := NewPromptModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.PromptListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
@@ -98,7 +98,7 @@ func (c *ShallowPrompt) Get(ctx context.Context) error {
 	content.ShallowModel.ContentType = "shallowprompt"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.PromptGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -113,7 +113,7 @@ func (c ShallowPrompt) Set(ctx context.Context) error {
 	content.ShallowModel.ID = c.ID.String()
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.PromptSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -123,7 +123,7 @@ func (c ShallowPrompt) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.PromptDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -133,7 +133,7 @@ func (c ShallowPrompt) GetDispositions(ctx context.Context) (ShallowPrompt, erro
 	//disposition := NewShallowDisposition(nil)
 //	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(ctx)
 	if err != nil {
-		return c, merrors.DispositionListError{Package: "types", Struct: "ShallowPrompt", Function: "GetDispositions"}.Wrap(err)
+		return c, merrors.ContentListError{Package: "types", Struct: "ShallowPrompt", Function: "GetDispositions"}.Wrap(err)
 	}
 	return c, nil
 }
@@ -173,12 +173,4 @@ func (c ShallowPrompt) Bind(e echo.Context) (ShallowPrompt, error) {
 	var err error
 	c.SettingsModel = e.FormValue("settings")
 	return c, err
-}
-
-func (c ShallowPrompt) Next(e echo.Context, ctx context.Context) (*Context, error) {
-	systemContext, err := c.ShallowModel.GetCtx(ctx)
-	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Prompt", Function: "Next"}.Wrap(err)
-	}
-	return systemContext, nil
 }

@@ -133,7 +133,7 @@ func GetSystemPrompts() ([]SystemPrompt, error) {
 	systemPrompt := NewSystemPrompt(nil)
 	systemPrompts, err := systemPrompt.List(ctx)
 	if err != nil {
-		return nil, merrors.SystemPromptListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
+		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
 	}
 	return systemPrompts, nil
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type ShallowFile struct {
-	EmbedModel
+	ShallowModel
 	ID 			FileID `json:"file_id"`
 	Type 		string `json:"type"`
 	Path 		string `json:"path"`

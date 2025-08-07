@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
 
@@ -18,6 +19,33 @@ type ShallowToggle struct {
 	Value 		bool `json:"value"`
 	Title 		string `json:"title"`
 }
+
+func (c ShallowToggle) Expand(ctx context.Context) (*Toggle, error) {
+	r := Toggle{}
+	if c.CreatedAt.IsZero() {
+		m, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		c.ShallowModel = m.ShallowModel
+		if err := json.Unmarshal([]byte(m.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Model.ID = c.ShallowModel.ID
+	r.Model.CreatedAt = c.ShallowModel.CreatedAt
+	r.Model.UpdatedAt = c.ShallowModel.UpdatedAt
+	r.Model.ContentType = c.ShallowModel.ContentType
+	r.ID = c.ID
+	r.NamePrefix = c.NamePrefix
+	r.IdPrefix = c.IdPrefix
+	r.Suffix = c.Suffix
+	r.Value = c.Value
+	r.Title = c.Title
+	return &r, nil
+}
+
 
 func (c *ShallowToggle) init() {
 	c.ID = uuid.NewString()
