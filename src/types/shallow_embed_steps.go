@@ -68,21 +68,21 @@ func (c ShallowSteps) FromModel(model models.ShallowSteps) ShallowSteps {
 	c.ShallowModel.FromModel(model.ShallowModel)
 	c.SetID()
 	c.GetResearchOutputModel = model.GetResearchOutputModel
-	c.GetResearchPromptModel = c.GetResearchPromptModel
-	c.ScreenwritingStartModel = c.ScreenwritingStartModel
-	c.ScreenwritingGetPromptInputModel = c.ScreenwritingGetPromptInputModel
-	c.ScreenwritingGetPromptOutputModel = c.ScreenwritingGetPromptOutputModel
-	c.ScreenwritingOutputModel = c.ScreenwritingOutputModel
-	c.ContainerSwapModel = c.ContainerSwapModel
-	c.GenerateAudioModel = c.GenerateAudioModel
-	c.GenerateLipsyncModel = c.GenerateLipsyncModel
-	c.GenerateThumbnailsModel = c.GenerateThumbnailsModel
-	c.GenerateBackgroundContextModel = c.GenerateBackgroundContextModel
-	c.GenerateBackgroundModel = c.GenerateBackgroundModel
-	c.FFMPEGLipsyncPostModel = c.FFMPEGLipsyncPostModel
-	c.FFMPEGMergeModel = c.FFMPEGMergeModel
-	c.PublishVideoModel = c.PublishVideoModel
-	c.PublishThumbnailModel = c.PublishThumbnailModel
-	c.PublishMetadataModel = c.PublishMetadataModel
+	c.GetResearchPromptModel = model.GetResearchPromptModel
+	c.ScreenwritingStartModel = model.ScreenwritingStartModel
+	c.ScreenwritingGetPromptInputModel = model.ScreenwritingGetPromptInputModel
+	c.ScreenwritingGetPromptOutputModel = model.ScreenwritingGetPromptOutputModel
+	c.ScreenwritingOutputModel = model.ScreenwritingOutputModel
+	c.ContainerSwapModel = model.ContainerSwapModel
+	c.GenerateAudioModel = model.GenerateAudioModel
+	c.GenerateLipsyncModel = model.GenerateLipsyncModel
+	c.GenerateThumbnailsModel = model.GenerateThumbnailsModel
+	c.GenerateBackgroundContextModel = model.GenerateBackgroundContextModel
+	c.GenerateBackgroundModel = model.GenerateBackgroundModel
+	c.FFMPEGLipsyncPostModel = model.FFMPEGLipsyncPostModel
+	c.FFMPEGMergeModel = model.FFMPEGMergeModel
+	c.PublishVideoModel = model.PublishVideoModel
+	c.PublishThumbnailModel = model.PublishThumbnailModel
+	c.PublishMetadataModel = model.PublishMetadataModel
 	return c
 }
