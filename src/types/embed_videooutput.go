@@ -13,6 +13,22 @@ type VideoOutput struct {
 	FilesArrayModel []File `json:"files_model"`
 }
 
+func (c VideoOutput) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowVideoOutput{}
+	sm.ShallowModel = sm.ShallowModel.FromEmbedModel(c.EmbedModel)
+	sm.ID = c.ID
+	sm.StatsModel = c.StatsModel.EmbedModel.ID
+	sms = append(sms, c.StatsModel.Pack()...)
+	sm.FilesArrayModel = make([]string, 0)
+	for _, id := range c.FilesArrayModel {
+		sm.FilesArrayModel = append(sm.FilesArrayModel, id.EmbedModel.ID)
+		sms = append(sms, id.Pack()...)
+	}
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *VideoOutput) Unmarshal(ctx context.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }

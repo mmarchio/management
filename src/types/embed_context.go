@@ -24,7 +24,7 @@ type Context struct {
 	AudioPromptModel 					Stats `json:"audio_prompt_model"`
 	AudioOutputModel 					AudioOutput `json:"audio_output_model"`
 	VideoLipsyncOutputModel 			VideoLipsyncOutput `json:"video_lipsync_output_model"`
-	VideoTransparencyOutputModel 		VideoTransparancyOutput `json:"video_transparency_output_model"`
+	VideoTransparencyOutputModel 		VideoTransparencyOutput `json:"video_transparency_output_model"`
 	VideoBackgroundOutputModel 			VideoBackgroundOutput `json:"video_background_output_model"`
 	VideoLayerMergeModel 				VideoLayerMergeOutput `json:"video_layer_merge_model"`
 	VideoJoinArrayModel 				[]Scene `json:"video_join_array_model"`

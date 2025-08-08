@@ -21,6 +21,26 @@ type Stats struct {
 	Status 			string `json:"status"`
 }
 
+func (c Stats) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowStats{}
+	sm.ShallowModel = sm.ShallowModel.FromEmbedModel(c.EmbedModel)
+	sm.ID = c.ID
+	sm.Start = c.Start
+	sm.End = c.End
+	sm.Input = c.Input
+	sm.Output = c.Output
+	sm.Duration = c.Duration
+	sm.Status = c.Status
+	sm.FilesArrayModel = make([]string, 0)
+	for _, id := range c.FilesArrayModel {
+		sm.FilesArrayModel = append(sm.FilesArrayModel, id.EmbedModel.ID)
+		sms = append(sms, id.Pack()...)
+	}
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *Stats) Unmarshal(ctx context.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
