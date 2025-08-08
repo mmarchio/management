@@ -8,7 +8,6 @@
             <li><a href="/comfy">ComfyUI Templates</a></li>
             <li><a href="/systemprompts">System Prompts</a></li>
             <li><a href="/workflow">Workflow</a></li>
-            <li><a href="/node">Node</a></li>
             <li><a href="/prompttemplates">Prompt Templates</a></li>
         </ul>
 {{end}}
