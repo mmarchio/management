@@ -12,12 +12,27 @@ import (
 )
 
 type Toggle struct {
+	Model
 	ID 			string `json:"id"`
 	NamePrefix 	string `json:"name_prefix"`
 	IdPrefix 	string `json:"id_suffix"`
 	Suffix 		string `json:"suffix"`
 	Value 		bool `json:"value"`
 	Title 		string `json:"title"`
+}
+
+func (c Toggle) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowToggle{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.NamePrefix = c.NamePrefix
+	sm.IdPrefix = c.IdPrefix
+	sm.Suffix = c.Suffix
+	sm.Value = c.Value
+	sm.Title = c.Title
+	sms = append(sms, sm)
+	return sms
 }
 
 func (c *Toggle) init() {

@@ -48,7 +48,7 @@ func (c JobStatus) List(ctx context.Context) ([]JobStatus, error) {
 	content := NewJobStatusModelContent()
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.JobStatusListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]JobStatus, 0)
 	for _, model := range contents {
@@ -66,7 +66,7 @@ func (c JobStatus) ListBy(ctx context.Context, key string, value interface{}) ([
 	content := NewJobStatusModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.JobStatusError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]JobStatus, 0)
 	for _, model := range contents {
@@ -86,7 +86,7 @@ func (c *JobStatus) Get(ctx context.Context) error {
 	content.Model.ContentType = "jobstatus"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.JobStatusGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -100,7 +100,7 @@ func (c JobStatus) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.JobStatusDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

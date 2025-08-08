@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/strrep"
 )
@@ -19,11 +20,75 @@ type OllamaNode struct {
 	Model
 	ID 				string `json:"id"`
 	Name 			string `form:"name" json:"name"`
-	OllamaModel 	string `form:"ollama_model" json:"ollama_model"`
+	OllamaModel 	string `form:"model" json:"model"`
 	SystemPrompt 	string `form:"system_prompt" json:"system_prompt"`
 	Prompt 			string `form:"prompt" json:"prompt"`
 	PromptTemplate  string `form:"prompt_template" json:"prompt_template"`
-	Response        OllamaResponse `json:"response"`
+	ResponseModel   OllamaResponse `json:"response_model"`
+	WorkflowID  	WorkflowID `form:"workflow_id" json:"workflow_id"`
+	Enabled 		bool   `json:"enabled"`
+	Bypass 			bool   `json:"bypass"`
+	Output 			string `form:"output" json:"output"`
+	Context			Context
+}
+
+func (c OllamaNode) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowOllamaNode{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.OllamaModel = c.OllamaModel
+	sm.SystemPrompt = c.SystemPrompt
+	sm.Prompt = c.Prompt
+	sm.PromptTemplate = c.PromptTemplate
+	sm.WorkflowID = c.WorkflowID
+	sm.Enabled = c.Enabled
+	sm.Output = c.Output
+	sms = append(sms, sm)
+	return sms
+}
+
+func (c OllamaNode) Validate() params {
+	valid := true
+	if !c.Model.Validate() {
+		valid = false
+	}
+	if c.Model.ContentType != "ollamanode" {
+		valid = false
+	}
+	if c.ID == "" || c.ID != c.Model.ID {
+		valid = false
+	}
+	if c.Name == "" || c.OllamaModel == "" {
+		valid = false
+	}
+	if c.Prompt == "" && c.PromptTemplate == "" {
+		valid = false
+	}
+	c.Model.Validated = valid
+	return c
+}
+
+func (c OllamaNode) GetValidated() bool {
+	return c.Model.Validated
+}
+
+func NewOllamaNode(id *string) OllamaNode {
+	c := OllamaNode{}
+	if id != nil {
+		c.Model.ID = *id
+	} else {
+		c.Model.ID = uuid.NewString()
+	}
+	c.ID = c.Model.ID
+	c.Model.ContentType = "ollamanode"
+	if c.Model.CreatedAt.IsZero() {
+		c.Model.CreatedAt = time.Now()
+		c.Model.UpdatedAt = c.Model.CreatedAt
+	} else {
+		c.Model.UpdatedAt = time.Now()
+	}
+	return c
 }
 
 func (c OllamaNode) GetName() string {
@@ -75,7 +140,7 @@ func (c *OllamaNode) ParsePromptTemplate(ctx context.Context) error {
 			id := c.PromptTemplate
 			pt := NewPromptTemplate(&id)
 			if err := pt.Get(ctx); err != nil {
-				return merrors.GetPromptTemplateError{Package: "types", Struct:"OllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
+				return merrors.ContentGetError{Package: "types", Struct:"OllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
 			}
 			msi := make(map[string]interface{})
 			if err := json.Unmarshal([]byte(pt.Vars), &msi); err != nil {
@@ -130,7 +195,7 @@ func (c *OllamaNode) FromMSI(msi map[string]interface{}) error {
 func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponse, errchan chan error) error {
 	start := time.Now()
 	if c.OllamaModel == "" {
-		return fmt.Errorf("OllamaNode:OllamaModel is nil\n")
+		errchan <- fmt.Errorf("OllamaNode:OllamaModel is nil\n")
 	}
 	oreq := OllamaRequest{
 		Model: c.OllamaModel,
@@ -145,10 +210,10 @@ func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponse, err
 		return merrors.JSONMarshallingError{Package: "types", Struct:"OllamaNode", Function: "Call"}.Wrap(err)
 	}
 	fmt.Printf("req data %#v\n", oreq)
-	c.Response = OllamaResponse{}
+	c.ResponseModel = OllamaResponse{}
 	semaphore := make(chan struct{}, 1)
 	ctr := 1
-	for !c.Response.Done {
+	for !c.ResponseModel.Done {
 		reader := bytes.NewReader(data)
 		req, err := http.NewRequest("POST", "http://172.17.0.1:7869/api/generate", reader)
 		if err != nil {
@@ -157,8 +222,8 @@ func (c *OllamaNode) Call(ctx context.Context, respchan chan OllamaResponse, err
 		wg.Add(1)
 		go worker(c, req, respchan, errchan, semaphore)
 		workerResp := <- respchan
-		c.Response.Done = workerResp.Done
-		c.Response.Response = workerResp.Response
+		c.ResponseModel.Done = workerResp.Done
+		c.ResponseModel.Response = workerResp.Response
 		time.Sleep(5*time.Second)
 		ctr++
 	}
@@ -186,9 +251,110 @@ func worker(c *OllamaNode, req *http.Request, respchan chan OllamaResponse, errc
 		if err != nil {
 			errchan <- err
 		}
-		c.Response.Response = cresp.Response
-		c.Response.Done = cresp.Done
-		respchan <- c.Response
+		c.ResponseModel.Response = cresp.Response
+		c.ResponseModel.Done = cresp.Done
+		respchan <- c.ResponseModel
 	}
 }
 
+func (c *OllamaNode) Get(ctx context.Context) error {
+	content := NewComfyNodeTypeContent()
+	content.Model.ID = c.Model.ID
+	content, err := content.Get(ctx)
+	if err != nil {
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+	}
+	err = json.Unmarshal([]byte(content.Content), c)
+	if err != nil {
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ollamanode", Function: "Get"}.Wrap(err)
+	}
+	return nil
+}
+
+func NewOllamaNodeTypeContent() Content {
+	c := Content{}
+	c.Model.ContentType = "ollamanode"
+	return c
+}
+
+func (c OllamaNode) Delete(ctx context.Context) error {
+	content := NewSSHNodeTypeContent()
+	content.FromType(c)
+	content.Model.ID = c.Model.ID
+	content.ID = c.ID
+	if err := content.Delete(ctx); err != nil {
+		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err)
+	}
+	return nil
+}
+
+func (c OllamaNode) GetContentType() string {
+	return c.Model.ContentType
+}
+
+func (c OllamaNode) GetID() string {
+	return c.Model.ID
+}
+
+func (c OllamaNode) Set(ctx context.Context) error {
+	c.Validate()
+	if !c.Model.Validated {
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+	}
+	content := NewOllamaNodeTypeContent()
+	content.FromType(c)
+	content.Model.ID = c.Model.ID
+	content.ID = c.Model.ID
+	err := content.Set(ctx)
+	if err != nil {
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
+	}
+	return nil
+}
+
+func (c *OllamaNode) GetNodeFromWorkflow(id string, wf Workflow) {
+	for _, v := range wf.OllamaNodesArrayModel {
+		if id == v.Model.ID {
+			c = &v
+			break
+		}
+	}
+}
+
+func (c OllamaNode) Exec(ctx context.Context) error {
+	fmt.Printf("ollama node found: %s\n", c.Name)
+	start := time.Now()
+	if c.SystemPrompt != "" && len(c.SystemPrompt) == 36 {
+		spid := c.SystemPrompt
+		sp := NewSystemPrompt(&spid)
+		if err := sp.Get(ctx); err != nil {
+			return err
+		}
+		c.SystemPrompt = sp.Prompt
+	}
+	Response := make(chan OllamaResponse, 1000)
+	Error := make(chan error, 1)
+	go c.Call(ctx, Response, Error)
+	go func(){
+		if len(Error) > 0 {
+			err := <- Error
+			fmt.Printf("err from errchan: %s\n", err.Error())
+		}
+	}()
+	wg.Add(1)
+	// var resp types.OllamaResponseModel
+	// go run(c, resp, ResponseModel, Error, 1, semaphore)
+	// wg.Add(1)
+	wg.Wait()
+	resp := <-Response
+	c.Output = resp.Response
+	end := time.Now()
+	c.Context.GetResearchPromptModel.Start = start
+	c.Context.GetResearchPromptModel.End = end 
+	c.Context.GetResearchPromptModel.Status = "done"
+	c.Context.GetResearchPromptModel.Output = c.ResponseModel.Response
+	if err := c.Set(ctx); err != nil {
+		return err
+	}
+	return nil
+}

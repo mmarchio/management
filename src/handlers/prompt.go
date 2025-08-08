@@ -78,6 +78,11 @@ func HandlePromptsNew(c echo.Context) error {
 	var err error
 	ctx := GetEchoCtx(c)
 	prompt := types.NewPrompt(nil)
+	prompt.ID = types.PromptID("")
+	prompt.Model.ID = ""
+	if id := c.Param("id"); err != nil {
+		prompt = types.NewPrompt(&id)
+	}
 	prompt, err = prompt.GetDispositions(ctx)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
@@ -102,46 +107,47 @@ func HandlePromptsNew(c echo.Context) error {
 func HandlePromptSave(c echo.Context) error {
 	var err error
 	ctx := database.GetDatabaseCtx()
+	prompt := types.NewPrompt(nil)
 	if id := c.Param("id"); id != "" {
-		prompt := types.NewPrompt(&id)
+		//existing entity
+		prompt = types.NewPrompt(&id)
 		if err := prompt.Get(ctx); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		if err = c.Bind(&prompt); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(err))
-		}
-		prompt, err = prompt.GetDispositions(ctx)
-		if err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		prompt, err = prompt.Bind(c)
-		if err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		if err = prompt.Set(ctx); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		prompt.Settings.Template.AvailableDispositions = reconcileDispositions(prompt)
-
-		existingJob := types.NewJob(nil)
-		existingJob.PromptID = prompt.ID
-		job, err := findExistingJob(ctx, existingJob.PromptID.String(), prompt)
-		if err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		if err = createPromptJobRuns(ctx, job, prompt); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		return HandlePromptsList(c)
 	}
-	return c.Render(http.StatusBadRequest, "error.tpl", "missing id")
+	if err = c.Bind(&prompt); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(err))
+	}
+	prompt, err = prompt.GetDispositions(ctx)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	prompt, err = prompt.Bind(c)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if err = prompt.Set(ctx); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	prompt.SettingsModel.TemplateModel.AvailableDispositions = reconcileDispositions(prompt)
+
+	existingJob := types.NewJob(nil)
+	existingJob.PromptID = prompt.ID
+	job, err := findExistingJob(ctx, existingJob.PromptID.String(), prompt)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if err = createPromptJobRuns(ctx, job, prompt); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	return HandlePromptsList(c)
 }
 
 func reconcileDispositions(prompt types.Prompt) []types.Disposition {
 	newAvailableDispositions := make([]types.Disposition, 0)
-	for _, d := range prompt.Settings.Template.Dispositions {
+	for _, d := range prompt.SettingsModel.TemplateModel.DispositionsArrayModel {
 		exists := false
-		for _, ad := range prompt.Settings.Template.AvailableDispositions {
+		for _, ad := range prompt.SettingsModel.TemplateModel.AvailableDispositions {
 			if d.Model.ID == ad.Model.ID {
 				exists = true
 			}
@@ -182,7 +188,7 @@ func findExistingJob(ctx context.Context, placeholderID string, prompt types.Pro
 	if foundJob.PromptID.String() != placeholderID {
 		job = types.NewJob(nil)
 		job.PromptID = types.PromptID(prompt.Model.ID)
-		job.WorkflowID = prompt.Settings.Workflow
+		job.WorkflowID = prompt.SettingsModel.Workflow
 		if err := job.Set(ctx); err != nil {
 			return nil, err
 		}
@@ -194,13 +200,13 @@ func findExistingJob(ctx context.Context, placeholderID string, prompt types.Pro
 
 func updateJobRuns(ctx context.Context, jobruns []types.JobRun, jobrun types.JobRun, prompt types.Prompt) error {
 	for _, jobrun = range jobruns {
-		if prompt.Settings.UpdatedAt != jobrun.Settings.UpdatedAt {
-			jobrun.Settings = prompt.Settings
+		if prompt.SettingsModel.UpdatedAt != jobrun.SettingsModel.UpdatedAt {
+			jobrun.SettingsModel = prompt.SettingsModel
 			jobrun.Model.UpdatedAt = time.Now()
 		}
-		for _, d := range prompt.Settings.Template.Dispositions {
-			if jobrun.Disposition.Model.ID == d.Model.ID && jobrun.Disposition.UpdatedAt != d.Model.UpdatedAt {
-				jobrun.Disposition = d
+		for _, d := range prompt.SettingsModel.TemplateModel.DispositionsArrayModel {
+			if jobrun.DispositionModel.Model.ID == d.Model.ID && jobrun.DispositionModel.UpdatedAt != d.Model.UpdatedAt {
+				jobrun.DispositionModel = d
 				jobrun.Model.UpdatedAt = time.Now()
 			}
 		}
@@ -213,14 +219,14 @@ func updateJobRuns(ctx context.Context, jobruns []types.JobRun, jobrun types.Job
 }
 
 func createJobRuns(ctx context.Context, prompt types.Prompt, job *types.Job) error {
-	for _, disposition := range prompt.Settings.Template.Dispositions {
+	for _, disposition := range prompt.SettingsModel.TemplateModel.DispositionsArrayModel {
 		jobrun := types.NewJobRun(nil)
 		jobrun.Model.ContentType = "jobrun"
 		jobrun.JobID = types.JobID(job.Model.ID)
-		jobrun.Context = types.NewContext(prompt, jobrun.ID, disposition)
+		jobrun.ContextModel = types.NewContext(prompt, jobrun.ID, disposition)
 		jobrun.LatestStatusType = "start"
 		jobrun.LatestStatusValue = "queued"
-		jobrun.Disposition = disposition
+		jobrun.DispositionModel = disposition
 		if err := jobrun.Set(ctx); err != nil {
 			return err
 		}
@@ -231,13 +237,12 @@ func createJobRuns(ctx context.Context, prompt types.Prompt, job *types.Job) err
 func createPromptJob(ctx context.Context, prompt types.Prompt) (*types.Job, error) {
 	newJob := types.NewJob(nil)
 	newJob.PromptID = prompt.ID
-	newJob.Recurring = prompt.Settings.Recurring.Value
-	newJob.Interval = prompt.Settings.Interval
-	newJob.WorkflowID = prompt.Settings.Workflow
+	newJob.Recurring = prompt.SettingsModel.RecurringModel.Value
+	newJob.Interval = prompt.SettingsModel.Interval
+	newJob.WorkflowID = prompt.SettingsModel.Workflow
 	if err := newJob.Set(ctx); err != nil {
 		return nil, err
 	}
-	fmt.Printf("new job created: %#v\n", newJob)
 	return &newJob, nil
 }
 

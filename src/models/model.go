@@ -1,14 +1,12 @@
 package models
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
 )
@@ -20,10 +18,55 @@ type Model struct {
 	ContentType string `json:"content_type"`
 	Columns 	string
 	Values 		string
-	Conflict 	string	
+	Conflict 	string
+	Validated   bool
+	Manifest	[]string	
+}
+
+type ShallowModel struct {
+	ID 			string `form:"id" json:"id"`
+	CreatedAt 	time.Time `json:"created_at"`
+	UpdatedAt 	time.Time `json:"updated_at"`
+	ContentType string `json:"content_type"`
+	TokenCount 	int64
+	Columns 	string
+	Values 		string
+	Conflict 	string
+	Validated   bool	
+	Manifest    []string `json:"manifest"`
+	ExpandedID  string `json:"expanded_id"`
+}
+
+func (c ShallowModel) New(id, ct *string) ShallowModel {
+	if id != nil {
+		c.ID = *id
+	} else {
+		c.ID = uuid.NewString()
+	}
+	if ct != nil {
+		c.ContentType = *ct
+	}
+	c.Init()
+	return c
+}
+
+func (c Model) Validate() bool {
+	if c.ID == "" {
+		return false
+	}
+	if c.CreatedAt.IsZero() || c.UpdatedAt.IsZero() {
+		return false
+	}
+	return true
 }
 
 func (c *Model) Init() {
+	c.Columns = "id, created_at, updated_at, content_type, content"
+	c.Values = "$1, $2, $3, $4, $5"
+	c.Conflict = "DO UPDATE SET updated_at = $3, content = $5"
+}
+
+func (c *ShallowModel) Init() {
 	c.Columns = "id, created_at, updated_at, content_type, content"
 	c.Values = "$1, $2, $3, $4, $5"
 	c.Conflict = "DO UPDATE SET updated_at = $3, content = $5"
@@ -105,32 +148,5 @@ func (c Model) ListBy(ctx context.Context, table ITable, column string, value st
 		r = append(r, itable)
 	}
 	return r, nil
-}
-
-func FromBase64(s string) (string, error) {
-	b := bytes.NewBufferString(s)
-	decoder := base64.NewDecoder(base64.StdEncoding, b)
-	decodedBytes := make([]byte, 10)
-	var str string
-	for {
-		n, err := decoder.Read(decodedBytes)
-		if err == io.EOF {
-			break
-		}
-		if err != nil && err != io.EOF {
-			return "", merrors.Base64DecodingError{Info: s}.Wrap(err)
-		}
-		str += string(decodedBytes[:n])
-	}
-	return str, nil
-}
-
-func ToBase64(b []byte) (string, error) {
-	writer := new(bytes.Buffer)
-	_, err := base64.NewEncoder(base64.StdEncoding, writer).Write(b)
-	if err != nil {
-		return "", merrors.Base64EncodingError{Info: string(b)}.Wrap(err)
-	}
-	return writer.String(), nil
 }
 

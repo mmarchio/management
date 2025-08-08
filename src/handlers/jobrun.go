@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -122,7 +123,7 @@ func HandleJobRunsContextGet(c echo.Context) error {
 		if err := entity.Get(ctx); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		b, err := json.MarshalIndent(entity.TruncatedContext, "", "  ")
+		b, err := json.MarshalIndent(entity.TruncatedContextModel, "", "  ")
 		if err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.JSONMarshallingError{}.Wrap(err))
 		}
@@ -138,16 +139,16 @@ func HandleAPIJobRunsContextGet(c echo.Context) error {
 		if err := entity.Get(ctx); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		if entity.TruncatedContext.ID == "" {
-			tc, err := entity.Context.Truncate()
+		if entity.TruncatedContextModel.ID == "" {
+			tc, err := entity.ContextModel.Truncate()
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, err.Error())
 			}
 			if tc != nil {
-				entity.TruncatedContext = *tc
+				entity.TruncatedContextModel = *tc
 			}
 		}
-		return c.JSON(http.StatusOK, entity.TruncatedContext)
+		return c.JSON(http.StatusOK, entity.TruncatedContextModel)
 	}
 	return c.JSON(http.StatusBadRequest, "bad request: missing id")
 }
@@ -159,13 +160,13 @@ func HandleAPIJobRunsContextSet(c echo.Context) error {
 		if err := entity.Get(ctx); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		if entity.TruncatedContext.ID == "" {
-			tc, err := entity.Context.Truncate()
+		if entity.TruncatedContextModel.ID == "" {
+			tc, err := entity.ContextModel.Truncate()
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, err.Error())
 			}
 			if tc != nil {
-				entity.TruncatedContext = *tc
+				entity.TruncatedContextModel = *tc
 			}
 		}
 		tc := types.TruncatedContext{}
@@ -187,7 +188,7 @@ func HandleJobRunsContextSet(c echo.Context) error {
 		if err := jobRun.Get(ctx); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		Ctx, err := jobRun.Context.Truncate()
+		Ctx, err := jobRun.ContextModel.Truncate()
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
@@ -246,45 +247,19 @@ func HandleJobRunRun(c echo.Context) error {
 		if err := wf.Get(ctx); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		for i, node := range wf.Nodes {
-			if node.Params == nil {
-				continue
-			}
-			switch node.Params.GetType() {
-			case "ollama_node":
-				if p, ok := node.Params.(types.OllamaNode); ok {
-					start := time.Now()
-					if p.SystemPrompt != "" && len(p.SystemPrompt) == 36 {
-						spid := p.SystemPrompt
-						sp := types.NewSystemPrompt(&spid)
-						if err := sp.Get(ctx); err != nil {
-							return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-						}
-						p.SystemPrompt = sp.Prompt
-					}
-					Response := make(chan types.OllamaResponse, 1000)
-					Error := make(chan error, 1)
-					go p.Call(ctx, Response, Error)
-					wg.Add(1)
-					// var resp types.OllamaResponse
-					// go run(c, resp, Response, Error, 1, semaphore)
-					// wg.Add(1)
-					wg.Wait()
-					wf.Nodes[i].Params = p
-					if err := wf.Set(ctx); err != nil {
+		for k := range wf.NodeOrder {
+			parts := strings.Split(k, ":")
+			if len(parts) == 2 {
+				switch parts[1] {
+				case "comfynode":
+				case "ollamanode":
+					onode := types.NewOllamaNode(nil)
+					onode.GetNodeFromWorkflow(parts[0], wf)
+					if err := onode.Exec(ctx); err != nil {
 						return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 					}
-					end := time.Now()
-					entity.Context.GetResearchPrompt.Start = start
-					entity.Context.GetResearchPrompt.End = end 
-					entity.Context.GetResearchPrompt.Status = "done"
-					entity.Context.GetResearchPrompt.Output = p.Response.Response
-					if err := entity.Set(ctx); err != nil {
-						return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-					}
+				case "sshnode":
 				}
-			case "comfy_node":
-			case "ssh_node":
 			}
 		}
 

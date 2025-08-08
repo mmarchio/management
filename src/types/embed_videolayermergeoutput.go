@@ -9,9 +9,25 @@ import (
 
 type VideoLayerMergeOutput struct {
 	EmbedModel
-	ID VideoLayerMergeOutputID `json:"id"`
-	Stats Stats `json:"stats"`
-	Files []File `json:"files"`
+	ID 				VideoLayerMergeOutputID `json:"id"`
+	StatsModel 		Stats `json:"stats_model"`
+	FilesArrayModel []File `json:"files_array_model"`
+}
+
+func (c VideoLayerMergeOutput) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowVideoLayerMergeOutput{}
+	sm.ShallowModel = sm.ShallowModel.FromEmbedModel(c.EmbedModel)
+	sm.ID = c.ID
+	sm.StatsModel = c.StatsModel.EmbedModel.ID
+	sms = append(sms, c.StatsModel.Pack()...)
+	sm.FilesArrayModel = make([]string, 0)
+	for _, id := range c.FilesArrayModel {
+		sm.FilesArrayModel = append(sm.FilesArrayModel, id.EmbedModel.ID)
+		sms = append(sms, id.Pack()...)
+	}
+	sms = append(sms, sm)
+	return sms
 }
 
 func (c *VideoLayerMergeOutput) Unmarshal(ctx context.Context, j string) error {
@@ -25,6 +41,6 @@ func (c VideoLayerMergeOutput) Marshal(ctx context.Context) (string, error) {
 
 func (c VideoLayerMergeOutput) New() VideoLayerMergeOutput {
 	c.ID = VideoLayerMergeOutputID(uuid.NewString())
-	c.Stats = c.Stats.New(c.ID.String())
+	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }
