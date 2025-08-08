@@ -17,6 +17,24 @@ type ShallowPromptTemplate struct {
 	Vars 		string `form:"vars" json:"vars"`
 }
 
+func (c ShallowPromptTemplate) Expand(ctx context.Context) (*PromptTemplate, error) {
+	r := PromptTemplate{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Model = r.Model.FromShallowModel(c.ShallowModel)
+	r.Name = c.Name
+	r.Template = c.Template
+	r.Vars = c.Vars
+	return &r, nil
+}
 
 func NewShallowPromptTemplate(id *string) ShallowPromptTemplate {
 	c := ShallowPromptTemplate{}
