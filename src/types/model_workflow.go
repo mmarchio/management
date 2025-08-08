@@ -21,6 +21,8 @@ type Workflow struct {
 	NodeOrder 				map[string]int 	`form: "node_order" "json: "node_order"`
 }
 
+
+
 func (c *Workflow) Validate() {
 	valid := true
 	if !c.Model.Validate() {

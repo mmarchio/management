@@ -16,6 +16,21 @@ type ShallowContent struct {
 	Content string `json:"content"`
 }
 
+func (c ShallowContent) Expand(ctx context.Context) (*Content, error) {
+	r := Content{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Content = c.Content
+	return &r, nil
+}
 
 func (c ShallowContent) New(ct string) ShallowContent {
 	c.ShallowModel.ID = uuid.New().String()
@@ -128,11 +143,4 @@ func (c *ShallowContent) FromType(m ITable) error {
 	}
 	c.Content = string(b)
 	return nil
-}
-
-func (c ShallowContent) Expand() Content {
-	r := Content{}
-	r.Model = c.ShallowModel.Expand()
-	r.Content = c.Content
-	return r
 }
