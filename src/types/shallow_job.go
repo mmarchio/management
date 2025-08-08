@@ -48,6 +48,28 @@ type ShallowJob struct {
 	LastCompleted 	time.Time 	`json:"last_completed"`
 }
 
+func (c ShallowJob) Expand(ctx context.Context) (*Job, error) {
+	r := Job{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}	
+	r.Model = r.Model.FromShallowModel(c.ShallowModel)
+	r.ID = c.ID
+	r.PromptID = c.PromptID
+	r.WorkflowID = c.WorkflowID
+	r.Recurring = c.Recurring
+	r.Interval = c.Interval
+	r.LastCompleted = c.LastCompleted
+	return &r, nil
+}
+
 func (c *ShallowJob) New() {
 	c.ID = c.ID.New()
 	c.ShallowModel.ID = c.ID.String()

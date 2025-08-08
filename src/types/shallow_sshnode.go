@@ -24,6 +24,32 @@ type ShallowSSHNode struct {
 	Output 		string `form:"output" json:"output"`
 }
 
+func (c ShallowSSHNode) Expand(ctx context.Context) (*SSHNode, error) {
+	r := SSHNode{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Model = r.Model.FromShallowModel(c.ShallowModel)
+	r.ID = c.ID
+	r.Name = c.Name
+	r.Command = c.Command
+	r.User = c.User
+	r.Host = c.Host
+	r.WorkflowID = c.WorkflowID
+	r.Type = c.Type
+	r.Enabled = c.Enabled
+	r.Bypass = c.Bypass
+	r.Output = c.Output
+	return &r, nil
+}
+
 func (c ShallowSSHNode) Validate() params {
 	valid := true
 	if !c.ShallowModel.Validate() {

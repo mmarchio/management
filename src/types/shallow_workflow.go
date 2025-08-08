@@ -29,45 +29,33 @@ func (c ShallowWorkflow) Expand(ctx context.Context) (*Workflow, error) {
 	w.Name = c.Name
 	w.ComfyNodesArrayModel = make([]ComfyNode, 0)
 	for _, id := range w.ComfyNodesArrayModel {
-		cnam := ComfyNode{}
 		scnam := ShallowComfyNode{}
 		scnam.ShallowModel.ID = id.Model.ID
-		sc, err := scnam.ShallowModel.Get(ctx)
+		sc, err := scnam.Expand(ctx)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
-		if err := json.Unmarshal([]byte(sc.Content), &cnam); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
-		}
-		w.ComfyNodesArrayModel = append(w.ComfyNodesArrayModel, cnam)
+		w.ComfyNodesArrayModel = append(w.ComfyNodesArrayModel, *sc)
 	}
 	w.OllamaNodesArrayModel = make([]OllamaNode, 0)
 	for _, id := range w.OllamaNodesArrayModel {
-		cnam := OllamaNode{}
 		scnam := ShallowOllamaNode{}
 		scnam.ShallowModel.ID = id.Model.ID
-		sc, err := scnam.ShallowModel.Get(ctx)
+		sc, err := scnam.Expand(ctx)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
-		if err := json.Unmarshal([]byte(sc.Content), &cnam); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
-		}
-		w.OllamaNodesArrayModel = append(w.OllamaNodesArrayModel, cnam)
+		w.OllamaNodesArrayModel = append(w.OllamaNodesArrayModel, *sc)
 	}
 	w.SSHNodesArrayModel = make([]SSHNode, 0)
 	for _, id := range w.SSHNodesArrayModel {
-		cnam := SSHNode{}
 		scnam := ShallowSSHNode{}
 		scnam.ShallowModel.ID = id.Model.ID
-		sc, err := scnam.ShallowModel.Get(ctx)
+		sc, err := scnam.Expand(ctx)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
-		if err := json.Unmarshal([]byte(sc.Content), &cnam); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
-		}
-		w.SSHNodesArrayModel = append(w.SSHNodesArrayModel, cnam)
+		w.SSHNodesArrayModel = append(w.SSHNodesArrayModel, *sc)
 	}
 	return &w, nil
 }

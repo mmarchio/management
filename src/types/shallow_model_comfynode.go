@@ -26,6 +26,33 @@ type ShallowComfyNode struct {
 	Output 			string 					`form:"output" json:"output"`
 }
 
+func (c ShallowComfyNode) Expand(ctx context.Context) (*ComfyNode, error) {
+	r := ComfyNode{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Model = r.Model.FromShallowModel(c.ShallowModel)
+	r.ID = c.ID
+	r.Name = c.Name
+	r.Prompt = c.Prompt
+	r.APIBase = c.APIBase
+	r.APITemplate = c.APITemplate
+	r.TemplateValues = c.TemplateValues
+	r.WorkflowID = c.WorkflowID
+	r.Type = c.Type
+	r.Enabled = c.Enabled
+	r.Bypass = c.Bypass
+	r.Output = c.Output
+	return &r, nil
+}
+
 func (c ShallowComfyNode) Validate() params {
 	valid := true
 	if !c.ShallowModel.Validate() {

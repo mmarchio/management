@@ -27,6 +27,39 @@ type ShallowOllamaNode struct {
 	Context			Context
 }
 
+func (c ShallowOllamaNode) Expand(ctx context.Context) (*OllamaNode, error) {
+	r := OllamaNode{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Model = r.Model.FromShallowModel(c.ShallowModel)
+	r.ID = c.ID
+	r.Name = c.Name
+	r.OllamaModel = c.OllamaModel
+	r.SystemPrompt = c.SystemPrompt
+	r.Prompt = c.Prompt
+	r.PromptTemplate = c.PromptTemplate
+	srm := ShallowOllamaResponse{}
+	srm.ShallowModel.ID = c.ResponseModel
+	rm, err := srm.Expand(ctx)
+	if err != nil {
+		return nil, err
+	}
+	r.ResponseModel = *rm
+	r.WorkflowID = c.WorkflowID
+	r.Enabled = c.Enabled
+	r.Bypass = c.Bypass
+	r.Output = c.Output
+	return &r, nil
+}
+
 func (c ShallowOllamaNode) Validate() params {
 	valid := true
 	if !c.ShallowModel.Validate() {
