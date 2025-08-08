@@ -18,6 +18,17 @@ type ShallowEntitlements struct {
 	FacebookModel 	string `form:"facebook" json:"facebook"`
 }
 
+func (c ShallowEntitlements) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowEntitlements) Expand(ctx context.Context) (*Entitlements, error) {
 	r := Entitlements{}
 	r.EmbedModel.FromShallowModel(c.ShallowModel)

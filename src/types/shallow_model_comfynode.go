@@ -26,6 +26,17 @@ type ShallowComfyNode struct {
 	Output 			string 					`form:"output" json:"output"`
 }
 
+func (c ShallowComfyNode) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowComfyNode) Expand(ctx context.Context) (*ComfyNode, error) {
 	r := ComfyNode{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

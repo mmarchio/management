@@ -18,6 +18,17 @@ type ShallowFile struct {
 	Joined 		bool `json:"joined"`
 }
 
+func (c ShallowFile) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowFile) Expand(ctx context.Context) (*File, error) {
 	r := File{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

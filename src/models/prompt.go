@@ -50,7 +50,7 @@ func (c Prompt) Scan(ctx context.Context, rows Scannable) (ITable, error) {
 	for rows.Next() {
 		err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Name, &c.Domain, &c.Category, &c.Settings)
 		if err != nil {
-			return nil, merrors.PromptModelScanError{}.Wrap(err)
+			return nil, merrors.DBContentScanError{}.Wrap(err)
 		}
 	}
 	return c, nil
@@ -78,7 +78,7 @@ func (c *Prompt) New() {
 func (c *Prompt) Get(ctx context.Context) error {
 	var err error
 	if err != nil {
-		return merrors.PromptGetError{}.Wrap(err)
+		return merrors.ContentGetError{}.Wrap(err)
 	}
 	return nil
 }
@@ -86,7 +86,7 @@ func (c *Prompt) Get(ctx context.Context) error {
 func (c Prompt) Set(ctx context.Context) error {
 	err := c.Model.Set(ctx, c)
 	if err != nil {
-		return merrors.PromptSetError{}.Wrap(err)
+		return merrors.ContentSetError{}.Wrap(err)
 	}
 	return nil
 }

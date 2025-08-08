@@ -15,6 +15,17 @@ type ShallowVideoLipsyncOutput struct {
 	FilesArrayModel []string `json:"files_array_model"`
 }
 
+func (c ShallowVideoLipsyncOutput) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowVideoLipsyncOutput) Expand(ctx context.Context) (*VideoLipsyncOutput, error) {
 	r := VideoLipsyncOutput{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

@@ -22,6 +22,17 @@ type ShallowWorkflow struct {
 	NodeOrder 				map[string]int 	`form: "node_order" "json: "node_order"`
 }
 
+func (c ShallowWorkflow) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowWorkflow) Expand(ctx context.Context) (*Workflow, error) {
 	w := Workflow{}
 	w.Model = w.Model.FromShallowModel(c.ShallowModel)

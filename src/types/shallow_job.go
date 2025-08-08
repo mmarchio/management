@@ -48,6 +48,17 @@ type ShallowJob struct {
 	LastCompleted 	time.Time 	`json:"last_completed"`
 }
 
+func (c ShallowJob) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowJob) Expand(ctx context.Context) (*Job, error) {
 	r := Job{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

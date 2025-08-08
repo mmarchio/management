@@ -22,6 +22,17 @@ type ShallowStats struct {
 	Status 			string `json:"status"`
 }
 
+func (c ShallowStats) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowStats) Expand(ctx context.Context) (*Stats, error) {
 	r := Stats{}
 	r.EmbedModel.ID = c.ShallowModel.ID

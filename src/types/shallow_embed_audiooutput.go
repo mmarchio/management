@@ -14,6 +14,17 @@ type ShallowAudioOutput struct {
 	FilesArrayModel []string `json:"files_array_model"`
 }
 
+func (c ShallowAudioOutput) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowAudioOutput) Expand(ctx context.Context) (*AudioOutput, error) {
 	r := AudioOutput{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

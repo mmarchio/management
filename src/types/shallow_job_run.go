@@ -43,6 +43,17 @@ type ShallowJobRun struct {
 	LatestStatusValue 		string 			 `json:"latest_status_value"`
 }
 
+func (c ShallowJobRun) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowJobRun) Expand(ctx context.Context) (*JobRun, error) {
 	r := JobRun{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

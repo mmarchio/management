@@ -20,6 +20,17 @@ type ShallowToggle struct {
 	Title 		string `json:"title"`
 }
 
+func (c ShallowToggle) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowToggle) Expand(ctx context.Context) (*Toggle, error) {
 	r := Toggle{}
 	if c.CreatedAt.IsZero() {

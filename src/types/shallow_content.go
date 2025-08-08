@@ -16,6 +16,13 @@ type ShallowContent struct {
 	Content string `json:"content"`
 }
 
+func (c ShallowContent) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	m.Content = c.Content
+	return &m, nil
+}
+
 func (c ShallowContent) Expand(ctx context.Context) (*Content, error) {
 	r := Content{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

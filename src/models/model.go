@@ -1,11 +1,8 @@
 package models
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -151,32 +148,5 @@ func (c Model) ListBy(ctx context.Context, table ITable, column string, value st
 		r = append(r, itable)
 	}
 	return r, nil
-}
-
-func FromBase64(s string) (string, error) {
-	b := bytes.NewBufferString(s)
-	decoder := base64.NewDecoder(base64.StdEncoding, b)
-	decodedBytes := make([]byte, 10)
-	var str string
-	for {
-		n, err := decoder.Read(decodedBytes)
-		if err == io.EOF {
-			break
-		}
-		if err != nil && err != io.EOF {
-			return "", merrors.Base64DecodingError{Info: s}.Wrap(err)
-		}
-		str += string(decodedBytes[:n])
-	}
-	return str, nil
-}
-
-func ToBase64(b []byte) (string, error) {
-	writer := new(bytes.Buffer)
-	_, err := base64.NewEncoder(base64.StdEncoding, writer).Write(b)
-	if err != nil {
-		return "", merrors.Base64EncodingError{Info: string(b)}.Wrap(err)
-	}
-	return writer.String(), nil
 }
 

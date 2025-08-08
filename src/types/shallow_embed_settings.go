@@ -18,6 +18,17 @@ type ShallowSettings struct {
 	Workflow 			WorkflowID 	`json:"workflow_id"`
 }
 
+func (c ShallowSettings) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowSettings) Expand(ctx context.Context) (*Settings, error) {
 	r := Settings{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

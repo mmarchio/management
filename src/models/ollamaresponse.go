@@ -62,7 +62,7 @@ func NewOllamaResponse(id *string) OllamaResponse {
 func (c ShallowOllamaResponse) Get(ctx context.Context, mode string) (*OllamaResponse, *ShallowOllamaResponse, error) {
 	content := Content{ID: c.Model.ID}
 	if err := content.Get(ctx); err != nil {
-		return nil, nil, merrors.ShallowWorkflowGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
 		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
@@ -79,5 +79,5 @@ func (c ShallowOllamaResponse) Get(ctx context.Context, mode string) (*OllamaRes
 		m.Response = c.Response
 		return &m, nil, nil
 	}
-	return nil, nil, merrors.ShallowOllamaResponseGetError{Package: "models", Struct: "ShallowOllamaResponse", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowOllamaResponse", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
 } 

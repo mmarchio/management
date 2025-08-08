@@ -43,6 +43,17 @@ type ShallowDisposition struct {
 	BypassModel 			string 			`form:"bypass" json:"bypass_model"`
 }
 
+func (c ShallowDisposition) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowDisposition) Expand(ctx context.Context) (*Disposition, error) {
 	r := Disposition{}
 	r.Model.ID = c.ShallowModel.ID

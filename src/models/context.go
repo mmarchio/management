@@ -391,7 +391,7 @@ func (c ShallowContext) SetPublishSocialYoutubeModel(ctx context.Context, id str
 func (c ShallowContext) Get(ctx context.Context, mode string) (*Context, *ShallowContext, error) {
 	content := Content{ID: c.ShallowModel.ID}
 	if err := content.Get(ctx); err != nil {
-		return nil, nil, merrors.ShallowWorkflowGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
 		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
@@ -422,7 +422,7 @@ func (c ShallowContext) Get(ctx context.Context, mode string) (*Context, *Shallo
 		}
 
 	}
-	return nil, nil, merrors.ShallowOllamaNodeGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
 }
 
 type Stats struct {

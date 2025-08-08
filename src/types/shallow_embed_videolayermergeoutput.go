@@ -15,6 +15,17 @@ type ShallowVideoLayerMergeOutput struct {
 	FilesArrayModel []string `json:"files_array_model"`
 }
 
+func (c ShallowVideoLayerMergeOutput) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowVideoLayerMergeOutput) Expand(ctx context.Context) (*VideoLayerMergeOutput, error) {
 	r := VideoLayerMergeOutput{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

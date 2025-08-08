@@ -27,6 +27,17 @@ type ShallowOllamaNode struct {
 	Context			Context
 }
 
+func (c ShallowOllamaNode) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowOllamaNode) Expand(ctx context.Context) (*OllamaNode, error) {
 	r := OllamaNode{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

@@ -41,6 +41,17 @@ func (c Workflow) Pack() []shallowmodel {
 	return sms
 }
 
+func (c Workflow) ToContent() (*Content, error) {
+	m := NewWorkflowTypeContent()
+	m.Model = c.Model
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c *Workflow) Validate() {
 	valid := true
 	if !c.Model.Validate() {

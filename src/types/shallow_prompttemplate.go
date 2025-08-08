@@ -17,6 +17,17 @@ type ShallowPromptTemplate struct {
 	Vars 		string `form:"vars" json:"vars"`
 }
 
+func (c ShallowPromptTemplate) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowPromptTemplate) IsShallowModel() bool {
 	return true
 }

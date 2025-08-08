@@ -17,6 +17,17 @@ type ShallowTemplate struct {
 	AvailableDispositions 	[]string
 }
 
+func (c ShallowTemplate) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowTemplate) Expand(ctx context.Context) (*Template, error) {
 	r := Template{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

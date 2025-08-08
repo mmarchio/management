@@ -38,6 +38,17 @@ type ShallowComfyUITemplate struct {
 	Template 	string 		`form:"template" json:"template"`
 }
 
+func (c ShallowComfyUITemplate) ToContent() (*Content, error) {
+	m := Content{}
+	m.Model = m.Model.FromShallowModel(c.ShallowModel)
+	b, err := json.Marshal(c)
+	if err != nil {
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+	}
+	m.Content = string(b)
+	return &m, nil
+}
+
 func (c ShallowComfyUITemplate) Expand(ctx context.Context) (*ComfyUITemplate, error) {
 	r := ComfyUITemplate{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {

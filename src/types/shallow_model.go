@@ -11,6 +11,7 @@ import (
 
 type shallowmodel interface{
 	IsShallowModel() bool
+	ToContent() (*Content, error)
 }
 
 type ShallowModel struct {

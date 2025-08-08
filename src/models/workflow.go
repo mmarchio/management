@@ -52,7 +52,7 @@ func (c ShallowWorkflow) Set(ctx context.Context) error {
 func (c ShallowWorkflow) Get(ctx context.Context, mode string) (*Workflow, *ShallowWorkflow, error) {
 	content := Content{ID: c.ShallowModel.ID}
 	if err := content.Get(ctx); err != nil {
-		return nil, nil, merrors.ShallowWorkflowGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if mode == "shallow" {
 		if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
@@ -79,7 +79,7 @@ func (c ShallowWorkflow) Get(ctx context.Context, mode string) (*Workflow, *Shal
 		}
 		return &full, nil, nil
 	}
-	return nil, nil, merrors.ShallowWorkflowGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
 } 
 
 func (c ShallowWorkflow) SetName(ctx context.Context, id string) error {
