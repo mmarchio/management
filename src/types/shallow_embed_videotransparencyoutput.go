@@ -63,3 +63,6 @@ func (c ShallowVideoTransparencyOutput) New() ShallowVideoTransparencyOutput {
 	return c
 }
 
+func (c ShallowVideoTransparencyOutput) IsShallowModel() bool {
+	return true
+}

@@ -9,6 +9,10 @@ import (
 	"github.com/mmarchio/management/models"
 )
 
+type shallowmodel interface{
+	IsShallowModel() bool
+}
+
 type ShallowModel struct {
 	ID 			string
 	CreatedAt 	time.Time
@@ -21,6 +25,23 @@ type ShallowModel struct {
 	Conflict 	string
 	Validated   bool
 }
+
+func (c ShallowModel) FromTypeModel(m Model) ShallowModel {
+	c.ID = m.ID
+	c.CreatedAt = m.CreatedAt
+	c.UpdatedAt = m.UpdatedAt
+	c.ContentType = m.ContentType
+	return c
+}
+
+func (c ShallowModel) FromEmbedModel(m EmbedModel) ShallowModel {
+	c.ID = m.ID
+	c.CreatedAt = m.CreatedAt
+	c.UpdatedAt = m.UpdatedAt
+	c.ContentType = m.ContentType
+	return c
+}
+
 
 func (c ShallowModel) Validate() bool {
 	valid := true
@@ -123,4 +144,8 @@ func (c ShallowModel) CustomQuery(ctx context.Context, write bool, q string, var
 		return nil, merrors.ContentCustomQueryError{}.Wrap(err)
 	}
 	return list, nil
+}
+
+func (c ShallowModel) IsShallowModel() bool {
+	return true
 }

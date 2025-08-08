@@ -235,3 +235,7 @@ func ValidateShallowDisposition(d ShallowDisposition) (ShallowDisposition, error
 	}
 	return d, nil
 }
+
+func (c ShallowDisposition) IsShallowModel() bool {
+	return true
+}

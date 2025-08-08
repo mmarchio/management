@@ -21,6 +21,20 @@ type Toggle struct {
 	Title 		string `json:"title"`
 }
 
+func (c Toggle) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowToggle{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.NamePrefix = c.NamePrefix
+	sm.IdPrefix = c.IdPrefix
+	sm.Suffix = c.Suffix
+	sm.Value = c.Value
+	sm.Title = c.Title
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *Toggle) init() {
 	c.ID = uuid.NewString()
 }

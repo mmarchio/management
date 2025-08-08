@@ -221,3 +221,6 @@ func (c ShallowSSHNode) Set(ctx context.Context) error {
 	return nil
 }
 
+func (c ShallowSSHNode) IsShallowModel() bool {
+	return true
+}

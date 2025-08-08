@@ -43,6 +43,24 @@ type JobRun struct {
 	LatestStatusValue 		string 			 `json:"latest_status_value"`
 }
 
+func (c JobRun) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowJobRun{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.JobID = c.JobID
+	sm.WorkflowID = c.WorkflowID
+	sm.SettingsModel = c.SettingsModel.ID
+	sms = append(sms, c.SettingsModel.Pack()...)
+	sm.DispositionModel = c.DispositionModel.Model.ID
+	sms = append(sms, c.DispositionModel.Pack()...)
+	sm.TokenCount = c.Tokens
+	sm.LatestStatusType = c.LatestStatusType
+	sm.LatestStatusValue = c.LatestStatusValue
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *JobRun) New(id *string) {
 	if id != nil {
 		c.Model.ID = *id

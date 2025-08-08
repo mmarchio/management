@@ -79,3 +79,6 @@ func (c *ShallowSettings) New(globalBypass, template *string) {
 	}
 }
 
+func (c ShallowSettings) IsShallowModel() bool {
+	return true
+}

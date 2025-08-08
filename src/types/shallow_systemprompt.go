@@ -176,3 +176,7 @@ func (c ShallowSystemPrompt) SetID() (ShallowSystemPrompt, error) {
 	}
 	return c, nil
 }
+
+func (c ShallowSystemPrompt) IsShallowModel() bool {
+	return true
+}

@@ -32,6 +32,22 @@ type OllamaNode struct {
 	Context			Context
 }
 
+func (c OllamaNode) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowOllamaNode{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.OllamaModel = c.OllamaModel
+	sm.SystemPrompt = c.SystemPrompt
+	sm.Prompt = c.Prompt
+	sm.PromptTemplate = c.PromptTemplate
+	sm.WorkflowID = c.WorkflowID
+	sm.Enabled = c.Enabled
+	sm.Output = c.Output
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c OllamaNode) Validate() params {
 	valid := true
 	if !c.Model.Validate() {

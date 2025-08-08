@@ -155,3 +155,7 @@ func (c ShallowSteps) FromModel(model models.ShallowSteps) ShallowSteps {
 	c.PublishMetadataModel = model.PublishMetadataModel
 	return c
 }
+
+func (c ShallowSteps) IsShallowModel() bool {
+	return true
+}

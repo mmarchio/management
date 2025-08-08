@@ -144,3 +144,7 @@ func (c *ShallowContent) FromType(m ITable) error {
 	c.Content = string(b)
 	return nil
 }
+
+func (c ShallowContent) IsShallowModel() bool {
+	return true
+}

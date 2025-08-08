@@ -22,3 +22,7 @@ func (c ShallowOllamaResponse) Expand(ctx context.Context) (*OllamaResponse, err
 	r.Response = c.Response
 	return &r, nil
 }
+
+func (c ShallowOllamaResponse) IsShallowModel() bool {
+	return true
+}

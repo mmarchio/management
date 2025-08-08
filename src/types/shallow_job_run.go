@@ -247,3 +247,6 @@ func (c ShallowJobRun) GetTable() string {
 	return c.ShallowModel.Table
 }
 
+func (c ShallowJobRun) IsShallowModel() bool {
+	return true
+}

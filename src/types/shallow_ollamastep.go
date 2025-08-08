@@ -15,3 +15,6 @@ func (c ShallowOllamaStep) GetType() string {
 	return "shallowollama"
 }
 
+func (c ShallowOllamaStep) IsShallowModel() bool {
+	return true
+}

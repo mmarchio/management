@@ -49,3 +49,6 @@ func (c ShallowFile) Marshal(ctx context.Context) (string, error) {
 	return string(b), err
 }
 
+func (c ShallowFile) IsShallowModel() bool {
+	return true
+}

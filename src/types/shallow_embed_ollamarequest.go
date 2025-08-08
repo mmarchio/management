@@ -21,3 +21,7 @@ func (c ShallowOllamaRequest) Expand(ctx context.Context) (*OllamaRequest, error
 	r.KeepAlive = c.KeepAlive
 	return &r, nil
 }
+
+func (c ShallowOllamaRequest) IsShallowModel() bool {
+	return true
+}

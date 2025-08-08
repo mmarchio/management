@@ -202,3 +202,7 @@ func (c ShallowPrompt) Bind(e echo.Context) (ShallowPrompt, error) {
 	c.SettingsModel = e.FormValue("settings")
 	return c, err
 }
+
+func (c ShallowPrompt) IsShallowModel() bool {
+	return true
+}

@@ -25,6 +25,25 @@ type ComfyNode struct {
 	Output 			string 					`form:"output" json:"output"`
 }
 
+func (c ComfyNode) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowComfyNode{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Prompt = c.Prompt
+	sm.APIBase = c.APIBase
+	sm.APITemplate = c.APITemplate
+	sm.TemplateValues = c.TemplateValues
+	sm.WorkflowID = c.WorkflowID
+	sm.Type = c.Type
+	sm.Enabled = c.Enabled
+	sm.Bypass = c.Bypass
+	sm.Output = c.Output
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c ComfyNode) Validate() params {
 	valid := true
 	if !c.Model.Validate() {

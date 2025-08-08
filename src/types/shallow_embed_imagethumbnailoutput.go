@@ -62,3 +62,7 @@ func (c ShallowImageThumbnailOutput) New() ShallowImageThumbnailOutput {
 	c.StatsModel = ShallowStats{}.New(nil).ShallowModel.ID
 	return c
 }
+
+func (c ShallowImageThumbnailOutput) IsShallowModel() bool {
+	return true
+}

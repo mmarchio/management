@@ -19,6 +19,24 @@ type Entitlements struct {
 	FacebookModel 	Toggle `form:"facebook" json:"facebook"`
 }
 
+func (c Entitlements) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowEntitlements{}
+	sm.ShallowModel = sm.ShallowModel.FromEmbedModel(c.EmbedModel)
+	sm.YouTubeModel = c.YouTubeModel.ID
+	sms = append(sms, c.YouTubeModel.Pack()...)
+	sm.TikTokModel = c.TikTokModel.ID
+	sms = append(sms, c.TikTokModel.Pack()...)
+	sm.RumbleModel = c.RumbleModel.ID
+	sms = append(sms, c.RumbleModel.Pack()...)
+	sm.PatreonModel = c.PatreonModel.ID
+	sms = append(sms, c.PatreonModel.Pack()...)
+	sm.FacebookModel = c.FacebookModel.ID
+	sms = append(sms, c.FacebookModel.Pack()...)
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *Entitlements) Unmarshal(ctx context.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }

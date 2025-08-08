@@ -186,3 +186,7 @@ func (c ShallowJob) GetContentType() string {
 func (c ShallowJob) GetTable() string {
 	return c.ShallowModel.Table
 }
+
+func (c ShallowJob) IsShallowModel() bool {
+	return true
+}

@@ -245,3 +245,6 @@ func (c ShallowComfyNode) Set(ctx context.Context) error {
 	return nil
 }
 
+func (c ShallowComfyNode) IsShallowModel() bool {
+	return true
+}

@@ -48,6 +48,20 @@ type Job struct {
 	LastCompleted 	time.Time 	`json:"last_completed"`
 }
 
+func (c Job) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowJob{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.PromptID = c.PromptID
+	sm.WorkflowID = c.WorkflowID
+	sm.Recurring = c.Recurring
+	sm.Interval = c.Interval
+	sm.LastCompleted = c.LastCompleted
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *Job) New() {
 	c.ID = c.ID.New()
 	c.Model.ID = c.ID.String()

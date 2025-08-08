@@ -62,3 +62,7 @@ func (c ShallowVideoBackgroundOutput) New() ShallowVideoBackgroundOutput {
 	c.StatsModel = ShallowStats{}.New(nil).ShallowModel.ID
 	return c
 }
+
+func (c ShallowVideoBackgroundOutput) IsShallowModel() bool {
+	return true
+}

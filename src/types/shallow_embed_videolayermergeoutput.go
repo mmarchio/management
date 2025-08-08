@@ -62,3 +62,7 @@ func (c ShallowVideoLayerMergeOutput) New() ShallowVideoLayerMergeOutput {
 	c.StatsModel = ShallowStats{}.New(nil).ShallowModel.ID
 	return c
 }
+
+func (c ShallowVideoLayerMergeOutput) IsShallowModel() bool {
+	return true
+}

@@ -23,13 +23,56 @@ type Steps struct {
 	GenerateAudioModel 					Toggle `json:"generate_audio_model"`
 	GenerateLipsyncModel 				Toggle `json:"generate_lipsync_model"`
 	GenerateThumbnailsModel 			Toggle `json:"generate_thumbnails_model"`
-	GenerateBackgroundContextModel 	Toggle `json:"generate_background_context_model"`
+	GenerateBackgroundContextModel 		Toggle `json:"generate_background_context_model"`
 	GenerateBackgroundModel 			Toggle `json:"generate_background_model"`
 	FFMPEGLipsyncPostModel 				Toggle `json:"ffmpeg_lipsync_post_model"`
 	FFMPEGMergeModel 					Toggle `json:"ffmpeg_merge_model"`
 	PublishVideoModel 					Toggle `json:"publish_video_model"`
 	PublishThumbnailModel 				Toggle `json:"publish_thumbnail_model"`
 	PublishMetadataModel 				Toggle `json:"publish_metadata_model"`
+}
+
+func (c Steps) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowSteps{}
+	sm.ShallowModel = sm.ShallowModel.FromEmbedModel(c.EmbedModel)
+	sm.ID = c.ID
+	sm.GetResearchOutputModel = c.GetResearchOutputModel.ID
+	sms = append(sms, c.GetResearchOutputModel.Pack()...)
+	sm.GetResearchPromptModel = c.GetResearchPromptModel.ID
+	sms = append(sms, c.GetResearchPromptModel.Pack()...)
+	sm.ScreenwritingStartModel = c.ScreenwritingStartModel.ID
+	sms = append(sms, c.ScreenwritingStartModel.Pack()...)
+	sm.ScreenwritingGetPromptInputModel = c.ScreenwritingGetPromptInputModel.ID
+	sms = append(sms, c.ScreenwritingGetPromptInputModel.Pack()...)
+	sm.ScreenwritingGetPromptOutputModel = c.ScreenwritingGetPromptOutputModel.ID
+	sms = append(sms, c.ScreenwritingGetPromptOutputModel.Pack()...)
+	sm.ScreenwritingOutputModel = c.ScreenwritingOutputModel.ID
+	sms = append(sms, c.ScreenwritingOutputModel.Pack()...)
+	sm.ContainerSwapModel = c.ContainerSwapModel.ID
+	sms = append(sms, c.ContainerSwapModel.Pack()...)
+	sm.GenerateAudioModel = c.GenerateAudioModel.ID
+	sms = append(sms, c.GenerateAudioModel.Pack()...)
+	sm.GenerateLipsyncModel = c.GenerateLipsyncModel.ID
+	sms = append(sms, c.GenerateLipsyncModel.Pack()...)
+	sm.GenerateThumbnailsModel = c.GenerateThumbnailsModel.ID
+	sms = append(sms, c.GenerateThumbnailsModel.Pack()...)
+	sm.GenerateBackgroundContextModel = c.GenerateBackgroundContextModel.ID
+	sms = append(sms, c.GenerateBackgroundContextModel.Pack()...)
+	sm.GenerateBackgroundModel = c.GenerateBackgroundModel.ID
+	sms = append(sms, c.GenerateBackgroundModel.Pack()...)
+	sm.FFMPEGLipsyncPostModel = c.FFMPEGLipsyncPostModel.ID
+	sms = append(sms, c.FFMPEGLipsyncPostModel.Pack()...)
+	sm.FFMPEGMergeModel = c.FFMPEGMergeModel.ID
+	sms = append(sms, c.FFMPEGMergeModel.Pack()...)
+	sm.PublishVideoModel = c.PublishVideoModel.ID
+	sms = append(sms, c.PublishVideoModel.Pack()...)
+	sm.PublishThumbnailModel = c.PublishThumbnailModel.ID
+	sms = append(sms, c.PublishThumbnailModel.Pack()...)
+	sm.PublishMetadataModel = c.PublishMetadataModel.ID
+	sms = append(sms, c.PublishMetadataModel.Pack()...)
+	sms = append(sms, sm)
+	return sms
 }
 
 func (c *Steps) Unmarshal(ctx context.Context, j string) error {

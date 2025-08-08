@@ -66,3 +66,6 @@ func (c ShallowScene) Marshal(ctx context.Context) (string, error) {
 	return string(b), err
 }
 
+func (c ShallowScene) IsShallowModel() bool {
+	return true
+}

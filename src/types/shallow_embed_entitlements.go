@@ -137,3 +137,7 @@ func ValidateShallowEntitlements(c ShallowEntitlements, prefix string) (ShallowE
 
 	return c, nil
 }
+
+func (c ShallowEntitlements) IsShallowModel() bool {
+	return true
+}

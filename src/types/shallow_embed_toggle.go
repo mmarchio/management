@@ -81,3 +81,7 @@ func (c ShallowToggle) FromModel(model models.ShallowToggle) ShallowToggle{
 	c.Value = model.Value
 	return c
 }
+
+func (c ShallowToggle) IsShallowModel() bool {
+	return true
+}

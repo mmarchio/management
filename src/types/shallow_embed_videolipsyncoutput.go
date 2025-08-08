@@ -63,3 +63,6 @@ func (c ShallowVideoLipsyncOutput) New() ShallowVideoLipsyncOutput {
 	return c
 }
 
+func (c ShallowVideoLipsyncOutput) IsShallowModel() bool {
+	return true
+}

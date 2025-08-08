@@ -75,3 +75,7 @@ func (c ShallowStats) New(id *string) ShallowStats {
 	return c
 }
 
+func (c ShallowStats) IsShallowModel() bool {
+	return true
+}
+

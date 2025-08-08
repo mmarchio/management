@@ -259,6 +259,9 @@ func (c ShallowOllamaNode) Set(ctx context.Context) error {
 	return nil
 }
 
+func (c ShallowOllamaNode) IsShallowModel() bool {
+	return true
+}
 // func (c *ShallowOllamaNode) GetNodeFromWorkflow(id string, wf Workflow) {
 // 	for _, v := range wf.OllamaNodesArrayModel {
 // 		if id == v {

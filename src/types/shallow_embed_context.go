@@ -123,3 +123,7 @@ func GetShallowSystemPrompts() ([]string, error) {
 	}
 	return list, nil
 }
+
+func (c ShallowContext) IsShallowModel() bool {
+	return true
+}

@@ -17,6 +17,17 @@ type PromptTemplate struct {
 	Vars 		string `form:"vars" json:"vars"`
 }
 
+func (c PromptTemplate) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowPromptTemplate{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Template = c.Template
+	sm.Vars = c.Vars
+	sms = append(sms, sm)
+	return sms
+}
 
 func NewPromptTemplate(id *string) PromptTemplate {
 	c := PromptTemplate{}

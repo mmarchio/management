@@ -16,6 +16,27 @@ type Template struct {
 	AvailableDispositions 	[]Disposition
 }
 
+func (c Template) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowTemplate{}
+	sm.ShallowModel = sm.ShallowModel.FromEmbedModel(c.EmbedModel)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.DispositionsArrayModel = make([]string, 0)
+	for _, id := range c.DispositionsArrayModel {
+		sm.DispositionsArrayModel = append(sm.DispositionsArrayModel, id.Model.ID)
+		sms = append(sms, c.Pack()...)
+	}
+	sm.CurrentDisposition = c.CurrentDisposition
+	sm.AvailableDispositions = make([]string, 0)
+	for _, id := range c.AvailableDispositions {
+		sm.AvailableDispositions = append(sm.AvailableDispositions, id.Model.ID)
+		sms = append(sms, c.Pack()...)
+	}
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *Template) Unmarshal(ctx context.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }

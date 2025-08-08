@@ -43,6 +43,24 @@ type Disposition struct {
 	BypassModel 			Steps 			`form:"bypass" json:"bypass_model"`
 }
 
+func (c Disposition) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowDisposition{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.MinDuration = c.MinDuration
+	sm.MaxDuration = c.MaxDuration
+	sm.AdvertisementDuration = c.AdvertisementDuration
+	sm.EntitlementsModel = c.EntitlementsModel.EmbedModel.ID
+	sms = append(sms, c.EntitlementsModel.Pack()...)
+	sm.VerificationModel = c.VerificationModel.EmbedModel.ID
+	sms = append(sms, c.VerificationModel.Pack()...)
+	sm.BypassModel = c.BypassModel.EmbedModel.ID
+	sms = append(sms, c.BypassModel.Pack()...)
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *Disposition) New(id *string) {
 	if id != nil {
 		c.Model.ID = *id

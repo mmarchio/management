@@ -38,6 +38,18 @@ type SystemPrompt struct {
 	Prompt 	string `form:"prompt" json:"prompt"`
 }
 
+func (c SystemPrompt) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowSystemPrompt{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Domain = c.Domain
+	sm.Prompt = c.Prompt
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *SystemPrompt) New(id *string) {
 	if id != nil {
 		c.Model.ID = *id

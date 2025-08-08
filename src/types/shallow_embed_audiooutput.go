@@ -55,3 +55,7 @@ func (c ShallowAudioOutput) Marshal(ctx context.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
+
+func (c ShallowAudioOutput) IsShallowModel() bool {
+	return true
+}

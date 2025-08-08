@@ -19,6 +19,24 @@ type Settings struct {
 	Workflow 			WorkflowID 	`json:"workflow_id"`
 }
 
+func (c Settings) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowSettings{}
+	sm.ShallowModel = sm.ShallowModel.FromEmbedModel(c.EmbedModel)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.TemplateModel = c.TemplateModel.EmbedModel.ID
+	sms = append(sms, c.TemplateModel.Pack()...)
+	sm.GlobalBypassModel = c.GlobalBypassModel.EmbedModel.ID
+	sms = append(sms, c.GlobalBypassModel.Pack()...)
+	sm.RecurringModel = c.RecurringModel.ID
+	sms = append(sms, c.RecurringModel.Pack()...)
+	sm.Interval = c.Interval
+	sm.Workflow = c.Workflow
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c Settings) Marshal(ctx context.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err

@@ -294,3 +294,7 @@ func (c *ShallowWorkflow) CutNode(id string) {
 		c.SSHNodesArrayModel = sshnodes
 	}
 }
+
+func (c ShallowWorkflow) IsShallowModel() bool {
+	return true
+}

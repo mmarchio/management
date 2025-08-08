@@ -83,3 +83,6 @@ func (c ShallowTemplate) Bind(e echo.Context) ShallowTemplate {
 	return c
 }
 
+func (c ShallowTemplate) IsShallowModel() bool {
+	return true
+}

@@ -21,7 +21,25 @@ type Workflow struct {
 	NodeOrder 				map[string]int 	`form: "node_order" "json: "node_order"`
 }
 
-
+func (c Workflow) Pack() []shallowmodel {
+	sw := ShallowWorkflow{}
+	sw.ShallowModel = sw.ShallowModel.FromTypeModel(c.Model)
+	sms := make([]shallowmodel, 0)
+	for _, sm := range c.ComfyNodesArrayModel {
+		sw.ComfyNodesArrayModel = append(sw.ComfyNodesArrayModel, sm.ID)
+		sms = append(sms, sm.Pack()...)
+	}
+	for _, sm := range c.OllamaNodesArrayModel {
+		sw.OllamaNodesArrayModel = append(sw.OllamaNodesArrayModel, sm.ID)
+		sms = append(sms, sm.Pack()...)
+	}
+	for _, sm := range c.SSHNodesArrayModel {
+		sw.SSHNodesArrayModel = append(sw.SSHNodesArrayModel, sm.ID)
+		sms = append(sms, sm.Pack()...)
+	}
+	sms = append(sms, sw)
+	return sms
+}
 
 func (c *Workflow) Validate() {
 	valid := true

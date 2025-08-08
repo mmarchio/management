@@ -24,6 +24,24 @@ type SSHNode struct {
 	Output 		string `form:"output" json:"output"`
 }
 
+func (c SSHNode) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowSSHNode{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Command = c.Command
+	sm.User = c.User
+	sm.Host = c.Host
+	sm.WorkflowID = c.WorkflowID
+	sm.Type = c.Type
+	sm.Enabled = c.Enabled
+	sm.Bypass = c.Bypass
+	sm.Output = c.Output
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c SSHNode) Validate() params {
 	valid := true
 	if !c.Model.Validate() {

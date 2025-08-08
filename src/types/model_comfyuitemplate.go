@@ -37,6 +37,19 @@ type ComfyUITemplate struct {
 	Template 	string 		`form:"template" json:"template"`
 }
 
+func (c ComfyUITemplate) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowComfyUITemplate{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Endpoint = c.Endpoint
+	sm.Base = c.Base
+	sm.Template = c.Template
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *ComfyUITemplate) New() {
 	c.ID = c.ID.New()
 	c.Model.ID = c.ID.String()

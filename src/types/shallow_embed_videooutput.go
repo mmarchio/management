@@ -57,4 +57,6 @@ func (c ShallowVideoOutput) Marshal(ctx context.Context) (string, error) {
 	return string(b), err
 }
 
-
+func (c ShallowVideoOutput) IsShallowModel() bool {
+	return true
+}

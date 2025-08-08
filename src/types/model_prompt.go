@@ -42,6 +42,21 @@ type Prompt struct {
 	SettingsModel 	Settings 	`form:"settings" json:"settings_model"`
 }
 
+func (c Prompt) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowPrompt{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Prompt = c.Prompt
+	sm.Domain = c.Domain
+	sm.Category = c.Category
+	sm.SettingsModel = c.SettingsModel.ID
+	sms = append(sms, c.SettingsModel.Pack()...)
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *Prompt) New(id *string) {
 	if id != nil {
 		c.Model.ID = *id

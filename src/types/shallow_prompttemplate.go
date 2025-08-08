@@ -17,6 +17,10 @@ type ShallowPromptTemplate struct {
 	Vars 		string `form:"vars" json:"vars"`
 }
 
+func (c ShallowPromptTemplate) IsShallowModel() bool {
+	return true
+}
+
 func (c ShallowPromptTemplate) Expand(ctx context.Context) (*PromptTemplate, error) {
 	r := PromptTemplate{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
@@ -171,3 +175,4 @@ func (c ShallowPromptTemplate) SetID() (ShallowPromptTemplate, error) {
 	}
 	return c, nil
 }
+

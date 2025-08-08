@@ -62,3 +62,7 @@ func (c ShallowImageBackgroundContextOutput) New() ShallowImageBackgroundContext
 	c.StatsModel = ShallowStats{}.New(nil).ShallowModel.ID
 	return c
 }
+
+func (c ShallowImageBackgroundContextOutput) IsShallowModel() bool {
+	return true
+}

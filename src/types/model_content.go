@@ -27,6 +27,15 @@ type Content struct {
 	Content string `json:"content"`
 }
 
+func (c Content) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowContent{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.Content = c.Content
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c Content) Scan(ctx context.Context, rows Scannable) (Content, error) {
 	err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Model.ContentType, &c.Content)
 	if err != nil {
