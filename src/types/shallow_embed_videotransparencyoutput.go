@@ -5,13 +5,47 @@ import (
 	"encoding/json"
 
 	"github.com/google/uuid"
+	merrors "github.com/mmarchio/management/errors"
 )
 
 type ShallowVideoTransparencyOutput struct {
 	ShallowModel
-	ID 				VideoTransparancyOutputID `json:"id"`
+	ID 				VideoTransparencyOutputID `json:"id"`
 	StatsModel 		string `json:"stats_model"`
 	FilesArrayModel []string `json:"files_array_model"`
+}
+
+func (c ShallowVideoTransparencyOutput) Expand(ctx context.Context) (*VideoTransparencyOutput, error) {
+	r := VideoTransparencyOutput{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.EmbedModel = r.EmbedModel.FromShallowModel(c.ShallowModel)
+	ss := ShallowStats{}
+	ss.ShallowModel.ID = c.StatsModel
+	stats, err := ss.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.StatsModel = *stats
+	r.FilesArrayModel = make([]File, 0)
+	for _, id := range c.FilesArrayModel {
+		sf := ShallowFile{}
+		sf.ShallowModel.ID = id
+		f, err := sf.Expand(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		r.FilesArrayModel = append(r.FilesArrayModel, *f)
+	}
+	return &r, nil
 }
 
 func (c *ShallowVideoTransparencyOutput) Unmarshal(ctx context.Context, j string) error {
@@ -24,7 +58,7 @@ func (c ShallowVideoTransparencyOutput) Marshal(ctx context.Context) (string, er
 }
 
 func (c ShallowVideoTransparencyOutput) New() ShallowVideoTransparencyOutput {
-	c.ID = VideoTransparancyOutputID(uuid.NewString())
+	c.ID = VideoTransparencyOutputID(uuid.NewString())
 	c.StatsModel = ShallowStats{}.New(nil).ShallowModel.ID
 	return c
 }

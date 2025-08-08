@@ -7,24 +7,24 @@ import (
 	"github.com/google/uuid"
 )
 
-type VideoTransparancyOutput struct {
+type VideoTransparencyOutput struct {
 	EmbedModel
-	ID 				VideoTransparancyOutputID `json:"id"`
+	ID 				VideoTransparencyOutputID `json:"id"`
 	StatsModel 		Stats `json:"stats_model"`
 	FilesArrayModel []File `json:"files_array_model"`
 }
 
-func (c *VideoTransparancyOutput) Unmarshal(ctx context.Context, j string) error {
+func (c *VideoTransparencyOutput) Unmarshal(ctx context.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c VideoTransparancyOutput) Marshal(ctx context.Context) (string, error) {
+func (c VideoTransparencyOutput) Marshal(ctx context.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
 
-func (c VideoTransparancyOutput) New() VideoTransparancyOutput {
-	c.ID = VideoTransparancyOutputID(uuid.NewString())
+func (c VideoTransparencyOutput) New() VideoTransparencyOutput {
+	c.ID = VideoTransparencyOutputID(uuid.NewString())
 	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }
