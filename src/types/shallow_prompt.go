@@ -42,6 +42,34 @@ type ShallowPrompt struct {
 	SettingsModel 	string 		`form:"settings" json:"settings_model"`
 }
 
+func (c ShallowPrompt) Expand(ctx context.Context) (*Prompt, error) {
+	r := Prompt{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Model = r.Model.FromShallowModel(c.ShallowModel)
+	r.ID = c.ID
+	r.Name = c.Name
+	r.Prompt = c.Prompt
+	r.Domain = c.Domain
+	r.Category = c.Category
+	ss := ShallowSettings{}
+	ss.ShallowModel.ID = c.SettingsModel
+	settings, err := ss.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.SettingsModel = *settings
+	return &r, nil
+}
+
 func (c *ShallowPrompt) New(id *string) {
 	if id != nil {
 		c.ShallowModel.ID = *id
