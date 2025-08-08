@@ -39,6 +39,26 @@ type ShallowSystemPrompt struct {
 	Prompt 	string `form:"prompt" json:"prompt"`
 }
 
+func (c ShallowSystemPrompt) Expand(ctx context.Context) (*SystemPrompt, error) {
+	r := SystemPrompt{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Model = r.Model.FromShallowModel(c.ShallowModel)
+	r.ID = c.ID
+	r.Name = c.Name
+	r.Domain = c.Domain
+	r.Prompt = c.Prompt
+	return &r, nil
+}
+
 func (c *ShallowSystemPrompt) New(id *string) {
 	if id != nil {
 		c.ShallowModel.ID = *id

@@ -43,6 +43,52 @@ type ShallowJobRun struct {
 	LatestStatusValue 		string 			 `json:"latest_status_value"`
 }
 
+func (c ShallowJobRun) Expand(ctx context.Context) (*JobRun, error) {
+	r := JobRun{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.Model = r.Model.FromShallowModel(c.ShallowModel)
+	r.ID = c.ID
+	r.JobID = c.JobID
+	r.WorkflowID = c.WorkflowID
+	context, err := r.Model.GetCtx(ctx)
+	if err != nil {
+		return nil, merrors.ContextGetError{}.Wrap(err)
+	}
+	r.ContextModel = *context
+	truncated, err := r.ContextModel.Truncate()
+	if err != nil {
+		return nil, merrors.ContextGetError{}.Wrap(err)
+	}
+	r.TruncatedContextModel = *truncated
+	ss := ShallowSettings{}
+	ss.ShallowModel.ID = c.SettingsModel
+	settings, err := ss.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.SettingsModel = *settings
+	sd := ShallowDisposition{}
+	sd.ShallowModel.ID = c.DispositionModel
+	disposition, err := sd.Expand(ctx)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	r.DispositionModel = *disposition
+	r.Tokens = c.Tokens
+	r.LatestStatusType = c.LatestStatusType
+	r.LatestStatusValue = c.LatestStatusValue
+	return &r, nil
+} 
+
 func (c *ShallowJobRun) New(id *string) {
 	if id != nil {
 		c.ShallowModel.ID = *id

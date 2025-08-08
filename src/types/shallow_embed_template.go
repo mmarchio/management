@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/labstack/echo/v4"
+	merrors "github.com/mmarchio/management/errors"
 )
 
 type ShallowTemplate struct {
@@ -14,6 +15,51 @@ type ShallowTemplate struct {
 	DispositionsArrayModel 	[]string `form:"dispositions" json:"dispositions_array_model"`
 	CurrentDisposition 		int64
 	AvailableDispositions 	[]string
+}
+
+func (c ShallowTemplate) Expand(ctx context.Context) (*Template, error) {
+	r := Template{}
+	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
+		sc, err := c.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}
+		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		return &r, nil
+	}
+	r.EmbedModel = r.EmbedModel.FromShallowModel(c.ShallowModel)
+	r.ID = c.ID
+	r.Name = c.Name
+	sd := ShallowDisposition{}
+	r.DispositionsArrayModel = make([]Disposition, 0)
+	for _, id := range c.DispositionsArrayModel {
+		d := Disposition{}
+		sd.ShallowModel.ID = id
+		sc, err := sd.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}		
+		if err := json.Unmarshal([]byte(sc.Content), &d); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		r.DispositionsArrayModel = append(r.DispositionsArrayModel, d)
+	}
+	r.AvailableDispositions = make([]Disposition, 0)
+	for _, id := range c.AvailableDispositions {
+		d := Disposition{}
+		sd.ShallowModel.ID = id
+		sc, err := sd.ShallowModel.Get(ctx)
+		if err != nil {
+			return nil, merrors.ContentGetError{}.Wrap(err)
+		}		
+		if err := json.Unmarshal([]byte(sc.Content), &d); err != nil {
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		}
+		r.AvailableDispositions = append(r.AvailableDispositions, d)
+	}
+	return &r, nil
 }
 
 func (c *ShallowTemplate) Unmarshal(ctx context.Context, j string) error {
