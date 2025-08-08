@@ -48,6 +48,20 @@ type Job struct {
 	LastCompleted 	time.Time 	`json:"last_completed"`
 }
 
+func (c Job) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowJob{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.PromptID = c.PromptID
+	sm.WorkflowID = c.WorkflowID
+	sm.Recurring = c.Recurring
+	sm.Interval = c.Interval
+	sm.LastCompleted = c.LastCompleted
+	sms = append(sms, sm)
+	return sms
+}
+
 func (c *Job) New() {
 	c.ID = c.ID.New()
 	c.Model.ID = c.ID.String()
@@ -64,7 +78,7 @@ func (c Job) List(ctx context.Context) ([]Job, error) {
 	content.Model.ContentType = "job"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.JobListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Job, 0)
 	for _, model := range contents {
@@ -82,7 +96,7 @@ func (c Job) ListBy(ctx context.Context, key string, value interface{}) ([]Job, 
 	content := NewJobModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.JobListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Job, 0)
 	for _, model := range contents {
@@ -104,7 +118,7 @@ func (c *Job) Get(ctx context.Context) error {
 	content.Model.ContentType = "job"
 	content, err = content.Get(ctx)
 	if err != nil {
-		return merrors.JobGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
 		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Job", Function: "Get"}.Wrap(err)
@@ -119,7 +133,7 @@ func (c *Job) FindBy(ctx context.Context, key, value string) (Job, error) {
 	content.Model.ID = c.Model.ID
 	content, err = content.FindBy(ctx, key, value) 
 	if err != nil {
-		return job, merrors.JobFindByError{Info: fmt.Sprintf("key: %s, value: %s", key, value)}.Wrap(err)
+		return job, merrors.ContentFindByError{Info: fmt.Sprintf("key: %s, value: %s", key, value)}.Wrap(err)
 	}
 	if err = json.Unmarshal([]byte(content.Content), &job); err != nil {
 		if _, ok := err.(merrors.WrappedError); ok {
@@ -138,7 +152,7 @@ func (c Job) Set(ctx context.Context) error {
 	content.ID = c.Model.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.JobSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -148,7 +162,7 @@ func (c Job) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.JobDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

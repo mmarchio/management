@@ -32,10 +32,22 @@ func NewSystemPromptTypeContent() Content {
 
 type SystemPrompt struct {
 	Model
-	ID SystemPromptID `form:"id" json:"id"`
-	Name string `form:"name" json:"name"`
-	Domain string `form:"domain" json:"domain"`
-	Prompt string `form:"prompt" json:"prompt"`
+	ID 		SystemPromptID `form:"id" json:"id"`
+	Name 	string `form:"name" json:"name"`
+	Domain 	string `form:"domain" json:"domain"`
+	Prompt 	string `form:"prompt" json:"prompt"`
+}
+
+func (c SystemPrompt) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowSystemPrompt{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Domain = c.Domain
+	sm.Prompt = c.Prompt
+	sms = append(sms, sm)
+	return sms
 }
 
 func (c *SystemPrompt) New(id *string) {
@@ -56,7 +68,7 @@ func (c SystemPrompt) List(ctx context.Context) ([]SystemPrompt, error) {
 	content.Model.ContentType = "systemprompt"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.SystemPromptListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]SystemPrompt, 0)
 	for _, model := range contents {
@@ -74,7 +86,7 @@ func (c SystemPrompt) ListBy(ctx context.Context, key string, value interface{})
 	content := NewSystemPromptModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.SystemPromptListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]SystemPrompt, 0)
 	for _, model := range contents {
@@ -94,7 +106,7 @@ func (c *SystemPrompt) Get(ctx context.Context) error {
 	content.Model.ContentType = "systemprompt"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.SystemPromptGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -108,7 +120,7 @@ func (c SystemPrompt) Set(ctx context.Context) error {
 	content.FromType(c)
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.SystemPromptSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -118,7 +130,7 @@ func (c SystemPrompt) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.SystemPromptDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

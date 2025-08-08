@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,6 +24,8 @@ type params interface {
 	GetApiBase() string 
 	GetApiTemplate() string 
 	GetType() string
+	Validate() params
+	GetValidated() bool
 }
 
 type Node struct {
@@ -37,13 +40,77 @@ type Node struct {
 	Output 		string `form:"output" json:"output"`
 }
 
+func (c *Node) Validate() {
+	valid := true
+	if !c.Model.Validate() {
+		fmt.Printf("types.node.model failed validation\n")
+		valid = false
+	}
+	if c.Model.ContentType != "node" {
+		fmt.Printf("types.node.model.contenttype is wrong\n")
+		valid = false
+	}
+	if c.ID.IsNil() || c.ID.String() != c.Model.ID {
+		fmt.Printf("types.node.id does not match model\n")
+		valid = false
+	}
+	if c.WorkflowID.IsNil() {
+		fmt.Printf("types.node.workflow_id is nil\n")
+		valid = false
+	}
+	if c.Name == "" {
+		fmt.Printf("types.node.name is nil\n")
+		valid = false
+	}
+	if c.Type == "" {
+		fmt.Printf("types.node.type is nil\n")
+		valid = false
+	}
+	if c.Params != nil {
+		if o, ok := c.Params.(OllamaNode); ok {
+			if c.Type != "ollama_node" {
+				fmt.Printf("type is wrong\n")
+				valid = false
+			}
+			o.Validate()
+			if !o.GetValidated() {
+				fmt.Printf("types.node.OllamaNode is not valid\n")
+				valid = false
+			}
+		}
+		if o, ok := c.Params.(ComfyNode); ok {
+			if c.Type != "comfy_node" {
+				fmt.Printf("type is wrong\n")
+				valid = false
+			}
+			o.Validate()
+			if !o.GetValidated() {
+				fmt.Printf("types.node.ComfyNode is not valid\n")
+				valid = false
+			}
+		}
+		if o, ok := c.Params.(SSHNode); ok {
+			if c.Type != "ssh_node" {
+				fmt.Printf("type is wrong\n")
+				valid = false
+			}
+			o.Validate()
+			if !o.GetValidated() {
+				fmt.Printf("types.node.SSHNode is not valid\n")
+				valid = false
+			}
+		}
+	}
+	c.Model.Validated = valid
+}
+
 func NewNode(id *string) Node {
 	c := Node{}
 	c.New(id)
 	c.Model.ContentType = "node"
 	c, _ = ValidateNode(c)
 	return c
-} 
+}
 
 func NewNodeModelContent() models.Content {
 	c := models.Content{}
@@ -68,13 +135,12 @@ func (c *Node) New(id *string) {
 	c.Model.UpdatedAt = c.Model.CreatedAt
 }
 
-
 func (c Node) List(ctx context.Context) ([]Node, error) {
 	content := NewNodeModelContent()
 	content.Model.ContentType = "node"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.NodeListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Node, 0)
 	for _, model := range contents {
@@ -94,7 +160,7 @@ func (c Node) ListBy(ctx context.Context, key string, value interface{}) ([]Node
 	content := NewNodeModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.NodeListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Node, 0)
 	for _, model := range contents {
@@ -116,7 +182,7 @@ func (c *Node) Get(ctx context.Context) error {
 	content.Model.ContentType = "node"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.NodeGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	msi := make(map[string]interface{})
 	err = json.Unmarshal([]byte(content.Content), &msi)
@@ -130,12 +196,17 @@ func (c *Node) Get(ctx context.Context) error {
 }
 
 func (c Node) Set(ctx context.Context) error {
+	c.Validate()
+	if !c.Model.Validated {
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+	}
 	content := NewNodeTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ID.String()
+	content.ID = c.ID.String()
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.NodeSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -146,7 +217,7 @@ func (c Node) Delete(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID.String()
 	if err := content.Delete(ctx); err != nil {
-		return merrors.NodeDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

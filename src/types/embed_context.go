@@ -12,64 +12,64 @@ import (
 
 type Context struct {
 	EmbedModel
-	Prompt Prompt `json:"prompt"`
-	Disposition Disposition `json:"disposition"`
-	JobRunID RunID `json:"job_run_id"`
-	Settings Settings `json:"settings"`
-	GetResearchPrompt Stats `json:"get_research_prompt"`
-	GetResearchOutput Stats `json:"get_research_output"`
-	ScreenwritingPrompt Stats `json:"screenwriting_prompt"`
-	ScreenWritingOutput Stats `json:"screenwriting_output"`
-	VideoPrompt Stats `json:"video_prompt"`
-	AudioPrompt Stats `json:"audio_prompt"`
-	AudioOutput AudioOutput `json:"audio_output"`
-	VideoLipsyncOutput VideoLipsyncOutput `json:"video_lipsync_output"`
-	VideoTransparencyOutput VideoTransparancyOutput `json:"video_transparency_output"`
-	VideoBackgroundOutput VideoBackgroundOutput `json:"video_background_output"`
-	VideoLayerMerge VideoLayerMergeOutput `json:"video_layer_merge"`
-	VideoJoin []Scene `json:"video_join"`
-	ImageThumbnailPrompt Stats `json:"image_thumbnail_prompt"`
-	ImageThumbnailOutput ImageThumbnailOutput `json:"image_thumbnail_output"`
-	ImageBackgroundContextOutput ImageBackgroundContextOutput `json:"image_background_context_output"`
-	PublishVideoYoutube Stats `json:"publish_video_youtube"`
-	PublishVideoTiktok Stats `json:"publish_video_tiktok"`
-	PublishVideoRumble Stats `json:"publish_video_rumble"`
-	PublishVideoFacebook Stats `json:"publish_video_facebook"`
-	PublishSocialFacebook Stats `json:"publish_social_facebook"`
-	PublishSocialX Stats `json:"publish_social_x"`
-	PublishSocialYoutube Stats `json:"publish_social_youtube"`
-	PublishSocialTruth Stats `json:"publish_social_truth"`
+	PromptModel							Prompt `json:"prompt_model"`
+	DispositionModel 					Disposition `json:"disposition_model"`
+	JobRunID 							RunID `json:"job_run_id"`
+	SettingsModel 						Settings `json:"settings_model"`
+	GetResearchPromptModel 				Stats `json:"get_research_prompt_model"`
+	GetResearchOutputModel 				Stats `json:"get_research_output_model"`
+	ScreenwritingPromptModel 			Stats `json:"screenwriting_prompt_model"`
+	ScreenWritingOutputModel 			Stats `json:"screenwriting_output_model"`
+	VideoPromptModel 					Stats `json:"video_prompt_model"`
+	AudioPromptModel 					Stats `json:"audio_prompt_model"`
+	AudioOutputModel 					AudioOutput `json:"audio_output_model"`
+	VideoLipsyncOutputModel 			VideoLipsyncOutput `json:"video_lipsync_output_model"`
+	VideoTransparencyOutputModel 		VideoTransparencyOutput `json:"video_transparency_output_model"`
+	VideoBackgroundOutputModel 			VideoBackgroundOutput `json:"video_background_output_model"`
+	VideoLayerMergeModel 				VideoLayerMergeOutput `json:"video_layer_merge_model"`
+	VideoJoinArrayModel 				[]Scene `json:"video_join_array_model"`
+	ImageThumbnailPromptModel 			Stats `json:"image_thumbnail_prompt_model"`
+	ImageThumbnailOutputModel 			ImageThumbnailOutput `json:"image_thumbnail_output_model"`
+	ImageBackgroundContextOutputModel 	ImageBackgroundContextOutput `json:"image_background_context_output_model"`
+	PublishVideoYoutubeModel 			Stats `json:"publish_video_youtube_model"`
+	PublishVideoTiktokModel 			Stats `json:"publish_video_tiktok_model"`
+	PublishVideoRumbleModel 			Stats `json:"publish_video_rumble_model"`
+	PublishVideoFacebookModel 			Stats `json:"publish_video_facebook_model"`
+	PublishSocialFacebookModel 			Stats `json:"publish_social_facebook_model"`
+	PublishSocialXModel 				Stats `json:"publish_social_x_model"`
+	PublishSocialYoutubeModel 			Stats `json:"publish_social_youtube_model"`
+	PublishSocialTruthModel 			Stats `json:"publish_social_truth_model"`
 }
 
 func NewContext(prompt Prompt, jobRunID RunID, disposition Disposition) Context {
 	c := Context{}
 	c.EmbedModel.ID = uuid.NewString()
 	c.ID = c.EmbedModel.ID
-	c.Prompt = prompt
-	c.Disposition = disposition
+	c.PromptModel = prompt
+	c.DispositionModel = disposition
 	c.JobRunID = jobRunID
-	c.Settings = prompt.Settings
-	c.GetResearchPrompt = c.GetResearchPrompt.New("")
-	c.GetResearchOutput = c.GetResearchOutput.New("")
-	c.ScreenwritingPrompt = c.ScreenwritingPrompt.New("")
-	c.ScreenWritingOutput = c.ScreenWritingOutput.New("")
-	c.VideoPrompt = c.VideoPrompt.New("")
-	c.AudioPrompt = c.AudioPrompt.New("")
-	c.VideoLipsyncOutput = c.VideoLipsyncOutput.New()
-	c.VideoTransparencyOutput = c.VideoTransparencyOutput.New()
-	c.VideoBackgroundOutput = c.VideoBackgroundOutput.New()
-	c.VideoLayerMerge = c.VideoLayerMerge.New()
-	c.ImageThumbnailPrompt = c.ImageThumbnailPrompt.New("")
-	c.ImageThumbnailOutput = c.ImageThumbnailOutput.New()
-	c.ImageBackgroundContextOutput = c.ImageBackgroundContextOutput.New()
-	c.PublishVideoYoutube = c.PublishVideoYoutube.New("")
-	c.PublishVideoTiktok = c.PublishVideoTiktok.New("")
-	c.PublishVideoRumble = c.PublishVideoRumble.New("")
-	c.PublishVideoFacebook = c.PublishVideoFacebook.New("")
-	c.PublishSocialFacebook = c.PublishSocialFacebook.New("")
-	c.PublishSocialX = c.PublishSocialX.New("")
-	c.PublishSocialYoutube = c.PublishSocialYoutube.New("")
-	c.PublishSocialTruth = c.PublishSocialTruth.New("")
+	c.SettingsModel = prompt.SettingsModel
+	c.GetResearchPromptModel = c.GetResearchPromptModel.New(nil)
+	c.GetResearchOutputModel = c.GetResearchOutputModel.New(nil)
+	c.ScreenwritingPromptModel = c.ScreenwritingPromptModel.New(nil)
+	c.ScreenWritingOutputModel = c.ScreenWritingOutputModel.New(nil)
+	c.VideoPromptModel = c.VideoPromptModel.New(nil)
+	c.AudioPromptModel = c.AudioPromptModel.New(nil)
+	c.VideoLipsyncOutputModel = c.VideoLipsyncOutputModel.New()
+	c.VideoTransparencyOutputModel = c.VideoTransparencyOutputModel.New()
+	c.VideoBackgroundOutputModel = c.VideoBackgroundOutputModel.New()
+	c.VideoLayerMergeModel = c.VideoLayerMergeModel.New()
+	c.ImageThumbnailPromptModel = c.ImageThumbnailPromptModel.New(nil)
+	c.ImageThumbnailOutputModel = c.ImageThumbnailOutputModel.New()
+	c.ImageBackgroundContextOutputModel = c.ImageBackgroundContextOutputModel.New()
+	c.PublishVideoYoutubeModel = c.PublishVideoYoutubeModel.New(nil)
+	c.PublishVideoTiktokModel = c.PublishVideoTiktokModel.New(nil)
+	c.PublishVideoRumbleModel = c.PublishVideoRumbleModel.New(nil)
+	c.PublishVideoFacebookModel = c.PublishVideoFacebookModel.New(nil)
+	c.PublishSocialFacebookModel = c.PublishSocialFacebookModel.New(nil)
+	c.PublishSocialXModel = c.PublishSocialXModel.New(nil)
+	c.PublishSocialYoutubeModel = c.PublishSocialYoutubeModel.New(nil)
+	c.PublishSocialTruthModel = c.PublishSocialTruthModel.New(nil)
 	return c
 }
 
@@ -133,7 +133,7 @@ func GetSystemPrompts() ([]SystemPrompt, error) {
 	systemPrompt := NewSystemPrompt(nil)
 	systemPrompts, err := systemPrompt.List(ctx)
 	if err != nil {
-		return nil, merrors.SystemPromptListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
+		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
 	}
 	return systemPrompts, nil
 }
@@ -142,11 +142,11 @@ func (c Context) Truncate() (*TruncatedContext, error) {
 	var err error
 	truncated := TruncatedContext{}
 	truncated.JobRunID = c.JobRunID.String()
-	truncated.PromptID = c.Prompt.Model.ID
-	truncated.Prompt = c.Prompt.Prompt
-	truncated.Domain = c.Prompt.Domain
-	truncated.Category = c.Prompt.Category
-	gb := c.Prompt.Settings.GlobalBypass.Truncate()
+	truncated.PromptID = c.PromptModel.Model.ID
+	truncated.Prompt = c.PromptModel.Prompt
+	truncated.Domain = c.PromptModel.Domain
+	truncated.Category = c.PromptModel.Category
+	gb := c.PromptModel.SettingsModel.GlobalBypassModel.Truncate()
 	if v, ok := gb["get_research_prompt"].(bool); ok {
 		truncated.GlobalBypass.GetResearchPrompt = v
 	}
@@ -198,43 +198,43 @@ func (c Context) Truncate() (*TruncatedContext, error) {
 	if v, ok := gb["screenwriting_start"].(bool); ok {
 		truncated.GlobalBypass.ScreenwritingStart = v
 	}
-	en := c.Disposition.Entitlements
-	truncated.Entitlements.Youtube = en.YouTube.Value
-	truncated.Entitlements.Tiktok = en.TikTok.Value
-	truncated.Entitlements.Rumble = en.Rumble.Value
-	truncated.Entitlements.Patreon = en.Patreon.Value
-	truncated.Entitlements.Facebook = en.Facebook.Value
+	en := c.DispositionModel.EntitlementsModel
+	truncated.Entitlements.Youtube = en.YouTubeModel.Value
+	truncated.Entitlements.Tiktok = en.TikTokModel.Value
+	truncated.Entitlements.Rumble = en.RumbleModel.Value
+	truncated.Entitlements.Patreon = en.PatreonModel.Value
+	truncated.Entitlements.Facebook = en.FacebookModel.Value
 
-	truncated.Disposition.MinDuration = c.Disposition.MinDuration
-	truncated.Disposition.MaxDuration = c.Disposition.MaxDuration
-	truncated.Disposition.AdvertisementDuration = c.Disposition.AdvertisementDuration
-	truncated.Settings.ID = c.Prompt.Settings.ID
-	truncated.Settings.Name = c.Prompt.Settings.Name
-	truncated.Settings.Recurring = c.Prompt.Settings.Recurring.Value
-	truncated.Settings.Interval = c.Prompt.Settings.Interval
+	truncated.Disposition.MinDuration = c.DispositionModel.MinDuration
+	truncated.Disposition.MaxDuration = c.DispositionModel.MaxDuration
+	truncated.Disposition.AdvertisementDuration = c.DispositionModel.AdvertisementDuration
+	truncated.Settings.ID = c.PromptModel.SettingsModel.ID
+	truncated.Settings.Name = c.PromptModel.SettingsModel.Name
+	truncated.Settings.Recurring = c.PromptModel.SettingsModel.RecurringModel.Value
+	truncated.Settings.Interval = c.PromptModel.SettingsModel.Interval
 
 	stats := make(map[string]Stats)
-	stats["get_research_prompt"] = c.GetResearchPrompt
-	stats["get_research_output"] = c.GetResearchOutput
-	stats["screenwriting_prompt"] = c.ScreenwritingPrompt
-	stats["screenwriting_output"] = c.ScreenWritingOutput
-	stats["video_prompt"] = c.VideoPrompt
-	stats["audio_prompt"] = c.AudioPrompt
-	stats["video_lipsync_output"] = c.VideoLipsyncOutput.Stats
-	stats["video_transparency_output"] = c.VideoTransparencyOutput.Stats
-	stats["video_background_output"] = c.VideoBackgroundOutput.Stats
-	stats["video_merge"] = c.VideoLayerMerge.Stats
-	stats["image_thumbnail_prompt"] = c.ImageThumbnailPrompt
-	stats["image_thumbnail_output"] = c.ImageThumbnailOutput.Stats
-	stats["image_background_context_output"] = c.ImageBackgroundContextOutput.Stats
-	stats["publish_video_youtube"] = c.PublishVideoYoutube
-	stats["publish_video_tiktok"] = c.PublishVideoTiktok
-	stats["publish_video_rumble"] = c.PublishVideoRumble
-	stats["publish_video_facebook"] = c.PublishVideoFacebook
-	stats["publish_social_facebook"] = c.PublishSocialFacebook
-	stats["publish_social_x"] = c.PublishSocialX
-	stats["publish_social_youtube"] = c.PublishSocialYoutube
-	stats["publish_social_truth"] = c.PublishSocialTruth
+	stats["get_research_prompt"] = c.GetResearchPromptModel
+	stats["get_research_output"] = c.GetResearchOutputModel
+	stats["screenwriting_prompt"] = c.ScreenwritingPromptModel
+	stats["screenwriting_output"] = c.ScreenWritingOutputModel
+	stats["video_prompt"] = c.VideoPromptModel
+	stats["audio_prompt"] = c.AudioPromptModel
+	stats["video_lipsync_output"] = c.VideoLipsyncOutputModel.StatsModel
+	stats["video_transparency_output"] = c.VideoTransparencyOutputModel.StatsModel
+	stats["video_background_output"] = c.VideoBackgroundOutputModel.StatsModel
+	stats["video_merge"] = c.VideoLayerMergeModel.StatsModel
+	stats["image_thumbnail_prompt"] = c.ImageThumbnailPromptModel
+	stats["image_thumbnail_output"] = c.ImageThumbnailOutputModel.StatsModel
+	stats["image_background_context_output"] = c.ImageBackgroundContextOutputModel.StatsModel
+	stats["publish_video_youtube"] = c.PublishVideoYoutubeModel
+	stats["publish_video_tiktok"] = c.PublishVideoTiktokModel
+	stats["publish_video_rumble"] = c.PublishVideoRumbleModel
+	stats["publish_video_facebook"] = c.PublishVideoFacebookModel
+	stats["publish_social_facebook"] = c.PublishSocialFacebookModel
+	stats["publish_social_x"] = c.PublishSocialXModel
+	stats["publish_social_youtube"] = c.PublishSocialYoutubeModel
+	stats["publish_social_truth"] = c.PublishSocialTruthModel
 	sysPrompts, err := GetSystemPrompts()
 	if err != nil {
 		return nil, err

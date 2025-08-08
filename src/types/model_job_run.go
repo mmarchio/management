@@ -13,8 +13,6 @@ import (
 func NewJobRun(id *string) JobRun {
 	c := JobRun{}
 	c.New(id)
-	c.ID = RunID(uuid.NewString())
-	c.Model.ID = c.ID.String()
 	c.Model.ContentType = "jobrun"
 	return c
 } 
@@ -33,16 +31,34 @@ func NewJobRunTypeContent() Content {
 
 type JobRun struct {
 	Model
-	ID 					RunID			 `json:"id"`
-	JobID 				JobID			 `json:"job_id"`
-	WorkflowID			WorkflowID  	 `json:"workflow_id"`
-	Context 			Context			 `json:"context"`
-	TruncatedContext    TruncatedContext `json:"truncated_context"`
-	Settings 			Settings		 `json:"settings"`
-	Disposition         Disposition 	 `json:"disposition"`
-	Tokens 				int64			 `json:"tokens"`
-	LatestStatusType 	string 			 `json:"latest_status_type"`
-	LatestStatusValue 	string 			 `json:"latest_status_value"`
+	ID 						RunID			 `json:"id"`
+	JobID 					JobID			 `json:"job_id"`
+	WorkflowID				WorkflowID  	 `json:"workflow_id"`
+	ContextModel 			Context			 `json:"context_model"`
+	TruncatedContextModel  	TruncatedContext `json:"truncated_context_model"`
+	SettingsModel 			Settings		 `json:"settings_model"`
+	DispositionModel        Disposition 	 `json:"disposition_model"`
+	Tokens 					int64			 `json:"tokens"`
+	LatestStatusType 		string 			 `json:"latest_status_type"`
+	LatestStatusValue 		string 			 `json:"latest_status_value"`
+}
+
+func (c JobRun) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowJobRun{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.JobID = c.JobID
+	sm.WorkflowID = c.WorkflowID
+	sm.SettingsModel = c.SettingsModel.ID
+	sms = append(sms, c.SettingsModel.Pack()...)
+	sm.DispositionModel = c.DispositionModel.Model.ID
+	sms = append(sms, c.DispositionModel.Pack()...)
+	sm.TokenCount = c.Tokens
+	sm.LatestStatusType = c.LatestStatusType
+	sm.LatestStatusValue = c.LatestStatusValue
+	sms = append(sms, sm)
+	return sms
 }
 
 func (c *JobRun) New(id *string) {
@@ -62,7 +78,7 @@ func (c JobRun) List(ctx context.Context) ([]JobRun, error) {
 	content.Model.ContentType = "jobrun"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.JobRunListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 	}
 	cuts := make([]JobRun, 0)
 	for _, model := range contents {
@@ -71,6 +87,7 @@ func (c JobRun) List(ctx context.Context) ([]JobRun, error) {
 		if err != nil {
 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 		}
+		cut.ContextModel.SetCtx(ctx)
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
@@ -80,7 +97,7 @@ func (c JobRun) ListBy(ctx context.Context, key string, value interface{}) ([]Jo
 	content := NewJobRunModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.JobRunListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(err)
 	}
 	cuts := make([]JobRun, 0)
 	for _, model := range contents {
@@ -100,7 +117,7 @@ func (c *JobRun) Get(ctx context.Context) error {
 	content.Model.ContentType = "jobrun"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.JobRunGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -122,7 +139,7 @@ func (c *JobRun) FindBy(ctx context.Context) error {
 		content, err = content.FindBy(ctx, "workflow_id", c.WorkflowID.String())
 	}
 	if err != nil {
-		return merrors.JobRunGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -140,14 +157,14 @@ func (c *JobRun) CustomQuery(ctx context.Context, write bool, q string, vars ...
 		content.FromType(c)
 		_, err := content.CustomQuery(ctx, write, q, vars)
 		if err != nil {
-			return nil, merrors.JobRunCustomQueryError{Info: c.Model.ID}.Wrap(err)
+			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(err)
 		}
 		return nil, nil
 	}
 	res, err := content.CustomQuery(ctx, write, q, vars)
 	if err != nil {
 		if err != nil {
-			return nil, merrors.JobRunCustomQueryError{Info: c.Model.ID}.Wrap(err).BubbleCode()
+			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(err).BubbleCode()
 		}
 	}
 	r := make([]JobRun, 0)
@@ -168,7 +185,7 @@ func (c JobRun) Set(ctx context.Context) error {
 	content.ID = c.Model.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.JobRunSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -178,7 +195,7 @@ func (c JobRun) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.JobRunDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -194,4 +211,3 @@ func (c JobRun) GetContentType() string {
 func (c JobRun) GetTable() string {
 	return c.Model.Table
 }
-

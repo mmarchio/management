@@ -11,12 +11,23 @@ import (
 
 type PromptTemplate struct {
 	Model
-	ID PromptTemplateID `form:"id" json:"id"`
-	Name string `form:"name" json:"name"`
-	Template string `form:"template" json:"template"`
-	Vars string `form:"vars" json:"vars"`
+	ID 			PromptTemplateID `form:"id" json:"id"`
+	Name 		string `form:"name" json:"name"`
+	Template 	string `form:"template" json:"template"`
+	Vars 		string `form:"vars" json:"vars"`
 }
 
+func (c PromptTemplate) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowPromptTemplate{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Template = c.Template
+	sm.Vars = c.Vars
+	sms = append(sms, sm)
+	return sms
+}
 
 func NewPromptTemplate(id *string) PromptTemplate {
 	c := PromptTemplate{}
@@ -49,7 +60,7 @@ func (c PromptTemplate) List(ctx context.Context) ([]PromptTemplate, error) {
 	content := NewPromptTemplateModelContent()
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.PromptTemplateListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]PromptTemplate, 0)
 	for _, model := range contents {
@@ -67,7 +78,7 @@ func (c PromptTemplate) ListBy(ctx context.Context, key string, value interface{
 	content := NewPromptTemplateModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.PromptTemplateListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]PromptTemplate, 0)
 	for _, model := range contents {
@@ -87,7 +98,7 @@ func (c *PromptTemplate) Get(ctx context.Context) error {
 	content.Model.ContentType = "prompttemplate"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.PromptTemplateError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -101,7 +112,7 @@ func (c PromptTemplate) Set(ctx context.Context) error {
 	content.FromType(c)
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.PromptTemplateSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -111,7 +122,7 @@ func (c PromptTemplate) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.PromptTemplateDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

@@ -232,27 +232,27 @@ func (c VideoLipsyncOutputID) Scan(s interface{}) (VideoLipsyncOutputID, error) 
 	return VideoLipsyncOutputID(n.String()), nil
 }
 
-type VideoTransparancyOutputID string
+type VideoTransparencyOutputID string
 
-func (c VideoTransparancyOutputID) New() VideoTransparancyOutputID {
-	return VideoTransparancyOutputID(uuid.NewString())
+func (c VideoTransparencyOutputID) New() VideoTransparencyOutputID {
+	return VideoTransparencyOutputID(uuid.NewString())
 }
 
-func (c VideoTransparancyOutputID) IsNil() bool {
+func (c VideoTransparencyOutputID) IsNil() bool {
 	return string(c) == ""
 }
 
-func (c VideoTransparancyOutputID) String() string {
+func (c VideoTransparencyOutputID) String() string {
 	return string(c)
 }
 
-func (c VideoTransparancyOutputID) Scan(s interface{}) (VideoTransparancyOutputID, error) {
+func (c VideoTransparencyOutputID) Scan(s interface{}) (VideoTransparencyOutputID, error) {
 	n := uuid.New()
 	err := n.Scan(s)
 	if err != nil {
 		return c, err
 	}
-	return VideoTransparancyOutputID(n.String()), nil
+	return VideoTransparencyOutputID(n.String()), nil
 }
 
 type VideoBackgroundOutputID string

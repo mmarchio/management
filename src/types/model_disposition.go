@@ -33,14 +33,32 @@ func NewDispositionTypeContent() Content {
 
 type Disposition struct {
 	Model
-	ID DispositionID 			`json:"id"`
-	Name string 				`form:"name" json:"name"`
-	MinDuration int64 			`form:"min_duration" json:"min_duration"`
-	MaxDuration int64 			`form:"max_duration" json:"max_duration"`
-	AdvertisementDuration int64 `form:"advertisement_duration" json:"advertisement_duration"`
-	Entitlements Entitlements 	`form:"entitlements" json:"entitlements"`
-	Verification Steps 			`form:"verification" json:"verification"`
-	Bypass Steps 				`form:"bypass" json:"bypass"`
+	ID 						DispositionID 	`json:"id"`
+	Name 					string 			`form:"name" json:"name"`
+	MinDuration 			int64 			`form:"min_duration" json:"min_duration"`
+	MaxDuration 			int64 			`form:"max_duration" json:"max_duration"`
+	AdvertisementDuration 	int64 			`form:"advertisement_duration" json:"advertisement_duration"`
+	EntitlementsModel 		Entitlements 	`form:"entitlements" json:"entitlements_model"`
+	VerificationModel 		Steps 			`form:"verification" json:"verification_model"`
+	BypassModel 			Steps 			`form:"bypass" json:"bypass_model"`
+}
+
+func (c Disposition) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowDisposition{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.MinDuration = c.MinDuration
+	sm.MaxDuration = c.MaxDuration
+	sm.AdvertisementDuration = c.AdvertisementDuration
+	sm.EntitlementsModel = c.EntitlementsModel.EmbedModel.ID
+	sms = append(sms, c.EntitlementsModel.Pack()...)
+	sm.VerificationModel = c.VerificationModel.EmbedModel.ID
+	sms = append(sms, c.VerificationModel.Pack()...)
+	sm.BypassModel = c.BypassModel.EmbedModel.ID
+	sms = append(sms, c.BypassModel.Pack()...)
+	sms = append(sms, sm)
+	return sms
 }
 
 func (c *Disposition) New(id *string) {
@@ -52,15 +70,15 @@ func (c *Disposition) New(id *string) {
 	c.ID = DispositionID(c.Model.ID)
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
-	c.Bypass.EmbedModel.New("bypass")
-	c.Verification.EmbedModel.New("verification")
+	c.BypassModel.EmbedModel.New("bypass")
+	c.VerificationModel.EmbedModel.New("verification")
 }
 
 func (c Disposition) List(ctx context.Context) ([]Disposition, error) {
 	content := NewDispositionModelContent()
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.DispositionListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Disposition, 0)
 	for _, model := range contents {
@@ -78,7 +96,7 @@ func (c Disposition) ListBy(ctx context.Context, key string, value interface{}) 
 	content := NewDispositionModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.DispositionListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Disposition, 0)
 	for _, model := range contents {
@@ -98,7 +116,7 @@ func (c *Disposition) Get(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.DispositionGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -113,7 +131,7 @@ func (c Disposition) Set(ctx context.Context) error {
 	content.Model.ID = c.Model.ID
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.DispositionSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -123,7 +141,7 @@ func (c Disposition) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.DispositionDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -162,26 +180,26 @@ func (c Disposition) Unmarshal(j string) (Disposition, error) {
 	c.MinDuration = model.MinDuration
 	c.MaxDuration = model.MaxDuration
 	c.AdvertisementDuration = model.AdvertisementDuration
-	c.Entitlements = c.Entitlements.FromModel(model.Entitlements)
-	c.Verification = c.Verification.FromModel(model.Verification)
-	c.Bypass = c.Bypass.FromModel(model.Bypass)
+	c.EntitlementsModel = c.EntitlementsModel.FromModel(model.EntitlementsModel)
+	c.VerificationModel = c.VerificationModel.FromModel(model.VerificationModel)
+	c.BypassModel = c.BypassModel.FromModel(model.BypassModel)
 	return c, nil
 }
 
 func (c Disposition) Bind(e echo.Context) (Disposition, error) {
 	var err error
-	c.Bypass, err = c.Bypass.Bind(e)
-	c.Verification, err = c.Verification.Bind(e)
-	c.Entitlements, err = c.Entitlements.Bind(e)
+	c.BypassModel, err = c.BypassModel.Bind(e)
+	c.VerificationModel, err = c.VerificationModel.Bind(e)
+	c.EntitlementsModel, err = c.EntitlementsModel.Bind(e)
 	return c, err
 }
 
 func ValidateDisposition(d Disposition) (Disposition, error) {
-	d.Entitlements, _ = ValidateEntitlements(d.Entitlements, "entitlements_")
-	d.Entitlements.EmbedModel.ContentType = "entitlements"
-	d.Bypass, _ = ValidateSteps(d.Bypass, "bypass_")
-	d.Bypass.EmbedModel.ContentType = "bypass"
-	d.Verification, _ = ValidateSteps(d.Verification, "verification_")
-	d.Verification.EmbedModel.ContentType = "verification"
+	d.EntitlementsModel, _ = ValidateEntitlements(d.EntitlementsModel, "entitlements_")
+	d.EntitlementsModel.EmbedModel.ContentType = "entitlements"
+	d.BypassModel, _ = ValidateSteps(d.BypassModel, "bypass_")
+	d.BypassModel.EmbedModel.ContentType = "bypass"
+	d.VerificationModel, _ = ValidateSteps(d.VerificationModel, "verification_")
+	d.VerificationModel.EmbedModel.ContentType = "verification"
 	return d, nil
 }

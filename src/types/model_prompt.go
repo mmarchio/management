@@ -39,7 +39,22 @@ type Prompt struct {
 	Domain 		string 		`form:"domain" json:"domain"`
 	Category 	string 		`form:"category" json:"category"`
 	Characters 	[]Character `form:"characters" json:"characters"`
-	Settings 	Settings 	`form:"settings" json:"settings"`
+	SettingsModel 	Settings 	`form:"settings" json:"settings_model"`
+}
+
+func (c Prompt) Pack() []shallowmodel {
+	sms := make([]shallowmodel, 0)
+	sm := ShallowPrompt{}
+	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
+	sm.ID = c.ID
+	sm.Name = c.Name
+	sm.Prompt = c.Prompt
+	sm.Domain = c.Domain
+	sm.Category = c.Category
+	sm.SettingsModel = c.SettingsModel.ID
+	sms = append(sms, c.SettingsModel.Pack()...)
+	sms = append(sms, sm)
+	return sms
 }
 
 func (c *Prompt) New(id *string) {
@@ -51,7 +66,7 @@ func (c *Prompt) New(id *string) {
 	c.ID = PromptID(c.Model.ID)
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
-	c.Settings.New()
+	c.SettingsModel.New()
 }
 
 
@@ -60,7 +75,7 @@ func (c Prompt) List(ctx context.Context) ([]Prompt, error) {
 	content.Model.ContentType = "prompt"
 	contents, err := content.List(ctx)
 	if err != nil {
-		return nil, merrors.PromptListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
@@ -78,7 +93,7 @@ func (c Prompt) ListBy(ctx context.Context, key string, value interface{}) ([]Pr
 	content := NewPromptModelContent()
 	contents, err := content.ListBy(ctx, key, value)
 	if err != nil {
-		return nil, merrors.PromptListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
@@ -98,7 +113,7 @@ func (c *Prompt) Get(ctx context.Context) error {
 	content.Model.ContentType = "prompt"
 	content, err := content.Get(ctx)
 	if err != nil {
-		return merrors.PromptGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
@@ -113,7 +128,7 @@ func (c Prompt) Set(ctx context.Context) error {
 	content.Model.ID = c.ID.String()
 	err := content.Set(ctx)
 	if err != nil {
-		return merrors.PromptSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -123,7 +138,7 @@ func (c Prompt) Delete(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(ctx); err != nil {
-		return merrors.PromptDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -131,9 +146,9 @@ func (c Prompt) Delete(ctx context.Context) error {
 func (c Prompt) GetDispositions(ctx context.Context) (Prompt, error) {
 	var err error
 	disposition := NewDisposition(nil)
-	c.Settings.Template.AvailableDispositions, err = disposition.List(ctx)
+	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(ctx)
 	if err != nil {
-		return c, merrors.DispositionListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
+		return c, merrors.ContentListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
 	}
 	return c, nil
 }
@@ -161,14 +176,14 @@ func (c Prompt) SetID() (Prompt, error) {
 
 func ValidatePrompt(p Prompt) (Prompt, error) {
 	var err error
-	p.Settings.GlobalBypass, err = ValidateSteps(p.Settings.GlobalBypass, "global_bypass_")
-	p.Settings.Recurring = ValidateToggle(p.Settings.Recurring, uuid.NewString(), "prompt_settings_", "recurring", "recurring")
+	p.SettingsModel.GlobalBypassModel, err = ValidateSteps(p.SettingsModel.GlobalBypassModel, "global_bypass_")
+	p.SettingsModel.RecurringModel = ValidateToggle(p.SettingsModel.RecurringModel, uuid.NewString(), "prompt_settings_", "recurring", "recurring")
 	return p, err
 }
 
 func (c Prompt) Bind(e echo.Context) (Prompt, error) {
 	var err error
-	c.Settings = c.Settings.Bind(e)
+	c.SettingsModel = c.SettingsModel.Bind(e)
 	return c, err
 }
 
