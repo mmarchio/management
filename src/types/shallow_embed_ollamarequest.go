@@ -1,5 +1,7 @@
 package types
 
+import "context"
+
 type ShallowOllamaRequest struct {
 	Model 		string `json:"model"`
 	System 		string `json:"system"`
@@ -9,3 +11,13 @@ type ShallowOllamaRequest struct {
 	KeepAlive 	string `json:"keep_alive"`
 }
 
+func (c ShallowOllamaRequest) Expand(ctx context.Context) (*OllamaRequest, error) {
+	r := OllamaRequest{}
+	r.Model = c.Model
+	r.System = c.System
+	r.Prompt = c.Prompt
+	r.Stream = c.Stream
+	r.Format = c.Format
+	r.KeepAlive = c.KeepAlive
+	return &r, nil
+}
