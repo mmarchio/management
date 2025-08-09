@@ -26,6 +26,13 @@ type Model struct {
 	Validated   bool
 }
 
+func (c Model) IsNil() bool {
+	if c.ID == "" && c.CreatedAt.IsZero() && c.UpdatedAt.IsZero() && c.ContentType == "" {
+		return true
+	}
+	return false
+}
+
 func (c Model) FromShallowModel(m ShallowModel) Model {
 	c.ID = m.ID
 	c.CreatedAt = m.CreatedAt
@@ -81,6 +88,13 @@ type EmbedModel struct {
 	UpdatedAt time.Time
 	TokenCount int64
 	ContentType string
+}
+
+func (c EmbedModel) IsNil() bool {
+	if c.ContentType == "" {
+		return true
+	}
+	return false
 }
 
 func (c EmbedModel) FromShallowModel(m ShallowModel) EmbedModel {

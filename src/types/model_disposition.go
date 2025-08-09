@@ -70,8 +70,9 @@ func (c *Disposition) New(id *string) {
 	c.ID = DispositionID(c.Model.ID)
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
-	c.BypassModel.EmbedModel.New("bypass")
-	c.VerificationModel.EmbedModel.New("verification")
+	c.EntitlementsModel.New(c)
+	c.BypassModel.New(c, "bypass")
+	c.VerificationModel.New(c, "verification")
 }
 
 func (c Disposition) List(ctx context.Context) ([]Disposition, error) {

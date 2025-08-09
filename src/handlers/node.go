@@ -1,377 +1,289 @@
 package handlers
 
-// import (
-// 	"fmt"
-// 	"net/http"
+import (
+	"net/http"
+	"strings"
 
-// 	"github.com/labstack/echo/v4"
-// 	merrors "github.com/mmarchio/management/errors"
-// 	"github.com/mmarchio/management/types"
-// )
+	"github.com/labstack/echo/v4"
+	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/types"
+)
 
-// func RegisterNodesRoutes(e *echo.Echo) {
-// 	g := e.Group("/node")
-// 	g.GET("", HandleNode)
-// 	g.GET("/new", HandleNodeNew)
-// 	g.GET("/new/:id", HandleNodeNew)
-// 	// g.POST("/save", HandleNodeSave)
-// 	// g.POST("/save/:id", HandleNodeSave)
-// 	g.GET("/list", HandleNodeList)
-// 	g.GET("/edit/:id", HandleNodeEdit)
-// 	g.GET("/delete/:id", HandleNodeDelete)
-// 	g.GET("/comfynode/delete/:id", HandleComfyNodeDelete)
-// 	g.GET("/ollamanode/delete/:id", HandleOllamaNodeDelete)
-// 	g.GET("/sshnode/delete/:id", HandleSSHNodeDelete)
-// 	g.GET("/comfynode/save", HandleComfyNodeSave)
-// 	g.GET("/ollamanode/save", HandleOllamaNodeSave)
-// 	g.GET("/sshnode/save", HandleSSHNodeSave)
-// 	g.GET("/comfynode/save/:id", HandleComfyNodeSave)
-// 	g.GET("/ollamanode/save/:id", HandleOllamaNodeSave)
-// 	g.GET("/sshnode/save/:id", HandleSSHNodeSave)
-// }
+func RegisterNodesRoutes(e *echo.Echo) {
+	g := e.Group("/node")
+	g.GET("/comfy/new", HandleComfyNew)
+	g.GET("/comfy/edit/:id", HandleComfyEdit)
+	g.GET("/comfy/delete/:id", HandleComfyDelete)
+	g.GET("/comfy/list", HandleComfyList)
+	g.POST("/comfy/save/:id", HandleComfySave)
 
-// func HandleAPIGetNode(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	if id := c.Param("id"); id != "" {
-// 		entity := types.NewNode(&id)
-// 		if err := entity.Get(ctx); err != nil {
-// 			return c.JSON(http.StatusInternalServerError, fmt.Sprintf("internal server error: %w", err))
-// 		}
-// 		return c.JSON(http.StatusOK, entity)
-// 	}
-// 	return c.JSON(http.StatusBadRequest, "missing id")
-// }
+	g.GET("/ollama/new", HandleOllamaNew)
+	g.GET("/ollama/edit/:id", HandleOllamaEdit)
+	g.GET("/ollama/delete/:id", HandleOllamaDelete)
+	g.GET("/ollama/list", HandleOllamaList)
+	g.POST("/ollama/save/:id", HandleOllamaSave)
+	
+	g.GET("/ssh/new", HandleSSHNew)
+	g.GET("/ssh/edit/:id", HandleSSHEdit)
+	g.GET("/ssh/delete/:id", HandleSSHDelete)
+	g.GET("/ssh/list", HandleSSHList)
+	g.POST("/ssh/save/:id", HandleSSHSave)
+}
 
-// func HandleAPIListNode(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	entity := types.NewNode(nil)
-// 	entities, err := entity.List(ctx)
-// 	if err != nil {
-// 		return c.JSON(http.StatusInternalServerError, err.Error())
-// 	}
-// 	return c.JSON(http.StatusOK, entities)
-// }
+func HandleComfyNew(c echo.Context) error {
+	dt := DisplayComfyNode{
+		ComfyNode: types.NewComfyNode(nil),
+		DisplayType: "new",
+	}
+	dt.Menu.Href = "/nodes/comfy"
+	dt.Menu.Title = "Comfy Nodes"
+	return c.Render(http.StatusOK, "node.comfy.tpl", dt)
+}
 
-// func HandleAPISaveNode(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	entity := types.NewNode(nil)
-// 	if err := c.Bind(&entity); err != nil {
-// 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveNode"}.Wrap(err))
-// 	}
-// 	if err := entity.Set(ctx); err != nil {
-// 		return c.JSON(http.StatusInternalServerError, err.Error())
-// 	}
-// 	return c.JSON(http.StatusCreated, entity)
-// }
+func HandleComfyEdit(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplayComfyNode{
+		DisplayType: "edit",
+	}
+	dt.Menu.Href = "/nodes/comfy"
+	dt.Menu.Title = "Comfy Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewComfyNode(&id)
+		if err := cn.Get(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		dt.ComfyNode = cn
+	}
+	return c.Render(http.StatusOK, "node.comfy.tpl", dt)
+}
 
-// func HandleNode(c echo.Context) error {
-// 	dt := DisplayNode{
-// 		DisplayType: "none",
-// 		Menu: Menu{
-// 			Href: "node",
-// 			Title: "Node",
-// 		},
-// 	}
-// 	return c.Render(http.StatusOK, "node.tpl", dt)
-// }
+func HandleComfySave(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplayComfyNode{
+		DisplayType: "edit",
+	}
+	dt.Menu.Href = "/nodes/comfy"
+	dt.Menu.Title = "Comfy Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewComfyNode(&id)
+		if err := cn.Get(ctx); err != nil {
+			if !strings.Contains(err.Error(), "not found") {
+				return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+			}
+		}
+		if err := c.Bind(&cn); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
+		}
+		if err := cn.Set(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		dt.ComfyNode = cn
+		return c.Render(http.StatusCreated, "node.comfy.tpl", dt)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+}
 
-// func HandleNodeList(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	entity := types.NewNode(nil)
-// 	list, err := entity.List(ctx)
-// 	if err != nil {
-// 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 	}
-// 	dt := DisplayNode{
-// 		List: list,
-// 		DisplayType: "list",
-// 		Menu: Menu{
-// 			Href: "node",
-// 			Title: "Node",
-// 		},
-// 	}
-// 	return c.Render(http.StatusOK, "node.tpl", dt)
-// }
+func HandleComfyDelete(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplayComfyNode{
+		DisplayType: "list",
+	}
+	dt.Menu.Href = "/nodes/comfy"
+	dt.Menu.Title = "Comfy Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewComfyNode(&id)
+		if err := cn.Delete(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		return HandleComfyList(c)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+}
 
-// func HandleNodeDelete(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	if id := c.Param("id"); id != "" {
-// 		entity := types.NewNode(&id)
-// 		if err := entity.Delete(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		wfid := entity.WorkflowID.String()
-// 		wf := types.NewWorkflow(&wfid)
-// 		fmt.Printf("handlers:node:HandleNodeDelete node: %#v\n", entity)
-// 		fmt.Printf("handlers:node:HandleNodeDelete wf: %#v\n", wf)
-// 		if err := wf.Get(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		wf.CutNode(entity.Model.ID)
-// 		wf.CutNodeOrder(fmt.Sprintf("%s:%s", entity.Model.ID, entity.Model.ContentType))
-// 		if err := wf.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		return HandleWorkflowList(c)
-// 	}
-// 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
-// }
+func HandleComfyList(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplayComfyNode{
+		DisplayType: "list",
+	}
+	dt.Menu.Href = "/nodes/comfy"
+	dt.Menu.Title = "Comfy Nodes"
+	cn := types.NewComfyNode(nil)
+	list, err := cn.List(ctx)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	dt.List = list
+	return c.Render(http.StatusOK, "node.comfy.tpl", dt)
+}
 
-// func HandleComfyNodeDelete(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	if id := c.Param("id"); id != "" {
-// 		entity := types.NewComfyNode(&id)
-// 		if err := entity.Get(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		wfid := entity.WorkflowID.String()
-// 		wf := types.NewWorkflow(&wfid)
-// 		wf.CutNode(entity.Model.ID)
-// 		wf.CutNodeOrder(fmt.Sprintf("%s:%s", entity.Model.ID, entity.Model.ContentType))
-// 		if err := wf.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if err := entity.Delete(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		return HandleWorkflowList(c)
-// 	}
-// 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
-// }
+func HandleOllamaNew(c echo.Context) error {
+	dt := DisplayOllamaNode{
+		OllamaNode: types.NewOllamaNode(nil),
+		DisplayType: "new",
+	}
+	dt.Menu.Href = "/nodes/ollama"
+	dt.Menu.Title = "Ollama Nodes"
+	return c.Render(http.StatusOK, "node.ollama.tpl", dt)
+}
 
-// func HandleOllamaNodeDelete(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	if id := c.Param("id"); id != "" {
-// 		entity := types.NewOllamaNode(&id)
-// 		if err := entity.Get(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		wfid := entity.WorkflowID.String()
-// 		wf := types.NewWorkflow(&wfid)
-// 		wf.CutNode(entity.Model.ID)
-// 		wf.CutNodeOrder(fmt.Sprintf("%s:%s", entity.Model.ID, entity.Model.ContentType))
-// 		if err := wf.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if err := entity.Delete(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		return HandleWorkflowList(c)
-// 	}
-// 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
-// }
+func HandleOllamaEdit(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplayOllamaNode{
+		DisplayType: "edit",
+	}
+	dt.Menu.Href = "/nodes/ollama"
+	dt.Menu.Title = "Ollama Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewOllamaNode(&id)
+		if err := cn.Get(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		dt.OllamaNode = cn
+	}
+	return c.Render(http.StatusOK, "node.ollama.tpl", dt)
+}
 
-// func HandleSSHNodeDelete(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	if id := c.Param("id"); id != "" {
-// 		entity := types.NewSSHNode(&id)
-// 		if err := entity.Get(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		wfid := entity.WorkflowID.String()
-// 		wf := types.NewWorkflow(&wfid)
-// 		wf.CutNode(entity.Model.ID)
-// 		wf.CutNodeOrder(fmt.Sprintf("%s:%s", entity.Model.ID, entity.Model.ContentType))
-// 		if err := wf.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if err := entity.Delete(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		return HandleWorkflowList(c)
-// 	}
-// 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
-// }
+func HandleOllamaSave(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplayOllamaNode{
+		DisplayType: "edit",
+	}
+	dt.Menu.Href = "/nodes/ollama"
+	dt.Menu.Title = "Ollama Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewOllamaNode(&id)
+		if err := cn.Get(ctx); err != nil {
+			if !strings.Contains(err.Error(), "not found") {
+				return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+			}
+		}
+		if err := c.Bind(&cn); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleOllamaSave"}.Wrap(err))
+		}
+		if err := cn.Set(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		dt.OllamaNode = cn
+		return c.Render(http.StatusCreated, "node.ollama.tpl", dt)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+}
 
-// // func HandleNodeSave(c echo.Context) error {
-// // 	ctx := GetEchoCtx(c)
-// // 	entity := types.NewNode(nil)
-// // 	if err := c.Bind(&entity); err != nil {
-// // 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// // 	}
-// // 	fmt.Printf("handlers:node:HandleNodeSave node: %#v\n", entity)
-// // 	if c.FormValue("enabled") == "on" {
-// // 		entity.Enabled = true
-// // 	}
-// // 	if c.FormValue("bypass") == "on" {
-// // 		entity.Bypass = true
-// // 	}
-// // 	if c.FormValue("workflow_id") != "" {
-// // 		entity.WorkflowID = types.WorkflowID(c.FormValue("workflow_id"))
-// // 	}
-// // 	if err := entity.Set(ctx); err != nil {
-// // 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// // 	}
-// // 	if entity.WorkflowID != "" {
-// // 		wfid := entity.WorkflowID.String()
-// // 		workflow := types.NewWorkflow(&wfid)
-// // 		if err := workflow.Get(ctx); err != nil {
-// // 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// // 		}
-// // 		if workflow.Nodes == nil {
-// // 			nodes := make([]types.Node, 0)
-// // 			nodes = append(nodes, entity)
-// // 			workflow.Nodes = nodes
-// // 		} else {
-// // 			workflow.Nodes = append(workflow.Nodes, entity)
-// // 		}
-// // 		if err := workflow.Set(ctx); err != nil {
-// // 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// // 		}
-// // 	}
-// // 	return HandleNodeList(c)
-// // }
+func HandleOllamaDelete(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplayOllamaNode{
+		DisplayType: "list",
+	}
+	dt.Menu.Href = "/nodes/ollama"
+	dt.Menu.Title = "Ollama Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewOllamaNode(&id)
+		if err := cn.Delete(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		return HandleOllamaList(c)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+}
 
-// func HandleComfyNodeSave(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	entity := types.NewComfyNode(nil)
-// 	if err := c.Bind(&entity); err != nil {
-// 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 	}
-// 	if c.FormValue("enabled") == "on" {
-// 		entity.Enabled = true
-// 	}
-// 	if c.FormValue("bypass") == "on" {
-// 		entity.Bypass = true
-// 	}
-// 	if c.FormValue("workflow_id") != "" {
-// 		entity.WorkflowID = types.WorkflowID(c.FormValue("workflow_id"))
-// 	}
-// 	if entity.WorkflowID != "" {
-// 		wfid := entity.WorkflowID.String()
-// 		workflow := types.NewWorkflow(&wfid)
-// 		if err := workflow.Get(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if workflow.ComfyNodes == nil {
-// 			nodes := make([]types.ComfyNode, 0)
-// 			nodes = append(nodes, entity)
-// 			workflow.ComfyNodes = nodes
-// 		} else {
-// 			workflow.ComfyNodes = append(workflow.ComfyNodes, entity)
-// 		}
-// 		workflow.NodeOrder[fmt.Sprintf("%s:%s", entity.Model.ID, entity.Model.ContentType)] = len(workflow.NodeOrder)
-// 		if err := workflow.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if err := entity.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 	}
-// 	return HandleWorkflowList(c)
-// }
+func HandleOllamaList(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplayOllamaNode{
+		DisplayType: "list",
+	}
+	dt.Menu.Href = "/nodes/ollama"
+	dt.Menu.Title = "Ollama Nodes"
+	cn := types.NewOllamaNode(nil)
+	list, err := cn.List(ctx)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	dt.List = list
+	return c.Render(http.StatusOK, "node.ollama.tpl", dt)
+}
 
-// func HandleOllamaNodeSave(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	entity := types.NewOllamaNode(nil)
-// 	if err := c.Bind(&entity); err != nil {
-// 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 	}
-// 	if c.FormValue("enabled") == "on" {
-// 		entity.Enabled = true
-// 	}
-// 	if c.FormValue("bypass") == "on" {
-// 		entity.Bypass = true
-// 	}
-// 	if c.FormValue("workflow_id") != "" {
-// 		entity.WorkflowID = types.WorkflowID(c.FormValue("workflow_id"))
-// 	}
-// 	if entity.WorkflowID != "" {
-// 		wfid := entity.WorkflowID.String()
-// 		workflow := types.NewWorkflow(&wfid)
-// 		if err := workflow.Get(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if workflow.OllamaNodes == nil {
-// 			nodes := make([]types.OllamaNode, 0)
-// 			nodes = append(nodes, entity)
-// 			workflow.OllamaNodes = nodes
-// 		} else {
-// 			workflow.OllamaNodes = append(workflow.OllamaNodes, entity)
-// 		}
-// 		workflow.NodeOrder[entity.Model.ID] = len(workflow.NodeOrder)
-// 		if err := workflow.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if err := entity.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 	}
-// 	return HandleWorkflowList(c)
-// }
+func HandleSSHNew(c echo.Context) error {
+	dt := DisplaySSHNode{
+		SSHNode: types.NewSSHNode(nil),
+		DisplayType: "new",
+	}
+	dt.Menu.Href = "/nodes/ssh"
+	dt.Menu.Title = "SSH Nodes"
+	return c.Render(http.StatusOK, "node.ssh.tpl", dt)
+}
 
-// func HandleSSHNodeSave(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	entity := types.NewSSHNode(nil)
-// 	if err := c.Bind(&entity); err != nil {
-// 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 	}
-// 	if c.FormValue("enabled") == "on" {
-// 		entity.Enabled = true
-// 	}
-// 	if c.FormValue("bypass") == "on" {
-// 		entity.Bypass = true
-// 	}
-// 	if c.FormValue("workflow_id") != "" {
-// 		entity.WorkflowID = types.WorkflowID(c.FormValue("workflow_id"))
-// 	}
-// 	if entity.WorkflowID != "" {
-// 		wfid := entity.WorkflowID.String()
-// 		workflow := types.NewWorkflow(&wfid)
-// 		if err := workflow.Get(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if workflow.SSHNodes == nil {
-// 			nodes := make([]types.SSHNode, 0)
-// 			nodes = append(nodes, entity)
-// 			workflow.SSHNodes = nodes
-// 		} else {
-// 			workflow.SSHNodes = append(workflow.SSHNodes, entity)
-// 		}
-// 		workflow.NodeOrder[entity.Model.ID] = len(workflow.NodeOrder)
-// 		if err := workflow.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		if err := entity.Set(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 	}
-// 	return HandleWorkflowList(c)
-// }
+func HandleSSHEdit(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplaySSHNode{
+		DisplayType: "edit",
+	}
+	dt.Menu.Href = "/nodes/ssh"
+	dt.Menu.Title = "SSH Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewSSHNode(&id)
+		if err := cn.Get(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		dt.SSHNode = cn
+	}
+	return c.Render(http.StatusOK, "node.ssh.tpl", dt)
+}
 
-// func HandleNodeNew(c echo.Context) error {
-// 	entity := types.NewNode(nil)
-// 	if id := c.Param("id"); id != "" {
-// 		entity.WorkflowID = types.WorkflowID(id)
-// 	}
-// 	dt := DisplayNode{
-// 		Node: entity,
-// 		DisplayType: "new",
-// 		Menu: Menu{
-// 			Href: "node",
-// 			Title: "Node",
-// 		},
-// 	}
-// 	return c.Render(http.StatusOK, "node.tpl", dt)
-// }
+func HandleSSHSave(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplaySSHNode{
+		DisplayType: "edit",
+	}
+	dt.Menu.Href = "/nodes/ssh"
+	dt.Menu.Title = "SSH Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewSSHNode(&id)
+		if err := cn.Get(ctx); err != nil {
+			if !strings.Contains(err.Error(), "not found") {
+				return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+			}
+		}
+		if err := c.Bind(&cn); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
+		}
+		if err := cn.Set(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		dt.SSHNode = cn
+		return c.Render(http.StatusCreated, "node.ssh.tpl", dt)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+}
 
-// func HandleNodeEdit(c echo.Context) error {
-// 	ctx := GetEchoCtx(c)
-// 	if id := c.Param("id"); id != "" {
-// 		entity := types.NewNode(&id)
-// 		if err := entity.Get(ctx); err != nil {
-// 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-// 		}
-// 		dt := DisplayNode{
-// 			Node: entity,
-// 			DisplayType: "new",
-// 			Menu: Menu{
-// 				Href: "node",
-// 				Title: "Node",
-// 			},
-// 		}
-// 		return c.Render(http.StatusOK, "node.tpl", dt)
-// 	}
-// 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
-// }
+func HandleSSHDelete(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplaySSHNode{
+		DisplayType: "list",
+	}
+	dt.Menu.Href = "/nodes/ssh"
+	dt.Menu.Title = "SSH Nodes"
+	if id := c.Param("id"); id != "" {
+		cn := types.NewSSHNode(&id)
+		if err := cn.Delete(ctx); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		return HandleSSHList(c)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+}
 
+func HandleSSHList(c echo.Context) error {
+	ctx := GetEchoCtx(c)
+	dt := DisplaySSHNode{
+		DisplayType: "list",
+	}
+	dt.Menu.Href = "/nodes/ssh"
+	dt.Menu.Title = "SSH Nodes"
+	cn := types.NewSSHNode(nil)
+	list, err := cn.List(ctx)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	dt.List = list
+	return c.Render(http.StatusOK, "node.ssh.tpl", dt)
+}

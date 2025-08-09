@@ -36,6 +36,8 @@ type ShallowSystemPrompt struct {
 	ID 		SystemPromptID `form:"id" json:"id"`
 	Name 	string `form:"name" json:"name"`
 	Domain 	string `form:"domain" json:"domain"`
+	SelfModel string `form:"self_model" json:"self_model"`
+	TargetModel string `form:"target_model" json:"target_model"`
 	Prompt 	string `form:"prompt" json:"prompt"`
 }
 
@@ -66,6 +68,8 @@ func (c ShallowSystemPrompt) Expand(ctx context.Context) (*SystemPrompt, error) 
 	r.ID = c.ID
 	r.Name = c.Name
 	r.Domain = c.Domain
+	r.SelfModel = c.SelfModel
+	r.TargetModel = c.TargetModel
 	r.Prompt = c.Prompt
 	return &r, nil
 }

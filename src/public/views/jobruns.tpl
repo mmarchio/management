@@ -28,7 +28,7 @@
                 <td>{{$jobrun.JobID}}</td>
                 <td><a href="/jobruns/context/{{$jobrun.ID}}">context</a></td>
                 <td><a href="/jobruns/settings/{{$jobrun.ID}}">settings</a></td>
-                <td>{{if $jobrun.Disposition.Name}}{{$jobrun.Disposition.Name}}{{end}}</td>
+                <td>{{if $jobrun.DispositionModel.Name}}{{$jobrun.DispositionModel.Name}}{{end}}</td>
                 <td>{{$jobrun.Tokens}}</td>
                 <td>{{$jobrun.Model.UpdatedAt}}</td>
                 <td><a href="/jobruns/delete/{{$jobrun.ID}}">delete</a></td>

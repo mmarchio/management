@@ -1,19 +1,19 @@
 {{define "form.template"}}
+
 <h2>template</h2>
 <details>
 <summary>template</summary>
 <ul>
     <li><input type="text" name="template_name" id="template_name" placeholder="name" value="{{if .Name}}{{.Name}}{{end}}"></li>
-    {{range .Dispositions}}
-    <li><a href="/disposition/edit/{{.ID}}">edit {{.Name}}</a></li>
-    {{end}}
     <li>
-        {{range .Dispositions}}
-        <li><span style="float:left">{{.Name}}</span><input style="float:right" type="checkbox" name="{{.ID}}" id="{{.ID}}" checked></li>
-        {{end}}
+        <ul>
         {{range .AvailableDispositions}}
-        <li><span style="float:left">{{.Name}}</span><input style="float:right" type="checkbox" name="{{.ID}}" id="{{.ID}}"></li>
+        <li><span style="float:left">{{if .Name}}{{.Name}}{{end}}</span><input style="float:right" type="checkbox" name="{{if .ID}}{{.ID}}{{end}}" id="{{if .ID}}{{.ID}}{{end}}"></li>
         {{end}}
+        {{range .DispositionsArrayModel}}
+        <li><span style="float:left">{{if .Name}}{{.Name}}{{end}}</span><input style="float:right" type="checkbox" name="{{if .ID}}{{.ID}}{{end}}" id="{{if .ID}}{{.ID}}{{end}}" checked></li>
+        {{end}}
+        </ul>
     </li>
     <li><a href="/dispositions/new">new disposition</a></li>
     <li><input type="number" name="template_current_disposition" id="template_current_disposition" placeholder="current disposition" value="{{if .CurrentDisposition}}{{.CurrentDisposition}}{{end}}"></li>

@@ -20,7 +20,7 @@
                 <li><input type="text" name="prompt" id="prompt" placeholder="prompt" value="{{if .Prompt.Prompt}}{{.Prompt.Prompt}}{{end}}">
                 <li><input type="text" name="domain" id="domain" placeholder="domain" value="{{if .Prompt.Domain}}{{.Prompt.Domain}}{{end}}">
                 <li><input type="text" name="category" id="category" placeholder="category" value="{{if .Prompt.Category}}{{.Prompt.Category}}{{end}}">
-                <li>{{if .Settings}}{{template "form.settings" .}}{{end}}</li>
+                <li>{{if .SettingsModel}}{{template "form.settings" .}}{{end}}</li>
                 <li><input type="submit" value="submit">
             </ul>
         </form>

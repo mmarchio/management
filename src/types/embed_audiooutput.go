@@ -13,6 +13,13 @@ type AudioOutput struct {
 	FilesArrayModel []File `json:"files_array_model"`
 }
 
+func (c AudioOutput) IsNil() bool {
+	if c.EmbedModel.IsNil() && c.ID.IsNil() && c.StatsModel.IsNil() && len(c.FilesArrayModel) == 0 {
+		return true
+	}
+	return false
+}
+
 func (c AudioOutput) Pack() []shallowmodel {
 	sms := make([]shallowmodel, 0)
 	sm := ShallowAudioOutput{}

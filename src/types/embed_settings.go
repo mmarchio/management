@@ -19,6 +19,13 @@ type Settings struct {
 	Workflow 			WorkflowID 	`json:"workflow_id"`
 }
 
+func (c Settings) IsNil() bool {
+	if c.EmbedModel.IsNil() && c.ID == "" && c.Name == "" && c.TemplateModel.IsNil() && c.GlobalBypassModel.IsNil() && c.RecurringModel.IsNil() && c.Interval == 0 && c.Workflow.IsNil() {
+		return true
+	}
+	return false
+}
+
 func (c Settings) Pack() []shallowmodel {
 	sms := make([]shallowmodel, 0)
 	sm := ShallowSettings{}

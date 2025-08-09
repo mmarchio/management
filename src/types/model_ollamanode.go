@@ -358,3 +358,22 @@ func (c OllamaNode) Exec(ctx context.Context) error {
 	}
 	return nil
 }
+
+func (c OllamaNode) List(ctx context.Context) ([]OllamaNode, error) {
+	content := NewOllamaNodeTypeContent()
+	content.Model.ContentType = "ollamanode"
+	contents, err := content.List(ctx)
+	if err != nil {
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+	}
+	cuts := make([]OllamaNode, 0)
+	for _, model := range contents {
+		cut := OllamaNode{}
+		err = json.Unmarshal([]byte(model.Content), &cut)
+		if err != nil {
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Job", Function: "List"}.Wrap(err)
+		}
+		cuts = append(cuts, cut)
+	}
+	return cuts, nil
+}

@@ -32,6 +32,13 @@ type Steps struct {
 	PublishMetadataModel 				Toggle `json:"publish_metadata_model"`
 }
 
+func (c Steps) IsNil() bool {
+	if c.EmbedModel.IsNil() && c.ID.IsNil() {
+		return true
+	}
+	return false
+}
+
 func (c Steps) Pack() []shallowmodel {
 	sms := make([]shallowmodel, 0)
 	sm := ShallowSteps{}

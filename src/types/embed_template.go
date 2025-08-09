@@ -13,7 +13,14 @@ type Template struct {
 	Name 					string `form:"name" json:"name"`
 	DispositionsArrayModel 	[]Disposition `form:"dispositions" json:"dispositions_array_model"`
 	CurrentDisposition 		int64
-	AvailableDispositions 	[]Disposition
+	AvailableDispositions 	[]Disposition `json:"available_dispositions"`
+}
+
+func (c Template) IsNil() bool {
+	if c.EmbedModel.IsNil() && c.ID.IsNil() && c.Name == "" && len(c.DispositionsArrayModel) == 0 && c.CurrentDisposition == 0 && len(c.AvailableDispositions) == 0 {
+		return true
+	}
+	return false
 }
 
 func (c Template) Pack() []shallowmodel {

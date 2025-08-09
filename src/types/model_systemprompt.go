@@ -34,6 +34,8 @@ type SystemPrompt struct {
 	Model
 	ID 		SystemPromptID `form:"id" json:"id"`
 	Name 	string `form:"name" json:"name"`
+	SelfModel string `form:"self_model" json:"self_model"`
+	TargetModel string `form:"target_model" json:"target_model"`
 	Domain 	string `form:"domain" json:"domain"`
 	Prompt 	string `form:"prompt" json:"prompt"`
 }
@@ -45,6 +47,8 @@ func (c SystemPrompt) Pack() []shallowmodel {
 	sm.ID = c.ID
 	sm.Name = c.Name
 	sm.Domain = c.Domain
+	sm.SelfModel = c.SelfModel
+	sm.TargetModel = c.TargetModel
 	sm.Prompt = c.Prompt
 	sms = append(sms, sm)
 	return sms

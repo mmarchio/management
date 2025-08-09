@@ -25,7 +25,8 @@ type Template struct {
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	err := t.Templates.ExecuteTemplate(w, name, data)
 	if err != nil {
-		fmt.Printf("Template rendering error: %w", err) // Log the error
+		terr := fmt.Errorf("Template rendering error: %w", err) // Log the error
+		fmt.Printf("%#v data: %#v", terr, data)
 		// You can choose to send a generic error page or a plain string
 		return c.String(http.StatusInternalServerError, "Error rendering template.")
 	}

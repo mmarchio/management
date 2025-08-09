@@ -55,6 +55,7 @@ type DisplayPrompt struct {
 	Workflows []types.Workflow
 	DisplayType string
 	List []types.Prompt
+	Debug interface{}
 }
 
 type DisplayComfyUITemplate struct {
@@ -113,4 +114,18 @@ type DisplayOllamaNode struct {
 type Menu struct {
 	Href string
 	Title string
+}
+
+type DisplayComfyNode struct {
+	types.ComfyNode
+	Menu
+	DisplayType string
+	List []types.ComfyNode
+}
+
+type DisplaySSHNode struct {
+	types.SSHNode
+	Menu
+	DisplayType string
+	List []types.SSHNode
 }

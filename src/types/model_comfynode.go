@@ -8,7 +8,26 @@ import (
 
 	"github.com/google/uuid"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/models"
 )
+
+func NewComfyModelContent(idPtr *string) models.Content {
+	var id string
+	if idPtr == nil {
+		id = uuid.NewString()
+	} else {
+		id = *idPtr
+	}
+	r := models.Content{
+		ID: id,
+		ContentType: "comfynode",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	r.Model.ID = id
+	r.Model.ContentType = "comfynode"
+	return r
+}
 
 type ComfyNode struct {
 	Model
@@ -230,3 +249,21 @@ func (c ComfyNode) Set(ctx context.Context) error {
 	return nil
 }
 
+func (c ComfyNode) List(ctx context.Context) ([]ComfyNode, error) {
+	content := NewComfyModelContent(nil)
+	content.Model.ContentType = "comfynode"
+	contents, err := content.List(ctx)
+	if err != nil {
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+	}
+	cuts := make([]ComfyNode, 0)
+	for _, model := range contents {
+		cut := ComfyNode{}
+		err = json.Unmarshal([]byte(model.Content), &cut)
+		if err != nil {
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Job", Function: "List"}.Wrap(err)
+		}
+		cuts = append(cuts, cut)
+	}
+	return cuts, nil
+}

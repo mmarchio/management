@@ -21,6 +21,13 @@ type Toggle struct {
 	Title 		string `json:"title"`
 }
 
+func (c Toggle) IsNil() bool {
+	if c.Model.IsNil() && c.ID == "" && c.NamePrefix == "" && c.IdPrefix == "" && c.Suffix == "" && c.Title == "" && !c.Value {
+		return true
+	}
+	return false
+}
+
 func (c Toggle) Pack() []shallowmodel {
 	sms := make([]shallowmodel, 0)
 	sm := ShallowToggle{}

@@ -21,21 +21,21 @@
     <li><span>publish metadata</span><label class="switch"><input type="checkbox" name="{{.EmbedModel.ContentType}}_publish_metadata" id="{{.EmbedModel.ContentType}}_publish_metadata"><span class="slider round"></span></label></li>
     {{else}}
     <input type="hidden" name="{{.EmbedModel.ContentType}}_id" value="{{.EmbedModel.ID}}">
-    <li>{{template "element.toggle" .ScreenwritingStart}}</li>
-    <li>{{template "element.toggle" .ScreenwritingGetPromptInput}}</li>
-    <li>{{template "element.toggle" .ScreenwritingGetPromptOutput}}</li>
-    <li>{{template "element.toggle" .ScreenwritingOutput}}</li>
-    <li>{{template "element.toggle" .ContainerSwap}}</li>
-    <li>{{template "element.toggle" .GenerateAudio}}</li>
-    <li>{{template "element.toggle" .GenerateLipsync}}</li>
-    <li>{{template "element.toggle" .GenerateThumbnails}}</li>
-    <li>{{template "element.toggle" .GenerateBackgroundCountext}}</li>
-    <li>{{template "element.toggle" .GenerateBackground}}</li>
-    <li>{{template "element.toggle" .FFMPEGLipsyncPost}}</li>
-    <li>{{template "element.toggle" .FFMPEGMerge}}</li>
-    <li>{{template "element.toggle" .PublishVideo}}</li>
-    <li>{{template "element.toggle" .PublishThumbnail}}</li>
-    <li>{{template "element.toggle" .PublishMetadata}}</li>
+    <li>{{template "element.toggle" .ScreenwritingStartModel}}</li>
+    <li>{{template "element.toggle" .ScreenwritingGetPromptInputModel}}</li>
+    <li>{{template "element.toggle" .ScreenwritingGetPromptOutputModel}}</li>
+    <li>{{template "element.toggle" .ScreenwritingOutputModel}}</li>
+    <li>{{template "element.toggle" .ContainerSwapModel}}</li>
+    <li>{{template "element.toggle" .GenerateAudioModel}}</li>
+    <li>{{template "element.toggle" .GenerateLipsyncModel}}</li>
+    <li>{{template "element.toggle" .GenerateThumbnailsModel}}</li>
+    <li>{{template "element.toggle" .GenerateBackgroundContextModel}}</li>
+    <li>{{template "element.toggle" .GenerateBackgroundModel}}</li>
+    <li>{{template "element.toggle" .FFMPEGLipsyncPostModel}}</li>
+    <li>{{template "element.toggle" .FFMPEGMergeModel}}</li>
+    <li>{{template "element.toggle" .PublishVideoModel}}</li>
+    <li>{{template "element.toggle" .PublishThumbnailModel}}</li>
+    <li>{{template "element.toggle" .PublishMetadataModel}}</li>
     {{end}}
 </ul>
 </details>

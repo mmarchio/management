@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -80,7 +81,7 @@ func HandlePromptsNew(c echo.Context) error {
 	prompt := types.NewPrompt(nil)
 	prompt.ID = types.PromptID("")
 	prompt.Model.ID = ""
-	if id := c.Param("id"); err != nil {
+	if id := c.Param("id"); id != "" {
 		prompt = types.NewPrompt(&id)
 	}
 	prompt, err = prompt.GetDispositions(ctx)
@@ -89,6 +90,9 @@ func HandlePromptsNew(c echo.Context) error {
 	}
 	wf := types.NewWorkflow(nil)
 	wfs, err := wf.List(ctx)
+	b, _ := json.Marshal(prompt)
+	msi := make(map[string]interface{})
+	_ = json.Unmarshal(b, &msi)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -100,6 +104,11 @@ func HandlePromptsNew(c echo.Context) error {
 			Href: "prompts",
 			Title: "Prompt",
 		},
+		Debug: msi,
+	}
+	fmt.Printf("len available: %d\n", len(dt.Prompt.SettingsModel.TemplateModel.AvailableDispositions))
+	for _, ad := range dt.Prompt.SettingsModel.TemplateModel.AvailableDispositions {
+		fmt.Printf("ad.id: %s at.name: %s\n", ad.ID, ad.Name)
 	}
 	return c.Render(http.StatusOK, "prompts.tpl", dt)
 }

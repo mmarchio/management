@@ -146,6 +146,9 @@ func (c Prompt) Delete(ctx context.Context) error {
 func (c Prompt) GetDispositions(ctx context.Context) (Prompt, error) {
 	var err error
 	disposition := NewDisposition(nil)
+	if !c.SettingsModel.EmbedModel.CreatedAt.IsZero() && c.SettingsModel.EmbedModel.ContentType == "settings" {
+		
+	}
 	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(ctx)
 	if err != nil {
 		return c, merrors.ContentListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
@@ -176,6 +179,9 @@ func (c Prompt) SetID() (Prompt, error) {
 
 func ValidatePrompt(p Prompt) (Prompt, error) {
 	var err error
+	p.SettingsModel.TemplateModel = Template{
+		DispositionsArrayModel: make([]Disposition, 0),
+	}
 	p.SettingsModel.GlobalBypassModel, err = ValidateSteps(p.SettingsModel.GlobalBypassModel, "global_bypass_")
 	p.SettingsModel.RecurringModel = ValidateToggle(p.SettingsModel.RecurringModel, uuid.NewString(), "prompt_settings_", "recurring", "recurring")
 	return p, err

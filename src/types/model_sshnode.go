@@ -213,3 +213,21 @@ func (c SSHNode) Set(ctx context.Context) error {
 	return nil
 }
 
+func (c SSHNode) List(ctx context.Context) ([]SSHNode, error) {
+	content := NewSSHNodeTypeContent()
+	content.Model.ContentType = "sshnode"
+	contents, err := content.List(ctx)
+	if err != nil {
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+	}
+	cuts := make([]SSHNode, 0)
+	for _, model := range contents {
+		cut := SSHNode{}
+		err = json.Unmarshal([]byte(model.Content), &cut)
+		if err != nil {
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SSHNode", Function: "List"}.Wrap(err)
+		}
+		cuts = append(cuts, cut)
+	}
+	return cuts, nil
+}

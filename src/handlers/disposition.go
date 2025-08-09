@@ -16,6 +16,7 @@ func RegisterDispositionRoutes(e *echo.Echo) {
 	g.GET("/list", HandleDispositionsList)
 	g.GET("/new", HandleDispositionsNew)
 	g.POST("/save", HandleDispositionsSave)
+	g.POST("/save/:id", HandleDispositionsSave)
 	g.GET("/delete/:id", HandleDispositionsDelete)
 }
 
@@ -80,6 +81,7 @@ func HandleDispositionsNew(c echo.Context) error {
 			Title: "Disposition",
 		},
 	}
+	dt.Disposition.New(nil)
 	return c.Render(http.StatusOK, "dispositions.tpl", dt)
 }
 
