@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
@@ -70,10 +69,10 @@ func (c *Prompt) New(id *string) {
 }
 
 
-func (c Prompt) List(ctx context.Context) ([]Prompt, error) {
+func (c Prompt) List(e echo.Context) ([]Prompt, error) {
 	content := NewPromptModelContent()
 	content.Model.ContentType = "prompt"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -89,9 +88,9 @@ func (c Prompt) List(ctx context.Context) ([]Prompt, error) {
 	return cuts, nil
 }
 
-func (c Prompt) ListBy(ctx context.Context, key string, value interface{}) ([]Prompt, error) {
+func (c Prompt) ListBy(e echo.Context, key string, value interface{}) ([]Prompt, error) {
 	content := NewPromptModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -107,11 +106,11 @@ func (c Prompt) ListBy(ctx context.Context, key string, value interface{}) ([]Pr
 	return cuts, nil
 }
 
-func (c *Prompt) Get(ctx context.Context) error {
+func (c *Prompt) Get(e echo.Context) error {
 	content := NewPromptTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "prompt"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -122,34 +121,34 @@ func (c *Prompt) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c Prompt) Set(ctx context.Context) error {
+func (c Prompt) Set(e echo.Context) error {
 	content := NewPromptTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ID.String()
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c Prompt) Delete(ctx context.Context) error {
+func (c Prompt) Delete(e echo.Context) error {
 	content := NewPromptTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c Prompt) GetDispositions(ctx context.Context) (Prompt, error) {
+func (c Prompt) GetDispositions(e echo.Context) (Prompt, error) {
 	var err error
 	disposition := NewDisposition(nil)
 	if !c.SettingsModel.EmbedModel.CreatedAt.IsZero() && c.SettingsModel.EmbedModel.ContentType == "settings" {
 		
 	}
-	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(ctx)
+	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(e)
 	if err != nil {
 		return c, merrors.ContentListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
 	}
@@ -193,8 +192,8 @@ func (c Prompt) Bind(e echo.Context) (Prompt, error) {
 	return c, err
 }
 
-func (c Prompt) Next(e echo.Context, ctx context.Context) (*models.Context, error) {
-	systemContext, err := models.Context{}.GetCtx(ctx)
+func (c Prompt) Next(e echo.Context) (*models.Context, error) {
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
 		return nil, merrors.ContextGetError{Package: "types", Struct: "Prompt", Function: "Next"}.Wrap(err)
 	}

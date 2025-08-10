@@ -1,12 +1,12 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/strrep"
 )
@@ -38,10 +38,10 @@ func (c ShallowOllamaNode) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowOllamaNode) Expand(ctx context.Context) (*OllamaNode, error) {
+func (c ShallowOllamaNode) Expand(e echo.Context) (*OllamaNode, error) {
 	r := OllamaNode{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -59,7 +59,7 @@ func (c ShallowOllamaNode) Expand(ctx context.Context) (*OllamaNode, error) {
 	r.PromptTemplate = c.PromptTemplate
 	srm := ShallowOllamaResponse{}
 	srm.ShallowModel.ID = c.ResponseModel
-	rm, err := srm.Expand(ctx)
+	rm, err := srm.Expand(e)
 	if err != nil {
 		return nil, err
 	}
@@ -157,12 +157,12 @@ func (c ShallowOllamaNode) GetType() string {
 	return "ollama_node"
 }
 
-func (c *ShallowOllamaNode) ParsePromptTemplate(ctx context.Context) error {
+func (c *ShallowOllamaNode) ParsePromptTemplate(e echo.Context) error {
 	if c.PromptTemplate != "" {
 		if len(c.PromptTemplate) == 36 {
 			id := c.PromptTemplate
 			pt := NewPromptTemplate(&id)
-			if err := pt.Get(ctx); err != nil {
+			if err := pt.Get(e); err != nil {
 				return merrors.ContentGetError{Package: "types", Struct:"ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
 			}
 			msi := make(map[string]interface{})
@@ -215,10 +215,10 @@ func (c *ShallowOllamaNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *ShallowOllamaNode) Get(ctx context.Context) error {
+func (c *ShallowOllamaNode) Get(e echo.Context) error {
 	content := NewComfyNodeTypeContent()
 	content.Model.ID = c.ShallowModel.ID
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -235,12 +235,12 @@ func NewShallowOllamaNodeTypeContent() ShallowContent {
 	return c
 }
 
-func (c ShallowOllamaNode) Delete(ctx context.Context) error {
+func (c ShallowOllamaNode) Delete(e echo.Context) error {
 	content := NewShallowSSHNodeTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ShallowModel.ID
 	content.ID = c.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err)
 	}
 	return nil
@@ -254,7 +254,7 @@ func (c ShallowOllamaNode) GetID() string {
 	return c.ShallowModel.ID
 }
 
-func (c ShallowOllamaNode) Set(ctx context.Context) error {
+func (c ShallowOllamaNode) Set(e echo.Context) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
@@ -263,7 +263,7 @@ func (c ShallowOllamaNode) Set(ctx context.Context) error {
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}

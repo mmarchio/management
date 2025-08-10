@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -29,36 +29,36 @@ func (c ShallowEntitlements) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowEntitlements) Expand(ctx context.Context) (*Entitlements, error) {
+func (c ShallowEntitlements) Expand(e echo.Context) (*Entitlements, error) {
 	r := Entitlements{}
 	r.EmbedModel.FromShallowModel(c.ShallowModel)
 	t := ShallowToggle{}
 	t.ShallowModel.ID = c.YouTubeModel
-	youTubeModel, err := t.Expand(ctx)
+	youTubeModel, err := t.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	r.YouTubeModel = *youTubeModel
 	t.ShallowModel.ID = c.TikTokModel
-	tikTokModel, err := t.Expand(ctx)
+	tikTokModel, err := t.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	r.TikTokModel = *tikTokModel
 	t.ShallowModel.ID = c.RumbleModel
-	rumbleModel, err := t.Expand(ctx)
+	rumbleModel, err := t.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	r.RumbleModel = *rumbleModel
 	t.ShallowModel.ID = c.PatreonModel
-	patreonModel, err := t.Expand(ctx)
+	patreonModel, err := t.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	r.PatreonModel = *patreonModel
 	t.ShallowModel.ID = c.FacebookModel
-	facebookModel, err := t.Expand(ctx)
+	facebookModel, err := t.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
@@ -66,11 +66,11 @@ func (c ShallowEntitlements) Expand(ctx context.Context) (*Entitlements, error) 
 	return &r, nil
 }
 
-func (c *ShallowEntitlements) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowEntitlements) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowEntitlements) Marshal(ctx context.Context) (string, error) {
+func (c ShallowEntitlements) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }

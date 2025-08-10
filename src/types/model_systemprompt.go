@@ -1,11 +1,11 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -67,10 +67,10 @@ func (c *SystemPrompt) New(id *string) {
 }
 
 
-func (c SystemPrompt) List(ctx context.Context) ([]SystemPrompt, error) {
+func (c SystemPrompt) List(e echo.Context) ([]SystemPrompt, error) {
 	content := NewSystemPromptModelContent()
 	content.Model.ContentType = "systemprompt"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -86,9 +86,9 @@ func (c SystemPrompt) List(ctx context.Context) ([]SystemPrompt, error) {
 	return cuts, nil
 }
 
-func (c SystemPrompt) ListBy(ctx context.Context, key string, value interface{}) ([]SystemPrompt, error) {
+func (c SystemPrompt) ListBy(e echo.Context, key string, value interface{}) ([]SystemPrompt, error) {
 	content := NewSystemPromptModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -104,11 +104,11 @@ func (c SystemPrompt) ListBy(ctx context.Context, key string, value interface{})
 	return cuts, nil
 }
 
-func (c *SystemPrompt) Get(ctx context.Context) error {
+func (c *SystemPrompt) Get(e echo.Context) error {
 	content := NewSystemPromptTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "systemprompt"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -119,21 +119,21 @@ func (c *SystemPrompt) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c SystemPrompt) Set(ctx context.Context) error {
+func (c SystemPrompt) Set(e echo.Context) error {
 	content := NewSystemPromptTypeContent()
 	content.FromType(c)
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c SystemPrompt) Delete(ctx context.Context) error {
+func (c SystemPrompt) Delete(e echo.Context) error {
 	content := NewSystemPromptTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil

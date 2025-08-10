@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mmarchio/management/config"
 	"github.com/mmarchio/management/handlers"
+	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 	"github.com/swaggo/echo-swagger"
 	_ "github.com/swaggo/echo-swagger/example/docs"
@@ -20,6 +21,13 @@ import (
 
 type Template struct {
 	Templates *template.Template
+}
+
+func LoggingContextMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cc := &logger.LoggingContext{c}
+		return next(cc)
+	}
 }
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
@@ -33,23 +41,9 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 	return nil
 }
 
-// @title Management Console
-// @version 1.0
-// @description This is a sample server Petstore server.
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.gofuckyourself.io/support
-// @contact.email m@localhost
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host localhost
-// @BasePath /api
 func main() {
 	e := echo.New()
-	
+	e.Use(LoggingContextMiddleware)
 	
 	e.GET("/", handleIndex)
 
@@ -85,7 +79,6 @@ func main() {
 	e.POST("/api/disposition", handlers.HandleAPISetDisposition)
 	e.GET("/api/dispositions", handlers.HandleAPIListDisposition)
 
-
 	// e.GET("/:ContentType", handlers.ContentType)
 	// e.GET("/:ContentType/new", handlers.ContentTypeNew)
 	// e.POST("/:ContentType/save", handlers.ContentTypeSave)
@@ -96,7 +89,7 @@ func main() {
 
 
 	handlers.RegisterWorkflowRoutes(e)
-	// handlers.RegisterNodesRoutes(e)
+	handlers.RegisterNodesRoutes(e)
 	handlers.RegisterPromptsRoutes(e)
 	handlers.RegisterComfyUITemplatesRoutes(e)
 	handlers.RegisterSystemPromptsRoutes(e)
@@ -115,7 +108,9 @@ func main() {
 
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set("context", context.Background())
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, logger.LoggerKey, logger.Logger)
+			c.Set("context", ctx)
 			return next(c)
 		}
 	})

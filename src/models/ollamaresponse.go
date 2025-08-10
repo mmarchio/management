@@ -1,12 +1,12 @@
 package models
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -59,9 +59,9 @@ func NewOllamaResponse(id *string) OllamaResponse {
 }
 
 
-func (c ShallowOllamaResponse) Get(ctx context.Context, mode string) (*OllamaResponse, *ShallowOllamaResponse, error) {
+func (c ShallowOllamaResponse) Get(e echo.Context, mode string) (*OllamaResponse, *ShallowOllamaResponse, error) {
 	content := Content{ID: c.Model.ID}
-	if err := content.Get(ctx); err != nil {
+	if err := content.Get(e); err != nil {
 		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {

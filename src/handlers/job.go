@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
@@ -18,10 +19,12 @@ func RegisterJobRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetJob(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIGetJob called")
+	}
 	if id := c.Param("id"); id != "" {
 		job := types.NewJob(&id)
-		if err := job.Get(ctx); err != nil {
+		if err := job.Get(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 		return c.JSON(http.StatusOK, job)
@@ -30,9 +33,11 @@ func HandleAPIGetJob(c echo.Context) error {
 }
 
 func HandleAPIListJob(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIListJob called")
+	}
 	job := types.NewJob(nil)
-	jobs, err := job.List(ctx)
+	jobs, err := job.List(c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -40,18 +45,23 @@ func HandleAPIListJob(c echo.Context) error {
 }
 
 func HandleAPISaveJob(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPISaveJob called")
+	}
 	job := types.NewJob(nil)
 	if err := c.Bind(&job); err != nil {
 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJob"}.Wrap(err))
 	}
-	if err := job.Set(ctx); err != nil {
+	if err := job.Set(c); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, job)
 }
 
 func HandleJobs(c echo.Context) error {
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobs called")
+	}
 	dt := DisplayJob{
 		Job: types.Job{},
 		DisplayType: "none",
@@ -64,9 +74,11 @@ func HandleJobs(c echo.Context) error {
 }
 
 func HandleJobsList(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobsList called")
+	}
 	job := types.NewJob(nil)
-	list, err := job.List(ctx)
+	list, err := job.List(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -83,10 +95,12 @@ func HandleJobsList(c echo.Context) error {
 }
 
 func HandleJobsDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobsDelete called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJob(&id)
-		if err := entity.Delete(ctx); err != nil {
+		if err := entity.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleJobsList(c)
@@ -95,14 +109,16 @@ func HandleJobsDelete(c echo.Context) error {
 }
 
 func HandlerJobWorkflowAdd(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandlerJobWorkflowAdd called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJob(&id)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		wf := types.NewWorkflow(nil)
-		wfs, err := wf.List(ctx)
+		wfs, err := wf.List(c)
 		if err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
@@ -120,10 +136,12 @@ func HandlerJobWorkflowAdd(c echo.Context) error {
 }
 
 func HandleJobSave(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobSave called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJob(&id)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		if err := c.Bind(&entity); err != nil {
@@ -132,7 +150,7 @@ func HandleJobSave(c echo.Context) error {
 		if entity.WorkflowID.IsNil() && c.FormValue("workflow_id") != "" {
 			entity.WorkflowID = types.WorkflowID(c.FormValue("workflow_id"))
 		}
-		if err := entity.Set(ctx); err != nil {
+		if err := entity.Set(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleJobsList(c)

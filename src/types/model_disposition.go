@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
@@ -75,9 +74,9 @@ func (c *Disposition) New(id *string) {
 	c.VerificationModel.New(c, "verification")
 }
 
-func (c Disposition) List(ctx context.Context) ([]Disposition, error) {
+func (c Disposition) List(e echo.Context) ([]Disposition, error) {
 	content := NewDispositionModelContent()
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -93,9 +92,9 @@ func (c Disposition) List(ctx context.Context) ([]Disposition, error) {
 	return cuts, nil
 }
 
-func (c Disposition) ListBy(ctx context.Context, key string, value interface{}) ([]Disposition, error) {
+func (c Disposition) ListBy(e echo.Context, key string, value interface{}) ([]Disposition, error) {
 	content := NewDispositionModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -111,11 +110,11 @@ func (c Disposition) ListBy(ctx context.Context, key string, value interface{}) 
 	return cuts, nil
 }
 
-func (c *Disposition) Get(ctx context.Context) error {
+func (c *Disposition) Get(e echo.Context) error {
 	content := NewDispositionTypeContent()
 	content.Model.ContentType = "disposition"
 	content.Model.ID = c.Model.ID
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -126,22 +125,22 @@ func (c *Disposition) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c Disposition) Set(ctx context.Context) error {
+func (c Disposition) Set(e echo.Context) error {
 	content := NewDispositionTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c Disposition) Delete(ctx context.Context) error {
+func (c Disposition) Delete(e echo.Context) error {
 	content := NewDispositionTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil

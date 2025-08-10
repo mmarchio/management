@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/models"
 )
 
@@ -62,9 +64,9 @@ func (c *Model) New(id *string) {
 	c.UpdatedAt = c.CreatedAt
 }
 
-func (c Model) GetCtx(ctx context.Context) (*Context, error) {
+func (c Model) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
-	systemContext, err := models.Context{}.GetCtx(ctx)
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
 		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
 	}
@@ -72,13 +74,19 @@ func (c Model) GetCtx(ctx context.Context) (*Context, error) {
 	return &typesContext, nil
 }
 
-func (c Model) SetCtx(ctx context.Context) (context.Context, error) {
+func (c Model) SetCtx(e echo.Context) (context.Context, error) {
+	var ctx context.Context
+	var cc logger.LoggingContext
+	var ok bool 
+	if cc, ok = e.(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+	}
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
 		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
 	}
-	ctx = s.SetCtx(ctx)
+	ctx = s.SetCtx(e)
 	return ctx, nil
 }
 
@@ -106,9 +114,9 @@ func (c EmbedModel) FromShallowModel(m ShallowModel) EmbedModel {
 	return c
 }
 
-func (c EmbedModel) GetCtx(ctx context.Context) (*Context, error) {
+func (c EmbedModel) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
-	systemContext, err := models.Context{}.GetCtx(ctx)
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
 		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
 	}
@@ -116,13 +124,19 @@ func (c EmbedModel) GetCtx(ctx context.Context) (*Context, error) {
 	return &typesContext, nil
 }
 
-func (c EmbedModel) SetCtx(ctx context.Context) (context.Context, error) {
+func (c EmbedModel) SetCtx(e echo.Context) (context.Context, error) {
+	var ctx context.Context
+	var cc logger.LoggingContext
+	var ok bool 
+	if cc, ok = e.(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+	}
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
 		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
 	}
-	ctx = s.SetCtx(ctx)
+	ctx = s.SetCtx(e)
 	return ctx, nil
 }
 

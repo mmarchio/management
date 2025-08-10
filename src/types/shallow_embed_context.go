@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -86,8 +86,8 @@ func (c ShallowContext) ToModel() (*models.ShallowContext, error) {
 
 func (c *ShallowContext) FromModel(ptr *models.ShallowContext) error {
 	if ptr != nil {
-		ctx := *ptr
-		b, err := json.Marshal(ctx)
+		e := *ptr
+		b, err := json.Marshal(e)
 		if err != nil {
 			return merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err)
 		}
@@ -100,20 +100,19 @@ func (c *ShallowContext) FromModel(ptr *models.ShallowContext) error {
 	return nil
 }
 
-func (c *ShallowContext) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowContext) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowContext) Marshal(ctx context.Context) (string, error) {
+func (c ShallowContext) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
 
-func GetShallowSystemPrompts() ([]string, error) {
+func GetShallowSystemPrompts(e echo.Context) ([]string, error) {
 	ct := "shallowsystemprompt"
-	ctx := context.Background()
 	systemPrompt := NewShallowSystemPrompt(nil, &ct)
-	systemPrompts, err := systemPrompt.List(ctx)
+	systemPrompts, err := systemPrompt.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
 	}

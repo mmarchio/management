@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -66,11 +67,11 @@ func (c Content) New(ct string) Content {
 	return c
 } 
 
-func (c *Content) Get(ctx context.Context) (Content, error) {
+func (c *Content) Get(e echo.Context) (Content, error) {
 	contentModel :=  models.Content{}
 	contentModel.Model.ID = c.Model.ID
 	contentModel.ID = c.ID
-	err := contentModel.Get(ctx)
+	err := contentModel.Get(e)
 	if err != nil {
 		return *c, merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -78,13 +79,13 @@ func (c *Content) Get(ctx context.Context) (Content, error) {
 	return d, nil
 }
 
-func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]Content, error) {
+func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]Content, error) {
 	if write {
 		contentModel := c.ToModel()
 		contentModel.Model.ID = c.Model.ID
 		contentModel.ID = contentModel.Model.ID
 		contentModel.ContentType = c.ContentType
-		_, err := contentModel.CustomQuery(ctx, write, q, vars...)
+		_, err := contentModel.CustomQuery(e, write, q, vars...)
 		if err != nil {
 			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
 		}
@@ -94,7 +95,7 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	contentModel.Model.ID = c.Model.ID
 	contentModel.ID = contentModel.Model.ID
 	contentModel.ContentType = c.ContentType
-	res, err := contentModel.CustomQuery(ctx, write, q, vars...)
+	res, err := contentModel.CustomQuery(e, write, q, vars...)
 	if err != nil {
 		return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).BubbleCode()
 	}
@@ -106,21 +107,21 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	return r, nil
 }
 
-func (c Content) Set(ctx context.Context) error {
+func (c Content) Set(e echo.Context) error {
 	contentModel := c.ToModel()
 	contentModel.Model.ID = c.Model.ID
 	contentModel.ID = c.Model.ID
-	err := contentModel.Set(ctx)
+	err := contentModel.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c *Content) FindBy(ctx context.Context, key, value string) (Content, error) {
+func (c *Content) FindBy(e echo.Context, key, value string) (Content, error) {
 	contentModel := models.Content{}
 	contentModel.Model.ID = c.Model.ID
-	if err := contentModel.FindBy(ctx, key, value); err != nil {
+	if err := contentModel.FindBy(e, key, value); err != nil {
 		return *c, merrors.ContentFindByError{Info: c.Model.ID}.Wrap(err)
 	}
 	if contentModel.Content == "" {
@@ -130,9 +131,9 @@ func (c *Content) FindBy(ctx context.Context, key, value string) (Content, error
 	return d, nil
 }
 
-func (c Content) List(ctx context.Context) ([]Content, error) {
+func (c Content) List(e echo.Context) ([]Content, error) {
 	contentModel := models.Content{}
-	contentModels, err := contentModel.List(ctx)
+	contentModels, err := contentModel.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -145,9 +146,9 @@ func (c Content) List(ctx context.Context) ([]Content, error) {
 	return contents, nil
 }
 
-func (c Content) ListBy(ctx context.Context, key string, value interface{}) ([]Content, error) {
+func (c Content) ListBy(e echo.Context, key string, value interface{}) ([]Content, error) {
 	contentModel := models.Content{}
-	contentModels, err := contentModel.ListBy(ctx, key, value)
+	contentModels, err := contentModel.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListByError{Info: fmt.Sprintf("content type: %s, filter: %s:%v", c.Model.ContentType, key, value)}.Wrap(err)
 	}
@@ -160,11 +161,11 @@ func (c Content) ListBy(ctx context.Context, key string, value interface{}) ([]C
 	return contents, nil
 }
 
-func (c Content) Delete(ctx context.Context) error {
+func (c Content) Delete(e echo.Context) error {
 	contentModel := models.Content{}
 	contentModel.Model.ID = c.Model.ID
 	contentModel.ID = c.ID
-	if err := contentModel.Delete(ctx); err != nil {
+	if err := contentModel.Delete(e); err != nil {
 		return merrors.ContentModelDeleteError{}.Wrap(err)
 	}
 	return nil

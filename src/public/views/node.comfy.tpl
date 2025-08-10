@@ -5,8 +5,8 @@
                     <li><textarea name="api_base" id="api_base" placeholder="api base"></textarea></li>
                     <li><textarea name="api_template" id="api_template" placeholder="api template"></textarea></li>
                     <li><textarea name="template_values" id="template_values" placeholder="template values"></textarea></li>
-                    <li>{{template "element.toggle" .}}</li>
-                    <li>{{template "element.toggle" .}}</li>
+                    <li>{{template "element.toggle" .Enabled}}</li>
+                    <li>{{template "element.toggle" .Bypass}}</li>
                     <li><textarea name="output" id="output" value="" placeholder="output"></textarea></li>
                 </ul>
  {{end}}
@@ -22,7 +22,7 @@
             {{end}}
             {{if eq .DisplayType "new"}}
             <form action="/node/comfy/save" method="post">
-            {{template "form.comfynode .}}
+            {{template "form.comfynode" .}}
             </form>
             {{end}}
             {{if eq .DisplayType "edit"}}
@@ -35,10 +35,3 @@
         {{end}}
     </body>
 </html>
-
-	ID 				string 					`json:"id"`
-	WorkflowID  	string 					`form:"workflow_id" json:"workflow_id"`
-	Type 			string 					`form:"type" json:"type"`
-	Enabled 		bool   					`json:"enabled"`
-	Bypass 			bool   					`json:"bypass"`
-	Output 			string 					`form:"output" json:"output"`

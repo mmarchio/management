@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
@@ -21,10 +21,12 @@ func RegisterDispositionRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetDisposition(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIGetDisposition called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewDisposition(&id)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 		return c.JSON(http.StatusOK, entity)
@@ -34,7 +36,9 @@ func HandleAPIGetDisposition(c echo.Context) error {
 
 func HandleAPISetDisposition(c echo.Context) error {
 	var err error
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPISetDisposition called")
+	}
 	entity := types.NewDisposition(nil)
 	if err := c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISetDisposition"}.Wrap(err))
@@ -44,7 +48,7 @@ func HandleAPISetDisposition(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	err = entity.Set(ctx)
+	err = entity.Set(c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -52,9 +56,11 @@ func HandleAPISetDisposition(c echo.Context) error {
 }
 
 func HandleAPIListDisposition(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIListDisposition called")
+	}
 	disposition := types.NewDisposition(nil)
-	dispositions, err := disposition.List(ctx)
+	dispositions, err := disposition.List(c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -62,6 +68,9 @@ func HandleAPIListDisposition(c echo.Context) error {
 }
 
 func HandleDispositions(c echo.Context) error {
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleDispositions called")
+	}
 	dt := DisplayDisposition{
 		DisplayType: "none",
 		Menu: Menu{
@@ -73,6 +82,9 @@ func HandleDispositions(c echo.Context) error {
 }
 
 func HandleDispositionsNew(c echo.Context) error {
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleDispositionsNew called")
+	}
 	dt := DisplayDisposition{
 		Disposition: types.Disposition{},
 		DisplayType: "new",
@@ -86,10 +98,12 @@ func HandleDispositionsNew(c echo.Context) error {
 }
 
 func HandleDispositionGet(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleDispositionGet called")
+	}
 	if id := c.Param("id"); id != "" {
 		disposition := types.NewDisposition(&id)
-		if err := disposition.Get(ctx); err != nil {
+		if err := disposition.Get(c); err != nil {
 			return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 		}
 		dt := DisplayDisposition{
@@ -106,9 +120,11 @@ func HandleDispositionGet(c echo.Context) error {
 }
 
 func HandleDispositionsList(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleDispositionsList called")
+	}
 	disposition := types.NewDisposition(nil)
-	dispositions, err := disposition.List(ctx)
+	dispositions, err := disposition.List(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -127,7 +143,9 @@ func HandleDispositionsList(c echo.Context) error {
 
 func HandleDispositionsSave(c echo.Context) error {
 	var err error
-	ctx := database.GetDatabaseCtx()
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleDispositionsSave called")
+	}
 	entity := types.NewDisposition(nil)
 	if err := c.Bind(&entity); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleDispositionsSave"}.Wrap(err))
@@ -136,7 +154,7 @@ func HandleDispositionsSave(c echo.Context) error {
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error)
 	}
-	if err = entity.Set(ctx); err != nil {
+	if err = entity.Set(c); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err)
 	}
 	
@@ -152,11 +170,13 @@ func HandleDispositionsSave(c echo.Context) error {
 }
 
 func HandleDispositionsDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleDispositionsDelete called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewDisposition(&id)
 		entity.Model.ID = c.Param("id")
-		if err := entity.Delete(ctx); err != nil {
+		if err := entity.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleDispositionsList(c)

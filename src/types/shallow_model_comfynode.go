@@ -1,12 +1,12 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -37,10 +37,10 @@ func (c ShallowComfyNode) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowComfyNode) Expand(ctx context.Context) (*ComfyNode, error) {
+func (c ShallowComfyNode) Expand(e echo.Context) (*ComfyNode, error) {
 	r := ComfyNode{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -161,11 +161,11 @@ func (c *ShallowComfyNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *ShallowComfyNode) Get(ctx context.Context) error {
+func (c *ShallowComfyNode) Get(e echo.Context) error {
 	content := NewComfyNodeTypeContent()
 	content.Model.ID = c.ShallowModel.ID
 	content.Model.ContentType = "shallowcomfynode"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -176,11 +176,11 @@ func (c *ShallowComfyNode) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c *ShallowComfyNode) GetShallow(ctx context.Context) error {
+func (c *ShallowComfyNode) GetShallow(e echo.Context) error {
 	content := NewComfyNodeTypeContent()
 	content.Model.ID = c.ShallowModel.ID
 	content.Model.ContentType = "shallowcomfynode"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -203,12 +203,12 @@ func NewShallowComfyNodeModelContent() models.ShallowContent {
 	return c
 }
 
-func (c ShallowComfyNode) Delete(ctx context.Context) error {
+func (c ShallowComfyNode) Delete(e echo.Context) error {
 	content := NewShallowComfyNodeTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ID = c.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ShallowComfyNode", Function: "delete"}.Wrap(err)
 	}
 	return nil
@@ -240,7 +240,7 @@ func NewShallowComfyNode(id *string) ShallowComfyNode {
 	return c
 }
 
-func (c ShallowComfyNode) Set(ctx context.Context) error {
+func (c ShallowComfyNode) Set(e echo.Context) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
@@ -249,7 +249,7 @@ func (c ShallowComfyNode) Set(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.ShallowModel.ID
 	content.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}

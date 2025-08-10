@@ -13,28 +13,28 @@
                 <th>edit</th>
                 <th>delete</th>
         </tr>
-        {{range .OllamaNodes}}
+        {{range .OllamaNodesArrayModel}}
         <tr>
                 <td>{{.Name}}</td>
-                <td>{{.Type}}</td>
-                <td><a href="/ollama/node/edit/{{.ID}}">edit</a></td>
-                <td><a href="/ollama/node/delete/{{.ID}}">delete</a></td>
+                <td>Ollama Node</td>
+                <td><a href="/node/ollama/edit/{{.ID}}">edit</a></td>
+                <td><a href="/node/ollama/delete/{{.ID}}">delete</a></td>
         </tr>
         {{end}}
-        {{range .SSHNodes}}
+        {{range .SSHNodesArrayModel}}
         <tr>
                 <td>{{.Name}}</td>
-                <td>{{.Type}}</td>
-                <td><a href="/ssh/node/edit/{{.ID}}">edit</a></td>
-                <td><a href="/ssh/node/delete/{{.ID}}">delete</a></td>
+                <td>SSH Node</td>
+                <td><a href="/node/ssh/edit/{{.ID}}">edit</a></td>
+                <td><a href="/node/ssh/delete/{{.ID}}">delete</a></td>
         </tr>
         {{end}}
-        {{range .ComfyNodes}}
+        {{range .ComfyNodesArrayModel}}
         <tr>
                 <td>{{.Name}}</td>
-                <td>{{.Type}}</td>
-                <td><a href="/comfy/node/edit/{{.ID}}">edit</a></td>
-                <td><a href="/comfy/node/delete/{{.ID}}">delete</a></td>
+                <td>ComfyUI Node</td>
+                <td><a href="/node/comfy/edit/{{.ID}}">edit</a></td>
+                <td><a href="/node/comfy/delete/{{.ID}}">delete</a></td>
         </tr>
         {{end}}
 </table>

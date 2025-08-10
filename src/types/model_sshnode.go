@@ -1,12 +1,12 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -139,11 +139,11 @@ func (c *SSHNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *SSHNode) Get(ctx context.Context) error {
+func (c *SSHNode) Get(e echo.Context) error {
 	content := NewSSHNodeTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "sshnode"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -160,12 +160,12 @@ func NewSSHNodeTypeContent() Content {
 	return c
 }
 
-func (c SSHNode) Delete(ctx context.Context) error {
+func (c SSHNode) Delete(e echo.Context) error {
 	content := NewSSHNodeTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err)
 	}
 	return nil
@@ -197,7 +197,7 @@ func NewSSHNode(id *string) SSHNode {
 	return c
 }
 
-func (c SSHNode) Set(ctx context.Context) error {
+func (c SSHNode) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
@@ -206,17 +206,17 @@ func (c SSHNode) Set(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	content.ID = c.Model.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c SSHNode) List(ctx context.Context) ([]SSHNode, error) {
+func (c SSHNode) List(e echo.Context) ([]SSHNode, error) {
 	content := NewSSHNodeTypeContent()
 	content.Model.ContentType = "sshnode"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -226,6 +226,25 @@ func (c SSHNode) List(ctx context.Context) ([]SSHNode, error) {
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SSHNode", Function: "List"}.Wrap(err)
+		}
+		cuts = append(cuts, cut)
+	}
+	return cuts, nil
+}
+
+func (c SSHNode) ListBy(e echo.Context, key string, value interface{}) ([]SSHNode, error) {
+	content := NewSSHNodeTypeContent()
+	content.Model.ContentType = "sshnode"
+	list, err := content.ListBy(e, key, value)
+	if err != nil {
+		return nil, merrors.ContentListByError{Info: fmt.Sprintf("{\"%s\":\"%s\"}", key, value), Package: "types", Struct: "SSHNode", Function: "ListBy"}.Wrap(err)
+	}
+	cuts := make([]SSHNode, 0)
+	for _, model := range list {
+		cut := SSHNode{}
+		err = json.Unmarshal([]byte(model.Content), &cut)
+		if err != nil {
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SSHNode", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}

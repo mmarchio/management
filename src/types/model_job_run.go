@@ -1,11 +1,11 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -73,10 +73,10 @@ func (c *JobRun) New(id *string) {
 	c.Model.UpdatedAt = c.Model.CreatedAt
 }
 
-func (c JobRun) List(ctx context.Context) ([]JobRun, error) {
+func (c JobRun) List(e echo.Context) ([]JobRun, error) {
 	content := NewJobRunModelContent()
 	content.Model.ContentType = "jobrun"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 	}
@@ -87,15 +87,15 @@ func (c JobRun) List(ctx context.Context) ([]JobRun, error) {
 		if err != nil {
 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 		}
-		cut.ContextModel.SetCtx(ctx)
+		cut.ContextModel.SetCtx(e)
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
 }
 
-func (c JobRun) ListBy(ctx context.Context, key string, value interface{}) ([]JobRun, error) {
+func (c JobRun) ListBy(e echo.Context, key string, value interface{}) ([]JobRun, error) {
 	content := NewJobRunModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(err)
 	}
@@ -111,11 +111,11 @@ func (c JobRun) ListBy(ctx context.Context, key string, value interface{}) ([]Jo
 	return cuts, nil
 }
 
-func (c *JobRun) Get(ctx context.Context) error {
+func (c *JobRun) Get(e echo.Context) error {
 	content := NewJobRunTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "jobrun"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -126,17 +126,17 @@ func (c *JobRun) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c *JobRun) FindBy(ctx context.Context) error {
+func (c *JobRun) FindBy(e echo.Context) error {
 	var err error
 	content := NewJobRunTypeContent()
 	if !c.ID.IsNil() {
-		content, err = content.FindBy(ctx, "id", c.ID.String())
+		content, err = content.FindBy(e, "id", c.ID.String())
 	}
 	if !c.JobID.IsNil() {
-		content, err = content.FindBy(ctx, "job_id", c.JobID.String())
+		content, err = content.FindBy(e, "job_id", c.JobID.String())
 	}
 	if !c.WorkflowID.IsNil() {
-		content, err = content.FindBy(ctx, "workflow_id", c.WorkflowID.String())
+		content, err = content.FindBy(e, "workflow_id", c.WorkflowID.String())
 	}
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
@@ -148,20 +148,20 @@ func (c *JobRun) FindBy(ctx context.Context) error {
 	return nil
 }
 
-func (c *JobRun) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]JobRun, error) {
+func (c *JobRun) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]JobRun, error) {
 	content := NewJobRunTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "jobrun"
 	content.ID = content.Model.ID
 	if write {
 		content.FromType(c)
-		_, err := content.CustomQuery(ctx, write, q, vars)
+		_, err := content.CustomQuery(e, write, q, vars)
 		if err != nil {
 			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(err)
 		}
 		return nil, nil
 	}
-	res, err := content.CustomQuery(ctx, write, q, vars)
+	res, err := content.CustomQuery(e, write, q, vars)
 	if err != nil {
 		if err != nil {
 			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(err).BubbleCode()
@@ -178,23 +178,23 @@ func (c *JobRun) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	return r, nil
 }
 
-func (c JobRun) Set(ctx context.Context) error {
+func (c JobRun) Set(e echo.Context) error {
 	content := NewJobRunTypeContent()
 	content.FromType(c)
 	content.ContentType = "jobrun"
 	content.ID = c.Model.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c JobRun) Delete(ctx context.Context) error {
+func (c JobRun) Delete(e echo.Context) error {
 	content := NewJobRunTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil

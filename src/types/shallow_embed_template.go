@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/labstack/echo/v4"
@@ -28,10 +27,10 @@ func (c ShallowTemplate) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowTemplate) Expand(ctx context.Context) (*Template, error) {
+func (c ShallowTemplate) Expand(e echo.Context) (*Template, error) {
 	r := Template{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -48,7 +47,7 @@ func (c ShallowTemplate) Expand(ctx context.Context) (*Template, error) {
 	for _, id := range c.DispositionsArrayModel {
 		d := Disposition{}
 		sd.ShallowModel.ID = id
-		sc, err := sd.ShallowModel.Get(ctx)
+		sc, err := sd.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}		
@@ -61,7 +60,7 @@ func (c ShallowTemplate) Expand(ctx context.Context) (*Template, error) {
 	for _, id := range c.AvailableDispositions {
 		d := Disposition{}
 		sd.ShallowModel.ID = id
-		sc, err := sd.ShallowModel.Get(ctx)
+		sc, err := sd.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}		
@@ -73,11 +72,11 @@ func (c ShallowTemplate) Expand(ctx context.Context) (*Template, error) {
 	return &r, nil
 }
 
-func (c *ShallowTemplate) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowTemplate) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowTemplate) Marshal(ctx context.Context) (string, error) {
+func (c ShallowTemplate) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }

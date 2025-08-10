@@ -1,12 +1,12 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -73,10 +73,10 @@ func (c *Job) New() {
 	c.Model.Conflict = "DO NOTHING"
 }
 
-func (c Job) List(ctx context.Context) ([]Job, error) {
+func (c Job) List(e echo.Context) ([]Job, error) {
 	content := NewJobModelContent()
 	content.Model.ContentType = "job"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -92,9 +92,9 @@ func (c Job) List(ctx context.Context) ([]Job, error) {
 	return cuts, nil
 }
 
-func (c Job) ListBy(ctx context.Context, key string, value interface{}) ([]Job, error) {
+func (c Job) ListBy(e echo.Context, key string, value interface{}) ([]Job, error) {
 	content := NewJobModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -110,13 +110,13 @@ func (c Job) ListBy(ctx context.Context, key string, value interface{}) ([]Job, 
 	return cuts, nil
 }
 
-func (c *Job) Get(ctx context.Context) error {
+func (c *Job) Get(e echo.Context) error {
 	var err error
 	content := NewJobTypeContent()
 	content.Model.ID = c.Model.ID
 	content.ID = content.Model.ID
 	content.Model.ContentType = "job"
-	content, err = content.Get(ctx)
+	content, err = content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -126,12 +126,12 @@ func (c *Job) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c *Job) FindBy(ctx context.Context, key, value string) (Job, error) {
+func (c *Job) FindBy(e echo.Context, key, value string) (Job, error) {
 	var err error
 	job := Job{}
 	content := NewJobTypeContent()
 	content.Model.ID = c.Model.ID
-	content, err = content.FindBy(ctx, key, value) 
+	content, err = content.FindBy(e, key, value) 
 	if err != nil {
 		return job, merrors.ContentFindByError{Info: fmt.Sprintf("key: %s, value: %s", key, value)}.Wrap(err)
 	}
@@ -145,23 +145,23 @@ func (c *Job) FindBy(ctx context.Context, key, value string) (Job, error) {
 	return job, nil
 }
 
-func (c Job) Set(ctx context.Context) error {
+func (c Job) Set(e echo.Context) error {
 	content := NewJobTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	content.ID = c.Model.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c Job) Delete(ctx context.Context) error {
+func (c Job) Delete(e echo.Context) error {
 	content := NewJobTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil

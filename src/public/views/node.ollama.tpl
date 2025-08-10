@@ -1,13 +1,29 @@
 {{define "form.ollamanode"}}
-               <ul>
-                    <li><input type="text" name="name" id="name" value="" placeholder="name"></li>
-                    <li><textarea name="prompt" id="prompt" placeholder="prompt"></textarea></li>
-                    <li><textarea name="api_base" id="api_base" placeholder="api base"></textarea></li>
-                    <li><textarea name="api_template" id="api_template" placeholder="api template"></textarea></li>
-                    <li><textarea name="template_values" id="template_values" placeholder="template values"></textarea></li>
-                    <li>{{template "element.toggle" .}}</li>
-                    <li>{{template "element.toggle" .}}</li>
+                <input type="hidden" name="workflow_id" id="workflow_id" value="{{if .WorkflowID}}{{.WorkflowID}}{{end}}">
+                <ul>
+                    <li><input type="text" name="name" id="name" value="{{if .Name}}{{.Name}}{{end}}" placeholder="name"></li>
+                    <li><input type="text" name="ollama_model" id="ollama_model" value="{{if .OllamaModel}}{{.OllamaModel}}{{end}}" placeholder="model"></li>
+                    <li>
+                        <select name="system_prompt" id="system_prompt">
+                            <option value="">Select System Prompt</option>
+                            {{range .SystemPrompts}}
+                            <option value="{{.ID}}">{{.Name}}:{{.Domain}}</option>
+                            {{end}}
+                        </select>
+                    </li>
+                    <li><textarea name="prompt" id="prompt" placeholder="prompt">{{if .Prompt}}{{.Prompt}}{{end}}</textarea></li>
+                    <li>
+                        <select name="prompt_template" id="prompt_template">
+                            <option value="">Select Prompt Template</option>
+                            {{range .PromptTemplates}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                    </li>
+                    <li>{{template "element.toggle" .Enabled}}</li>
+                    <li>{{template "element.toggle" .Bypass}}</li>
                     <li><textarea name="output" id="output" value="" placeholder="output"></textarea></li>
+                    <li>{{template "element.submit" .}}</li>
                 </ul>
  {{end}}
 
@@ -22,11 +38,11 @@
             {{end}}
             {{if eq .DisplayType "new"}}
             <form action="/node/ollama/save" method="post">
-            {{template "form.ollamanode .}}
+            {{template "form.ollamanode" .}}
             </form>
             {{end}}
             {{if eq .DisplayType "edit"}}
-            <form action="/node/ollama/save/{{if .ID}}{{.ID}}{{end}}" method="post">
+            <form action="/node/ollama/save{{if .ID}}/{{.ID}}{{end}}" method="post">
             {{template "form.ollamanode" .}}
             </form>
             {{end}}
@@ -35,10 +51,3 @@
         {{end}}
     </body>
 </html>
-
-	ID 				string 					`json:"id"`
-	WorkflowID  	string 					`form:"workflow_id" json:"workflow_id"`
-	Type 			string 					`form:"type" json:"type"`
-	Enabled 		bool   					`json:"enabled"`
-	Bypass 			bool   					`json:"bypass"`
-	Output 			string 					`form:"output" json:"output"`

@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 )
 
 type Content struct {
@@ -43,7 +45,12 @@ func NewShallowContent(id *string) ShallowContent {
 	return c
 }
 
-func (c Content) ShallowGetIn(ctx context.Context) ([]ShallowContent, error) {
+func (c Content) ShallowGetIn(e echo.Context) ([]ShallowContent, error) {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("ShallowGetIn called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -55,7 +62,7 @@ func (c Content) ShallowGetIn(ctx context.Context) ([]ShallowContent, error) {
 	}
 	ta := make([]ShallowContent, 0)
 	for rows.Next() {
-		t, err := c.ShallowScan(ctx, rows)
+		t, err := c.ShallowScan(e, rows)
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +71,12 @@ func (c Content) ShallowGetIn(ctx context.Context) ([]ShallowContent, error) {
 	return ta, nil
 }
 
-func (c Content) GetIn(ctx context.Context) ([]Content, error) {
+func (c Content) GetIn(e echo.Context) ([]Content, error) {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("GetIn called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -76,7 +88,7 @@ func (c Content) GetIn(ctx context.Context) ([]Content, error) {
 	}
 	ta := make([]Content, 0)
 	for rows.Next() {
-		t, err := c.Scan(ctx, rows)
+		t, err := c.Scan(e, rows)
 		if err != nil {
 			return nil, err
 		}
@@ -85,7 +97,12 @@ func (c Content) GetIn(ctx context.Context) ([]Content, error) {
 	return ta, nil
 }
 
-func (c *Content) Get(ctx context.Context) error {
+func (c *Content) Get(e echo.Context) error {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("Get called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -104,7 +121,7 @@ func (c *Content) Get(ctx context.Context) error {
 	}
 	var t Content
 	for rows.Next() {
-		t, err = c.Scan(ctx, rows)
+		t, err = c.Scan(e, rows)
 		if err != nil {
 			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(err)
 		}
@@ -113,7 +130,12 @@ func (c *Content) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c *ShallowContent) Get(ctx context.Context) error {
+func (c *ShallowContent) Get(e echo.Context) error {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("Get called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -132,7 +154,7 @@ func (c *ShallowContent) Get(ctx context.Context) error {
 	}
 	var t ShallowContent
 	for rows.Next() {
-		t, err = c.Scan(ctx, rows)
+		t, err = c.Scan(e, rows)
 		if err != nil {
 			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(err)
 		}
@@ -141,7 +163,12 @@ func (c *ShallowContent) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c *Content) FindBy(ctx context.Context, key, value string) error {
+func (c *Content) FindBy(e echo.Context, key, value string) error {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("FindBy called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -155,7 +182,7 @@ func (c *Content) FindBy(ctx context.Context, key, value string) error {
 	ctr := 0
 	for rows.Next() {
 		ctr++
-		t, err = c.Scan(ctx, rows)
+		t, err = c.Scan(e, rows)
 		if err != nil {
 			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q)}.Wrap(err)
 		}
@@ -170,7 +197,12 @@ func (c *Content) FindBy(ctx context.Context, key, value string) error {
 	return nil
 }
 
-func (c *ShallowContent) FindBy(ctx context.Context, key, value string) error {
+func (c *ShallowContent) FindBy(e echo.Context, key, value string) error {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("FindBy called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -184,7 +216,7 @@ func (c *ShallowContent) FindBy(ctx context.Context, key, value string) error {
 	ctr := 0
 	for rows.Next() {
 		ctr++
-		t, err = c.Scan(ctx, rows)
+		t, err = c.Scan(e, rows)
 		if err != nil {
 			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(err)
 		}
@@ -199,7 +231,12 @@ func (c *ShallowContent) FindBy(ctx context.Context, key, value string) error {
 	return nil
 }
 
-func (c Content) Set(ctx context.Context) error {
+func (c Content) Set(e echo.Context) error {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("Set called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -219,7 +256,12 @@ func (c Content) Set(ctx context.Context) error {
 	return nil
 }
 
-func (c ShallowContent) Set(ctx context.Context) error {
+func (c ShallowContent) Set(e echo.Context) error {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("Set called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -239,7 +281,12 @@ func (c ShallowContent) Set(ctx context.Context) error {
 	return nil
 }
 
-func (c Content) List(ctx context.Context) ([]Content, error) {
+func (c Content) List(e echo.Context) ([]Content, error) {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("List called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -260,7 +307,7 @@ func (c Content) List(ctx context.Context) ([]Content, error) {
 	}
 	r := make([]Content, 0)
 	for rows.Next() {
-		content, err := c.Scan(ctx, rows)
+		content, err := c.Scan(e, rows)
 		r = append(r, content)
 		if err != nil {
 			return nil, merrors.DBContentScanError{}.Wrap(err)
@@ -276,7 +323,12 @@ func (c Content) List(ctx context.Context) ([]Content, error) {
 	return r, nil
 }
 
-func (c ShallowContent) List(ctx context.Context) ([]ShallowContent, error) {
+func (c ShallowContent) List(e echo.Context) ([]ShallowContent, error) {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("List called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -297,7 +349,7 @@ func (c ShallowContent) List(ctx context.Context) ([]ShallowContent, error) {
 	}
 	r := make([]ShallowContent, 0)
 	for rows.Next() {
-		content, err := c.Scan(ctx, rows)
+		content, err := c.Scan(e, rows)
 		r = append(r, content)
 		if err != nil {
 			return nil, merrors.DBContentScanError{}.Wrap(err)
@@ -313,7 +365,12 @@ func (c ShallowContent) List(ctx context.Context) ([]ShallowContent, error) {
 	return r, nil
 }
 
-func (c Content) ListBy(ctx context.Context, key, value interface{}) ([]Content, error) {
+func (c Content) ListBy(e echo.Context, key, value interface{}) ([]Content, error) {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("ListBy called")
+	}
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
@@ -325,7 +382,7 @@ func (c Content) ListBy(ctx context.Context, key, value interface{}) ([]Content,
 	}
 	r := make([]Content, 0)
 	for rows.Next() {
-		content, err := c.Scan(ctx, rows)
+		content, err := c.Scan(e, rows)
 		if err != nil {
 			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
 		}
@@ -334,7 +391,12 @@ func (c Content) ListBy(ctx context.Context, key, value interface{}) ([]Content,
 	return r, nil
 }
 
-func (c ShallowContent) ListBy(ctx context.Context, key, value interface{}) ([]ShallowContent, error) {
+func (c ShallowContent) ListBy(e echo.Context, key, value interface{}) ([]ShallowContent, error) {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("ListBy called")
+	}
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
@@ -346,7 +408,7 @@ func (c ShallowContent) ListBy(ctx context.Context, key, value interface{}) ([]S
 	}
 	r := make([]ShallowContent, 0)
 	for rows.Next() {
-		content, err := c.Scan(ctx, rows)
+		content, err := c.Scan(e, rows)
 		if err != nil {
 			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
 		}
@@ -355,7 +417,12 @@ func (c ShallowContent) ListBy(ctx context.Context, key, value interface{}) ([]S
 	return r, nil
 }
 
-func (c Content) Delete(ctx context.Context) error {
+func (c Content) Delete(e echo.Context) error {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("Delete called")
+	}
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
@@ -375,7 +442,12 @@ func (c Content) Delete(ctx context.Context) error {
 	return nil
 }
 
-func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]Content, error) {
+func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]Content, error) {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("CustomQuery called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -414,7 +486,7 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	r := make([]Content, 0)
 	for rows.Next() {
 		ctr++
-		content, err := c.Scan(ctx, rows)
+		content, err := c.Scan(e, rows)
 		if err != nil {
 			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
 		}
@@ -434,7 +506,12 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	return r, nil
 }
 
-func (c ShallowContent) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]ShallowContent, error) {
+func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]ShallowContent, error) {
+	var ctx context.Context
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+		cc.Flogger("CustomQuery called")
+	}
 	c.Init()
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
@@ -473,7 +550,7 @@ func (c ShallowContent) CustomQuery(ctx context.Context, write bool, q string, v
 	r := make([]ShallowContent, 0)
 	for rows.Next() {
 		ctr++
-		content, err := c.Scan(ctx, rows)
+		content, err := c.Scan(e, rows)
 		if err != nil {
 			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
 		}
@@ -493,7 +570,10 @@ func (c ShallowContent) CustomQuery(ctx context.Context, write bool, q string, v
 	return r, nil
 }
 
-func (c Content) Scan(ctx context.Context, rows Scannable) (Content, error) {
+func (c Content) Scan(e echo.Context, rows Scannable) (Content, error) {
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		cc.Flogger("Scan called")
+	}
 	err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Model.ContentType, &c.Content)
 	if err != nil {
 		return c, err
@@ -501,7 +581,10 @@ func (c Content) Scan(ctx context.Context, rows Scannable) (Content, error) {
 	return c, nil
 }
 
-func (c ShallowContent) Scan(ctx context.Context, rows Scannable) (ShallowContent, error) {
+func (c ShallowContent) Scan(e echo.Context, rows Scannable) (ShallowContent, error) {
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		cc.Flogger("Scan called")
+	}
 	err := rows.Scan(&c.ShallowModel.ID, &c.ShallowModel.CreatedAt, &c.ShallowModel.UpdatedAt, &c.ShallowModel.ContentType, &c.Content)
 	if err != nil {
 		return c, err
@@ -509,7 +592,10 @@ func (c ShallowContent) Scan(ctx context.Context, rows Scannable) (ShallowConten
 	return c, nil
 }
 
-func (c Content) ShallowScan(ctx context.Context, rows Scannable) (ShallowContent, error) {
+func (c Content) ShallowScan(e echo.Context, rows Scannable) (ShallowContent, error) {
+	if cc, ok := (e).(logger.LoggingContext); ok {
+		cc.Flogger("ShallowScan called")
+	}
 	sc := ShallowContent{}
 	err := rows.Scan(&sc.ShallowModel.ID, &sc.ShallowModel.CreatedAt, &sc.ShallowModel.UpdatedAt, &sc.ShallowModel.ContentType, &sc.Content)
 	if err != nil {

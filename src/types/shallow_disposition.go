@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
@@ -54,7 +53,7 @@ func (c ShallowDisposition) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowDisposition) Expand(ctx context.Context) (*Disposition, error) {
+func (c ShallowDisposition) Expand(e echo.Context) (*Disposition, error) {
 	r := Disposition{}
 	r.Model.ID = c.ShallowModel.ID
 	r.Model.CreatedAt = c.ShallowModel.CreatedAt
@@ -67,7 +66,7 @@ func (c ShallowDisposition) Expand(ctx context.Context) (*Disposition, error) {
 	r.AdvertisementDuration = c.AdvertisementDuration
 	entitlements := ShallowEntitlements{}
 	entitlements.ShallowModel.ID = c.EntitlementsModel
-	entitlementsModel, err := entitlements.Expand(ctx);
+	entitlementsModel, err := entitlements.Expand(e);
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
@@ -76,7 +75,7 @@ func (c ShallowDisposition) Expand(ctx context.Context) (*Disposition, error) {
 	steps.ShallowModel.ID = c.VerificationModel
 	steps.ID = StepsID(c.VerificationModel)
 	steps.ShallowModel.ContentType = "shallowverification"
-	verificationModel, err := steps.Expand(ctx)
+	verificationModel, err := steps.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
@@ -84,7 +83,7 @@ func (c ShallowDisposition) Expand(ctx context.Context) (*Disposition, error) {
 	steps.ShallowModel.ID = c.BypassModel
 	steps.ID = StepsID(c.BypassModel)
 	steps.ContentType = "shallowbypass"
-	bypassModel, err := steps.Expand(ctx)
+	bypassModel, err := steps.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
@@ -105,9 +104,9 @@ func (c *ShallowDisposition) New(id *string) {
 	c.VerificationModel = ""
 }
 
-func (c ShallowDisposition) List(ctx context.Context) ([]ShallowDisposition, error) {
+func (c ShallowDisposition) List(e echo.Context) ([]ShallowDisposition, error) {
 	content := NewDispositionModelContent()
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
@@ -123,9 +122,9 @@ func (c ShallowDisposition) List(ctx context.Context) ([]ShallowDisposition, err
 	return cuts, nil
 }
 
-func (c ShallowDisposition) ListBy(ctx context.Context, key string, value interface{}) ([]ShallowDisposition, error) {
+func (c ShallowDisposition) ListBy(e echo.Context, key string, value interface{}) ([]ShallowDisposition, error) {
 	content := NewShallowDispositionModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
@@ -141,11 +140,11 @@ func (c ShallowDisposition) ListBy(ctx context.Context, key string, value interf
 	return cuts, nil
 }
 
-func (c *ShallowDisposition) Get(ctx context.Context) error {
+func (c *ShallowDisposition) Get(e echo.Context) error {
 	content := NewShallowDispositionTypeContent()
 	content.ShallowModel.ContentType = "disposition"
 	content.ShallowModel.ID = c.ShallowModel.ID
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -156,22 +155,22 @@ func (c *ShallowDisposition) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c ShallowDisposition) Set(ctx context.Context) error {
+func (c ShallowDisposition) Set(e echo.Context) error {
 	content := NewShallowDispositionTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c ShallowDisposition) Delete(ctx context.Context) error {
+func (c ShallowDisposition) Delete(e echo.Context) error {
 	content := NewShallowDispositionTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil

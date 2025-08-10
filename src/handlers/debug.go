@@ -11,7 +11,6 @@ import (
 )
 
 func HandleDebugContentView(c echo.Context) error {
-	ctx := GetEchoCtx(c)
 	content := types.Content{}
 	if c.Param("id") != "" {
 		content.Model.ID = c.Param("id")
@@ -19,7 +18,7 @@ func HandleDebugContentView(c echo.Context) error {
 	} else {
 		return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 	}
-	entity, err := content.Get(ctx)
+	entity, err := content.Get(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err)
 	}

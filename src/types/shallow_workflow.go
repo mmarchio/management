@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -14,12 +13,12 @@ import (
 
 type ShallowWorkflow struct {
 	ShallowModel
-	ID 						WorkflowID 		`form: "id" json:"id"`
-	Name 					string 			`form: "name" json:"name"`
-	ComfyNodesArrayModel 	[]string 	`form: "comfy_nodes" json: "comfy_nodes_array_model"`
-	OllamaNodesArrayModel 	[]string 	`form: "ollama_nodes" json: "ollama_nodes_array_model"`
-	SSHNodesArrayModel 		[]string 		`form: "ssh_nodes" json: "ssh_nodes_array_model"`
-	NodeOrder 				map[string]int 	`form: "node_order" "json: "node_order"`
+	ID 						WorkflowID 		`form:"id" json:"id"`
+	Name 					string 			`form:"name" json:"name"`
+	ComfyNodesArrayModel 	[]string 		`form:"comfy_nodes" json: "comfy_nodes_array_model"`
+	OllamaNodesArrayModel 	[]string 		`form:"ollama_nodes" json: "ollama_nodes_array_model"`
+	SSHNodesArrayModel 		[]string 		`form:"ssh_nodes" json: "ssh_nodes_array_model"`
+	NodeOrder 				map[string]int 	`form:"node_order" "json: "node_order"`
 }
 
 func (c ShallowWorkflow) ToContent() (*Content, error) {
@@ -33,7 +32,7 @@ func (c ShallowWorkflow) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowWorkflow) Expand(ctx context.Context) (*Workflow, error) {
+func (c ShallowWorkflow) Expand(e echo.Context) (*Workflow, error) {
 	w := Workflow{}
 	w.Model = w.Model.FromShallowModel(c.ShallowModel)
 	w.ID = c.ID
@@ -42,7 +41,7 @@ func (c ShallowWorkflow) Expand(ctx context.Context) (*Workflow, error) {
 	for _, id := range w.ComfyNodesArrayModel {
 		scnam := ShallowComfyNode{}
 		scnam.ShallowModel.ID = id.Model.ID
-		sc, err := scnam.Expand(ctx)
+		sc, err := scnam.Expand(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -52,7 +51,7 @@ func (c ShallowWorkflow) Expand(ctx context.Context) (*Workflow, error) {
 	for _, id := range w.OllamaNodesArrayModel {
 		scnam := ShallowOllamaNode{}
 		scnam.ShallowModel.ID = id.Model.ID
-		sc, err := scnam.Expand(ctx)
+		sc, err := scnam.Expand(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -62,7 +61,7 @@ func (c ShallowWorkflow) Expand(ctx context.Context) (*Workflow, error) {
 	for _, id := range w.SSHNodesArrayModel {
 		scnam := ShallowSSHNode{}
 		scnam.ShallowModel.ID = id.Model.ID
-		sc, err := scnam.Expand(ctx)
+		sc, err := scnam.Expand(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -139,10 +138,10 @@ func (c *ShallowWorkflow) New(id *string) {
 }
 
 
-func (c ShallowWorkflow) List(ctx context.Context) ([]ShallowWorkflow, error) {
+func (c ShallowWorkflow) List(e echo.Context) ([]ShallowWorkflow, error) {
 	content := NewShallowWorkflowModelContent()
 	content.ShallowModel.ContentType = "shallowworkflow"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
@@ -157,9 +156,9 @@ func (c ShallowWorkflow) List(ctx context.Context) ([]ShallowWorkflow, error) {
 	return cuts, nil
 }
 
-func (c ShallowWorkflow) ListBy(ctx context.Context, key string, value interface{}) ([]ShallowWorkflow, error) {
+func (c ShallowWorkflow) ListBy(e echo.Context, key string, value interface{}) ([]ShallowWorkflow, error) {
 	content := NewShallowWorkflowModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
@@ -175,13 +174,13 @@ func (c ShallowWorkflow) ListBy(ctx context.Context, key string, value interface
 	return cuts, nil
 }
 
-func (c *ShallowWorkflow) Get(ctx context.Context) error {
+func (c *ShallowWorkflow) Get(e echo.Context) error {
 	fmt.Printf("types:shallowworkflow:get model.id: %s id: %s\n", c.ShallowModel.ID, c.ID.String())
 	content := NewShallowWorkflowTypeContent()
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ID = c.ShallowModel.ID
 	content.ShallowModel.ContentType = "shallowworkflow"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -191,7 +190,7 @@ func (c *ShallowWorkflow) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c ShallowWorkflow) Set(ctx context.Context) error {
+func (c ShallowWorkflow) Set(e echo.Context) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "shallowworkflow", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
@@ -199,18 +198,18 @@ func (c ShallowWorkflow) Set(ctx context.Context) error {
 	content := NewShallowWorkflowTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ID.String()
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c ShallowWorkflow) Delete(ctx context.Context) error {
+func (c ShallowWorkflow) Delete(e echo.Context) error {
 	content := NewShallowWorkflowTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
@@ -247,8 +246,8 @@ func (c ShallowWorkflow) Bind(e echo.Context) (ShallowWorkflow, error) {
 	return c, err
 }
 
-func (c ShallowWorkflow) Next(e echo.Context, ctx context.Context) (*models.Context, error) {
-	systemContext, err := models.Context{}.GetCtx(ctx)
+func (c ShallowWorkflow) Next(e echo.Context) (*models.Context, error) {
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
 		return nil, merrors.ContextGetError{Package: "types", Struct: "ShallowWorkflow", Function: "Next"}.Wrap(err)
 	}

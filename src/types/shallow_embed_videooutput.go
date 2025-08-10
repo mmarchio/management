@@ -1,9 +1,9 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -25,10 +25,10 @@ func (c ShallowVideoOutput) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowVideoOutput) Expand(ctx context.Context) (*VideoOutput, error) {
+func (c ShallowVideoOutput) Expand(e echo.Context) (*VideoOutput, error) {
 	r := VideoOutput{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -40,7 +40,7 @@ func (c ShallowVideoOutput) Expand(ctx context.Context) (*VideoOutput, error) {
 	r.EmbedModel = r.EmbedModel.FromShallowModel(c.ShallowModel)
 	ss := ShallowStats{}
 	ss.ShallowModel.ID = c.StatsModel
-	stats, err := ss.Expand(ctx)
+	stats, err := ss.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
@@ -49,7 +49,7 @@ func (c ShallowVideoOutput) Expand(ctx context.Context) (*VideoOutput, error) {
 	for _, id := range c.FilesArrayModel {
 		sf := ShallowFile{}
 		sf.ShallowModel.ID = id
-		f, err := sf.Expand(ctx)
+		f, err := sf.Expand(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -58,11 +58,11 @@ func (c ShallowVideoOutput) Expand(ctx context.Context) (*VideoOutput, error) {
 	return &r, nil
 }
 
-func (c *ShallowVideoOutput) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowVideoOutput) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowVideoOutput) Marshal(ctx context.Context) (string, error) {
+func (c ShallowVideoOutput) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	c.StatsModel = ShallowStats{}.New(nil).ShallowModel.ID
 	return string(b), err

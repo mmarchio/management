@@ -1,11 +1,11 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -31,10 +31,10 @@ func (c ShallowToggle) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowToggle) Expand(ctx context.Context) (*Toggle, error) {
+func (c ShallowToggle) Expand(e echo.Context) (*Toggle, error) {
 	r := Toggle{}
 	if c.CreatedAt.IsZero() {
-		m, err := c.ShallowModel.Get(ctx)
+		m, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -74,11 +74,11 @@ func (c *ShallowToggle) New(parent Embeddable) {
 
 }
 
-func (c *ShallowToggle) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowToggle) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowToggle) Marshal(ctx context.Context) (string, error) {
+func (c ShallowToggle) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }

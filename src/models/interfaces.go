@@ -1,10 +1,12 @@
 package models
 
-import "context"
+import (
+	"github.com/labstack/echo/v4"
+)
 
 type ITable interface {
-	Scan(ctx context.Context, rows Scannable) (ITable, error) 
-	Values(ctx context.Context) ([]any, error)
+	Scan(ctx echo.Context, rows Scannable) (ITable, error) 
+	Values(ctx echo.Context) ([]any, error)
 	GetID() string
 	GetContentType() string
 }

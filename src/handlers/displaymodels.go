@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"context"
 
+	"github.com/labstack/echo/v4"
 	"github.com/mmarchio/management/types"
 )
 
@@ -17,9 +17,9 @@ type DisplayNode struct {
 	List []types.Node
 }
 
-func (c *DisplayNode) GetSystemPrompts(ctx context.Context) error {
+func (c *DisplayNode) GetSystemPrompts(e echo.Context) error {
 	entity := types.NewSystemPrompt(nil)
-	list, err := entity.List(ctx)
+	list, err := entity.List(e)
 	if err != nil {
 		return err
 	}
@@ -27,9 +27,9 @@ func (c *DisplayNode) GetSystemPrompts(ctx context.Context) error {
 	return nil
 }
 
-func (c *DisplayNode) GetPromptTemplates(ctx context.Context) error {
+func (c *DisplayNode) GetPromptTemplates(e echo.Context) error {
 	entity := types.NewPromptTemplate(nil)
-	list, err := entity.List(ctx)
+	list, err := entity.List(e)
 	if err != nil {
 		return err
 	}
@@ -109,6 +109,10 @@ type DisplayOllamaNode struct {
 	Menu
 	DisplayType string
 	List []types.OllamaNode
+	Enabled types.Toggle
+	Bypass types.Toggle
+	SystemPrompts []types.SystemPrompt
+	PromptTemplates []types.PromptTemplate
 }
 
 type Menu struct {
@@ -121,6 +125,8 @@ type DisplayComfyNode struct {
 	Menu
 	DisplayType string
 	List []types.ComfyNode
+	Enabled types.Toggle
+	Bypass types.Toggle
 }
 
 type DisplaySSHNode struct {
@@ -128,4 +134,6 @@ type DisplaySSHNode struct {
 	Menu
 	DisplayType string
 	List []types.SSHNode
+	Enabled types.Toggle
+	Bypass types.Toggle
 }

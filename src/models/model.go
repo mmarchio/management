@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 )
 
 type Model struct {
@@ -72,14 +74,20 @@ func (c *ShallowModel) Init() {
 	c.Conflict = "DO UPDATE SET updated_at = $3, content = $5"
 }
 
-func (c Model) Get(ctx context.Context, table ITable) (ITable, error) {
+func (c Model) Get(e echo.Context, table ITable) (ITable, error) {
+	var ctx context.Context
+	var cc logger.LoggingContext
+	var ok bool 
+	if cc, ok = e.(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+	}
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = $1", c.Columns)
 	rows, err := db.Query(q, c.ID)
 	var t ITable
 	for rows.Next() {
-		t, err = table.Scan(ctx, rows)
+		t, err = table.Scan(e, rows)
 		if err != nil {
 			return nil, err
 		}
@@ -87,28 +95,40 @@ func (c Model) Get(ctx context.Context, table ITable) (ITable, error) {
 	return t, nil
 }
 
-func (c Model) Set(ctx context.Context, table ITable) error {
-	ctx, tx := database.GetDBTransaction(ctx)
+func (c Model) Set(e echo.Context, table ITable) error {
+	var ctx context.Context
+	var cc logger.LoggingContext
+	var ok bool 
+	if cc, ok = e.(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+	}
+	tx := database.GetPQTx(ctx)
 	q := fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s) ON CONFLICT(id) %s",
 		c.Columns,
 		c.Values,
 		c.Conflict,
 	)
-	values, err := table.Values(ctx)
+	values, err := table.Values(e)
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, q, values...)
+	_, err = tx.Exec(q, values...)
 	if err != nil {
-		tx.Rollback(ctx)
+		tx.Rollback()
 		return fmt.Errorf("err: %w\nq: %s", err, q)
 	}
 	fmt.Printf("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
 	return nil
 }
 
-func (c Model) List(ctx context.Context, table Content) ([]Content, error) {
+func (c Model) List(e echo.Context, table Content) ([]Content, error) {
+	var ctx context.Context
+	var cc logger.LoggingContext
+	var ok bool
+	if cc, ok = e.(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+	}
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	r := make([]Content, 0)
@@ -121,7 +141,7 @@ func (c Model) List(ctx context.Context, table Content) ([]Content, error) {
 		return nil, merrors.SQLQueryError{Info: "model list"}.Wrap(err)
 	}
 	for rows.Next() {
-		itable, err := table.Scan(ctx, rows)
+		itable, err := table.Scan(e, rows)
 		if err != nil {
 			fmt.Println(err)
 			return nil, merrors.DBContentScanError{Info: "model list"}.Wrap(err)
@@ -131,7 +151,13 @@ func (c Model) List(ctx context.Context, table Content) ([]Content, error) {
 	return r, nil
 }
 
-func (c Model) ListBy(ctx context.Context, table ITable, column string, value string) ([]ITable, error) {
+func (c Model) ListBy(e echo.Context, table ITable, column string, value string) ([]ITable, error) {
+	var ctx context.Context
+	var cc logger.LoggingContext
+	var ok bool 
+	if cc, ok = e.(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+	}
 	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	r := make([]ITable, 0)
@@ -141,7 +167,7 @@ func (c Model) ListBy(ctx context.Context, table ITable, column string, value st
 		return nil, err
 	}
 	for rows.Next() {
-		itable, err := table.Scan(ctx, rows)
+		itable, err := table.Scan(e, rows)
 		if err != nil {
 			return nil, err
 		}

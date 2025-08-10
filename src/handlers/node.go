@@ -1,47 +1,74 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
 func RegisterNodesRoutes(e *echo.Echo) {
 	g := e.Group("/node")
-	g.GET("/comfy/new", HandleComfyNew)
+	g.GET("/comfy/new/:workflowid", HandleComfyNew)
 	g.GET("/comfy/edit/:id", HandleComfyEdit)
 	g.GET("/comfy/delete/:id", HandleComfyDelete)
 	g.GET("/comfy/list", HandleComfyList)
+	g.POST("/comfy/save", HandleComfySave)
 	g.POST("/comfy/save/:id", HandleComfySave)
 
-	g.GET("/ollama/new", HandleOllamaNew)
+	g.GET("/ollama/new/:workflowid", HandleOllamaNew)
 	g.GET("/ollama/edit/:id", HandleOllamaEdit)
 	g.GET("/ollama/delete/:id", HandleOllamaDelete)
 	g.GET("/ollama/list", HandleOllamaList)
+	g.POST("/ollama/save", HandleOllamaSave)
 	g.POST("/ollama/save/:id", HandleOllamaSave)
 	
-	g.GET("/ssh/new", HandleSSHNew)
+	g.GET("/ssh/new/:workflowid", HandleSSHNew)
 	g.GET("/ssh/edit/:id", HandleSSHEdit)
 	g.GET("/ssh/delete/:id", HandleSSHDelete)
 	g.GET("/ssh/list", HandleSSHList)
+	g.POST("/ssh/save", HandleSSHSave)
 	g.POST("/ssh/save/:id", HandleSSHSave)
 }
 
 func HandleComfyNew(c echo.Context) error {
-	dt := DisplayComfyNode{
-		ComfyNode: types.NewComfyNode(nil),
-		DisplayType: "new",
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyNew called")
 	}
-	dt.Menu.Href = "/nodes/comfy"
-	dt.Menu.Title = "Comfy Nodes"
-	return c.Render(http.StatusOK, "node.comfy.tpl", dt)
+	if workflowid := c.Param("workflowid"); workflowid != "" {
+		dt := DisplayComfyNode{
+			ComfyNode: types.NewComfyNode(nil),
+			DisplayType: "new",
+			Enabled: types.Toggle{
+				NamePrefix: "comfynode_",
+				IdPrefix: "comfynode_",
+				Suffix: "enabled",
+				Title: "Enabled",
+			},
+			Bypass: types.Toggle{
+				NamePrefix: "comfynode_",
+				IdPrefix: "comfynode_",
+				Suffix: "bypass",
+				Title: "Bypass",
+			},
+		}
+		dt.ComfyNode.WorkflowID = types.WorkflowID(workflowid)
+		dt.Menu.Href = "/nodes/comfy"
+		dt.Menu.Title = "Comfy Nodes"
+
+		return c.Render(http.StatusOK, "node.comfy.tpl", dt)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 }
 
 func HandleComfyEdit(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyEdit called")
+	}
 	dt := DisplayComfyNode{
 		DisplayType: "edit",
 	}
@@ -49,7 +76,7 @@ func HandleComfyEdit(c echo.Context) error {
 	dt.Menu.Title = "Comfy Nodes"
 	if id := c.Param("id"); id != "" {
 		cn := types.NewComfyNode(&id)
-		if err := cn.Get(ctx); err != nil {
+		if err := cn.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		dt.ComfyNode = cn
@@ -58,33 +85,53 @@ func HandleComfyEdit(c echo.Context) error {
 }
 
 func HandleComfySave(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfySave called")
+	}
 	dt := DisplayComfyNode{
 		DisplayType: "edit",
 	}
 	dt.Menu.Href = "/nodes/comfy"
 	dt.Menu.Title = "Comfy Nodes"
+	var cn types.ComfyNode
 	if id := c.Param("id"); id != "" {
-		cn := types.NewComfyNode(&id)
-		if err := cn.Get(ctx); err != nil {
+		cn = types.NewComfyNode(&id)
+		if err := cn.Get(c); err != nil {
 			if !strings.Contains(err.Error(), "not found") {
 				return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 			}
 		}
-		if err := c.Bind(&cn); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
-		}
-		if err := cn.Set(ctx); err != nil {
+	} else {
+		cn = types.NewComfyNode(nil)
+	}
+	if err := c.Bind(&cn); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
+	}
+	if err := cn.Set(c); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if !cn.WorkflowID.IsNil() {
+		wfid := cn.WorkflowID.String()
+		wf := types.NewWorkflow(&wfid)
+		if err := wf.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		dt.ComfyNode = cn
-		return c.Render(http.StatusCreated, "node.comfy.tpl", dt)
+		if wf.ComfyNodesArrayModel == nil {
+			wf.ComfyNodesArrayModel = make([]types.ComfyNode, 0)
+		}
+		wf.ComfyNodesArrayModel = append(wf.ComfyNodesArrayModel, cn)
+		if err := wf.Set(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
 	}
-	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+	dt.ComfyNode = cn
+	return c.Render(http.StatusCreated, "node.comfy.tpl", dt)
 }
 
 func HandleComfyDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyDelete called")
+	}
 	dt := DisplayComfyNode{
 		DisplayType: "list",
 	}
@@ -92,7 +139,7 @@ func HandleComfyDelete(c echo.Context) error {
 	dt.Menu.Title = "Comfy Nodes"
 	if id := c.Param("id"); id != "" {
 		cn := types.NewComfyNode(&id)
-		if err := cn.Delete(ctx); err != nil {
+		if err := cn.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleComfyList(c)
@@ -101,14 +148,16 @@ func HandleComfyDelete(c echo.Context) error {
 }
 
 func HandleComfyList(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyList called")
+	}
 	dt := DisplayComfyNode{
 		DisplayType: "list",
 	}
 	dt.Menu.Href = "/nodes/comfy"
 	dt.Menu.Title = "Comfy Nodes"
 	cn := types.NewComfyNode(nil)
-	list, err := cn.List(ctx)
+	list, err := cn.List(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -117,60 +166,144 @@ func HandleComfyList(c echo.Context) error {
 }
 
 func HandleOllamaNew(c echo.Context) error {
-	dt := DisplayOllamaNode{
-		OllamaNode: types.NewOllamaNode(nil),
-		DisplayType: "new",
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleOllamaNew called")
 	}
-	dt.Menu.Href = "/nodes/ollama"
-	dt.Menu.Title = "Ollama Nodes"
-	return c.Render(http.StatusOK, "node.ollama.tpl", dt)
+	if workflowid := c.Param("workflowid"); workflowid != "" {
+		dt := DisplayOllamaNode{
+			OllamaNode: types.NewOllamaNode(nil),
+			DisplayType: "new",
+			Enabled: types.Toggle{
+				NamePrefix: "ollamanode_",
+				IdPrefix: "ollamanode_",
+				Suffix: "enabled",
+				Title: "Enabled",
+			},
+			Bypass: types.Toggle{
+				NamePrefix: "ollamanode_",
+				IdPrefix: "ollamanode_",
+				Suffix: "bypass",
+				Title: "Bypass",
+			},
+		}
+		dt.Enabled.Value = dt.OllamaNode.Enabled
+		dt.Bypass.Value = dt.OllamaNode.Bypass
+		sp := types.SystemPrompt{}
+		sps, err := sp.List(c)
+		if err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		pt := types.PromptTemplate{}
+		pts, err := pt.List(c)
+		if err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		dt.SystemPrompts = sps
+		dt.PromptTemplates = pts
+		dt.OllamaNode.WorkflowID = types.WorkflowID(workflowid)
+		dt.Menu.Href = "/nodes/ollama"
+		dt.Menu.Title = "Ollama Nodes"
+		return c.Render(http.StatusOK, "node.ollama.tpl", dt)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 }
 
 func HandleOllamaEdit(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleOllamaEdit called")
+	}
 	dt := DisplayOllamaNode{
 		DisplayType: "edit",
+		Enabled: types.Toggle{
+			NamePrefix: "ollamanode_",
+			IdPrefix: "ollamanode_",
+			Suffix: "enabled",
+			Title: "Enabled",
+		},
+		Bypass: types.Toggle{
+			NamePrefix: "ollamanode_",
+			IdPrefix: "ollamanode_",
+			Suffix: "bypass",
+			Title: "Bypass",
+		},
 	}
+	sp := types.SystemPrompt{}
+	sps, err := sp.List(c)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	pt := types.PromptTemplate{}
+	pts, err := pt.List(c)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	dt.SystemPrompts = sps
+	dt.PromptTemplates = pts
 	dt.Menu.Href = "/nodes/ollama"
 	dt.Menu.Title = "Ollama Nodes"
 	if id := c.Param("id"); id != "" {
 		cn := types.NewOllamaNode(&id)
-		if err := cn.Get(ctx); err != nil {
+		if err := cn.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		dt.OllamaNode = cn
+		dt.Enabled.Value = cn.Enabled
+		dt.Bypass.Value = cn.Bypass
 	}
 	return c.Render(http.StatusOK, "node.ollama.tpl", dt)
 }
 
 func HandleOllamaSave(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleOllamaSave called")
+	}
 	dt := DisplayOllamaNode{
 		DisplayType: "edit",
 	}
 	dt.Menu.Href = "/nodes/ollama"
 	dt.Menu.Title = "Ollama Nodes"
+	var cn types.OllamaNode
 	if id := c.Param("id"); id != "" {
-		cn := types.NewOllamaNode(&id)
-		if err := cn.Get(ctx); err != nil {
+		cn = types.NewOllamaNode(&id)
+		if err := cn.Get(c); err != nil {
 			if !strings.Contains(err.Error(), "not found") {
 				return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 			}
 		}
-		if err := c.Bind(&cn); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleOllamaSave"}.Wrap(err))
-		}
-		if err := cn.Set(ctx); err != nil {
+	} else {
+		cn = types.NewOllamaNode(nil)
+	}
+	if err := c.Bind(&cn); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleOllamaSave"}.Wrap(err))
+	}
+	if err := cn.Set(c); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if !cn.WorkflowID.IsNil() {
+		wfid := cn.WorkflowID.String()
+		wf := types.NewWorkflow(&wfid)
+		if err := wf.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		dt.OllamaNode = cn
-		return c.Render(http.StatusCreated, "node.ollama.tpl", dt)
+		if wf.OllamaNodesArrayModel == nil {
+			wf.OllamaNodesArrayModel = make([]types.OllamaNode, 0)
+		}
+		wf.OllamaNodesArrayModel = append(wf.OllamaNodesArrayModel, cn)
+		if err := wf.Set(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		fmt.Printf("handlers:node:handleOllamaSave: wfid: %s\n workflow ollamanodes: %#v", wf.ID, wf.OllamaNodesArrayModel)
+	} else {
+		fmt.Printf("ollamanode workflow id is nil")
 	}
-	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+	dt.OllamaNode = cn
+	return HandleWorkflowList(c)
 }
 
 func HandleOllamaDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleOllamaDelete called")
+	}
 	dt := DisplayOllamaNode{
 		DisplayType: "list",
 	}
@@ -178,7 +311,7 @@ func HandleOllamaDelete(c echo.Context) error {
 	dt.Menu.Title = "Ollama Nodes"
 	if id := c.Param("id"); id != "" {
 		cn := types.NewOllamaNode(&id)
-		if err := cn.Delete(ctx); err != nil {
+		if err := cn.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleOllamaList(c)
@@ -187,14 +320,16 @@ func HandleOllamaDelete(c echo.Context) error {
 }
 
 func HandleOllamaList(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleOllamaList called")
+	}
 	dt := DisplayOllamaNode{
 		DisplayType: "list",
 	}
 	dt.Menu.Href = "/nodes/ollama"
 	dt.Menu.Title = "Ollama Nodes"
 	cn := types.NewOllamaNode(nil)
-	list, err := cn.List(ctx)
+	list, err := cn.List(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -203,17 +338,38 @@ func HandleOllamaList(c echo.Context) error {
 }
 
 func HandleSSHNew(c echo.Context) error {
-	dt := DisplaySSHNode{
-		SSHNode: types.NewSSHNode(nil),
-		DisplayType: "new",
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleSSHNew called")
 	}
-	dt.Menu.Href = "/nodes/ssh"
-	dt.Menu.Title = "SSH Nodes"
-	return c.Render(http.StatusOK, "node.ssh.tpl", dt)
+	if workflowid := c.Param("workflowid"); workflowid != "" {
+		dt := DisplaySSHNode{
+			SSHNode: types.NewSSHNode(nil),
+			DisplayType: "new",
+			Enabled: types.Toggle{
+				NamePrefix: "sshnode_",
+				IdPrefix: "sshnode_",
+				Suffix: "enabled",
+				Title: "Enabled",
+			},
+			Bypass: types.Toggle{
+				NamePrefix: "sshnode_",
+				IdPrefix: "sshnode_",
+				Suffix: "bypass",
+				Title: "Bypass",
+			},
+		}
+		dt.SSHNode.WorkflowID = types.WorkflowID(workflowid)
+		dt.Menu.Href = "/nodes/ssh"
+		dt.Menu.Title = "SSH Nodes"
+		return c.Render(http.StatusOK, "node.ssh.tpl", dt)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 }
 
 func HandleSSHEdit(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleSSHEdit called")
+	}
 	dt := DisplaySSHNode{
 		DisplayType: "edit",
 	}
@@ -221,7 +377,7 @@ func HandleSSHEdit(c echo.Context) error {
 	dt.Menu.Title = "SSH Nodes"
 	if id := c.Param("id"); id != "" {
 		cn := types.NewSSHNode(&id)
-		if err := cn.Get(ctx); err != nil {
+		if err := cn.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		dt.SSHNode = cn
@@ -230,33 +386,53 @@ func HandleSSHEdit(c echo.Context) error {
 }
 
 func HandleSSHSave(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleSSHSave called")
+	}
 	dt := DisplaySSHNode{
 		DisplayType: "edit",
 	}
 	dt.Menu.Href = "/nodes/ssh"
 	dt.Menu.Title = "SSH Nodes"
+	var cn types.SSHNode
 	if id := c.Param("id"); id != "" {
-		cn := types.NewSSHNode(&id)
-		if err := cn.Get(ctx); err != nil {
+		cn = types.NewSSHNode(&id)
+		if err := cn.Get(c); err != nil {
 			if !strings.Contains(err.Error(), "not found") {
 				return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 			}
 		}
-		if err := c.Bind(&cn); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
-		}
-		if err := cn.Set(ctx); err != nil {
+	} else {
+		cn = types.NewSSHNode(nil)
+	}
+	if err := c.Bind(&cn); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
+	}
+	if err := cn.Set(c); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if !cn.WorkflowID.IsNil() {
+		wfid := cn.WorkflowID.String()
+		wf := types.NewWorkflow(&wfid)
+		if err := wf.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		dt.SSHNode = cn
-		return c.Render(http.StatusCreated, "node.ssh.tpl", dt)
+		if wf.SSHNodesArrayModel == nil {
+			wf.SSHNodesArrayModel = make([]types.SSHNode, 0)
+		}
+		wf.SSHNodesArrayModel = append(wf.SSHNodesArrayModel, cn)
+		if err := wf.Set(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
 	}
-	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+	dt.SSHNode = cn
+	return c.Render(http.StatusCreated, "node.ssh.tpl", dt)
 }
 
 func HandleSSHDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleSSHDelete called")
+	}
 	dt := DisplaySSHNode{
 		DisplayType: "list",
 	}
@@ -264,7 +440,7 @@ func HandleSSHDelete(c echo.Context) error {
 	dt.Menu.Title = "SSH Nodes"
 	if id := c.Param("id"); id != "" {
 		cn := types.NewSSHNode(&id)
-		if err := cn.Delete(ctx); err != nil {
+		if err := cn.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleSSHList(c)
@@ -273,14 +449,16 @@ func HandleSSHDelete(c echo.Context) error {
 }
 
 func HandleSSHList(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleSSHList called")
+	}
 	dt := DisplaySSHNode{
 		DisplayType: "list",
 	}
 	dt.Menu.Href = "/nodes/ssh"
 	dt.Menu.Title = "SSH Nodes"
 	cn := types.NewSSHNode(nil)
-	list, err := cn.List(ctx)
+	list, err := cn.List(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}

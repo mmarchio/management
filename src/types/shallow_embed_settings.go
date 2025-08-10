@@ -1,9 +1,9 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -29,10 +29,10 @@ func (c ShallowSettings) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowSettings) Expand(ctx context.Context) (*Settings, error) {
+func (c ShallowSettings) Expand(e echo.Context) (*Settings, error) {
 	r := Settings{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -46,21 +46,21 @@ func (c ShallowSettings) Expand(ctx context.Context) (*Settings, error) {
 	r.Name = c.Name
 	st := ShallowTemplate{}
 	st.ShallowModel.ID = c.TemplateModel
-	template, err := st.Expand(ctx)
+	template, err := st.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	r.TemplateModel = *template
 	sgp := ShallowSteps{}
 	sgp.ShallowModel.ID = c.GlobalBypassModel
-	globalbypass, err := sgp.Expand(ctx)
+	globalbypass, err := sgp.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	r.GlobalBypassModel = *globalbypass
 	stg := ShallowToggle{}
 	stg.ShallowModel.ID = c.RecurringModel
-	recurring, err := stg.Expand(ctx)
+	recurring, err := stg.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
@@ -70,12 +70,12 @@ func (c ShallowSettings) Expand(ctx context.Context) (*Settings, error) {
 	return &r, nil
 }
 
-func (c ShallowSettings) Marshal(ctx context.Context) (string, error) {
+func (c ShallowSettings) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
 
-func (c *ShallowSettings) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowSettings) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 

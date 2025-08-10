@@ -1,12 +1,4 @@
 {{define "form.settings"}}
-<table>
-{{range $k, $v := .Debug.settings_model.template_model}}
-    {{if eq $k "AvailableDispositionsArrayModel"}}
-        {{range $i, $vv := $v}}
-            <tr><td>$i</td></tr>
-        {{end}}
-    {{end}}
-{{end}}
 </table>
     <ul>
         {{if .}}

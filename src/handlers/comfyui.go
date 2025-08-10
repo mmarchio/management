@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
@@ -19,21 +19,28 @@ func RegisterComfyUITemplatesRoutes(e *echo.Echo) {
 	g.GET("/delete/:id", HandleComfyUITemplatesDelete)
 }
 
-func HandleAPIGetComfyUITemplate(c echo.Context) error {
-	ctx := GetEchoCtx(c)
-	if id := c.Param("id"); id != "" {
-		entity := types.NewComfyUITemplate(&id)
-		if err := entity.Get(ctx); err != nil {
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
-		return c.JSON(http.StatusOK, entity)
+func HandleAPIGetComfyUITemplate(e echo.Context) error {
+	var cc logger.LoggingContext
+	var ok bool 
+	if cc, ok = e.(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIGetComfyUITemplate called")
 	}
-	return c.JSON(http.StatusBadRequest, "missing id")
+	if id := e.Param("id"); id != "" {
+		entity := types.NewComfyUITemplate(&id)
+		if err := entity.Get(e); err != nil {
+			return e.JSON(http.StatusInternalServerError, err.Error())
+		}
+		return e.JSON(http.StatusOK, entity)
+	}
+	return e.JSON(http.StatusBadRequest, "missing id")
 }
 
 func HandleAPISetComfyUITemplate(c echo.Context) error {
+	var e echo.Context
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPISetComfyUITemplate called")
+	}
 	var err error
-	ctx := GetEchoCtx(c)
 	entity := types.NewComfyUITemplate(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -42,16 +49,19 @@ func HandleAPISetComfyUITemplate(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if err = entity.Set(ctx); err != nil {
+	if err = entity.Set(e); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, entity)
 }
 
 func HandleAPIListComfyUITemplate(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	var e echo.Context
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIListComfyUITemplate called")
+	}
 	prompt := types.NewComfyUITemplate(nil)
-	prompts, err := prompt.List(ctx)
+	prompts, err := prompt.List(e)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -59,6 +69,9 @@ func HandleAPIListComfyUITemplate(c echo.Context) error {
 }
 
 func HandleComfyUITemplates(c echo.Context) error {
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyUITemplates called")
+	}
 	dt := DisplayComfyUITemplate{
 		ComfyUITemplate: types.ComfyUITemplate{},
 		DisplayType: "new",
@@ -71,6 +84,9 @@ func HandleComfyUITemplates(c echo.Context) error {
 }
 
 func HandleComfyUITemplatesNew(c echo.Context) error {
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyUITemplatesNew called")
+	}
 	dt := DisplayComfyUITemplate{
 		ComfyUITemplate: types.ComfyUITemplate{},
 		DisplayType: "new",
@@ -84,7 +100,10 @@ func HandleComfyUITemplatesNew(c echo.Context) error {
 
 func HandleComfyUITemplateSave(c echo.Context) error {
 	var err error
-	ctx := database.GetDatabaseCtx()
+	var e echo.Context
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyUITemplateSave called")
+	}
 	entity := types.NewComfyUITemplate(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfyUITemplateSave"}.Wrap(err))
@@ -93,7 +112,7 @@ func HandleComfyUITemplateSave(c echo.Context) error {
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
-	if err = entity.Set(ctx); err != nil {
+	if err = entity.Set(e); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
 
@@ -110,9 +129,12 @@ func HandleComfyUITemplateSave(c echo.Context) error {
 
 func HandleComfyUITemplateList(c echo.Context) error {
 	var err error
-	ctx := GetEchoCtx(c)
+	var e echo.Context
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyUITemplateList called")
+	}
 	entity := types.NewComfyUITemplate(nil)
-	entities, err := entity.List(ctx)
+	entities, err := entity.List(e)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -130,10 +152,13 @@ func HandleComfyUITemplateList(c echo.Context) error {
 }
 
 func HandleComfyUITemplatesGet(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	var e echo.Context
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyUITemplatesGet called")
+	}
 	if cutid := c.Param("id"); cutid != "" {
 		entity := types.NewComfyUITemplate(&cutid)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(e); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		dt := DisplayComfyUITemplate{
@@ -150,10 +175,13 @@ func HandleComfyUITemplatesGet(c echo.Context) error {
 }
 
 func HandleComfyUITemplatesDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	var e echo.Context
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleComfyUITemplatesDelete called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewComfyUITemplate(&id)
-		if err := entity.Delete(ctx); err != nil {
+		if err := entity.Delete(e); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleComfyUITemplateList(c)

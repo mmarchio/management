@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -57,9 +57,9 @@ func (c *ComfyUITemplate) New() {
 	c.Model.UpdatedAt = c.Model.CreatedAt
 }
 
-func (c ComfyUITemplate) List(ctx context.Context) ([]ComfyUITemplate, error) {
+func (c ComfyUITemplate) List(e echo.Context) ([]ComfyUITemplate, error) {
 	content := NewComfyUIModelContent()
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -75,9 +75,9 @@ func (c ComfyUITemplate) List(ctx context.Context) ([]ComfyUITemplate, error) {
 	return cuts, nil
 }
 
-func (c ComfyUITemplate) ListBy(ctx context.Context, key string, value interface{}) ([]ComfyUITemplate, error) {
+func (c ComfyUITemplate) ListBy(e echo.Context, key string, value interface{}) ([]ComfyUITemplate, error) {
 	content := NewComfyUIModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -93,11 +93,11 @@ func (c ComfyUITemplate) ListBy(ctx context.Context, key string, value interface
 	return cuts, nil
 }
 
-func (c *ComfyUITemplate) Get(ctx context.Context) error {
+func (c *ComfyUITemplate) Get(e echo.Context) error {
 	content := NewComfyUITypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "comfyuitemplate"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -108,21 +108,21 @@ func (c *ComfyUITemplate) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c ComfyUITemplate) Set(ctx context.Context) error {
+func (c ComfyUITemplate) Set(e echo.Context) error {
 	content := NewComfyUITypeContent()
 	content.FromType(c)
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c ComfyUITemplate) Delete(ctx context.Context) error {
+func (c ComfyUITemplate) Delete(e echo.Context) error {
 	content := NewComfyUITypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil

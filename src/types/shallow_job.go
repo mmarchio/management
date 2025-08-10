@@ -1,12 +1,12 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -59,10 +59,10 @@ func (c ShallowJob) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowJob) Expand(ctx context.Context) (*Job, error) {
+func (c ShallowJob) Expand(e echo.Context) (*Job, error) {
 	r := Job{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -92,10 +92,10 @@ func (c *ShallowJob) New() {
 	c.ShallowModel.Conflict = "DO NOTHING"
 }
 
-func (c ShallowJob) List(ctx context.Context) ([]ShallowJob, error) {
+func (c ShallowJob) List(e echo.Context) ([]ShallowJob, error) {
 	content := NewJobModelContent()
 	content.Model.ContentType = "job"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
@@ -111,9 +111,9 @@ func (c ShallowJob) List(ctx context.Context) ([]ShallowJob, error) {
 	return cuts, nil
 }
 
-func (c ShallowJob) ListBy(ctx context.Context, key string, value interface{}) ([]ShallowJob, error) {
+func (c ShallowJob) ListBy(e echo.Context, key string, value interface{}) ([]ShallowJob, error) {
 	content := NewShallowJobModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
@@ -129,13 +129,13 @@ func (c ShallowJob) ListBy(ctx context.Context, key string, value interface{}) (
 	return cuts, nil
 }
 
-func (c *ShallowJob) Get(ctx context.Context) error {
+func (c *ShallowJob) Get(e echo.Context) error {
 	var err error
 	content := NewShallowJobTypeContent()
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ID = content.ShallowModel.ID
 	content.ShallowModel.ContentType = "job"
-	content, err = content.Get(ctx)
+	content, err = content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -145,12 +145,12 @@ func (c *ShallowJob) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c *ShallowJob) FindBy(ctx context.Context, key, value string) (ShallowJob, error) {
+func (c *ShallowJob) FindBy(e echo.Context, key, value string) (ShallowJob, error) {
 	var err error
 	job := ShallowJob{}
 	content := NewShallowJobTypeContent()
 	content.ShallowModel.ID = c.ShallowModel.ID
-	content, err = content.FindBy(ctx, key, value) 
+	content, err = content.FindBy(e, key, value) 
 	if err != nil {
 		return job, merrors.ContentFindByError{Info: fmt.Sprintf("key: %s, value: %s", key, value)}.Wrap(err)
 	}
@@ -164,23 +164,23 @@ func (c *ShallowJob) FindBy(ctx context.Context, key, value string) (ShallowJob,
 	return job, nil
 }
 
-func (c ShallowJob) Set(ctx context.Context) error {
+func (c ShallowJob) Set(e echo.Context) error {
 	content := NewShallowJobTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c ShallowJob) Delete(ctx context.Context) error {
+func (c ShallowJob) Delete(e echo.Context) error {
 	content := NewJobTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ShallowModel.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil

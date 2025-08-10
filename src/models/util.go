@@ -1,6 +1,11 @@
 package models
 
-import "regexp"
+import (
+	"context"
+	"regexp"
+
+	"github.com/mmarchio/management/logger"
+)
 
 func HydrateShallowJson(object string, manifest map[string]string) (string, error) {
 	var err error
@@ -35,3 +40,11 @@ func replaceUUID(input, match, replace string) (string, error) {
     result := re.ReplaceAllString(input, `"`+replace+`"`)
     return result, nil
 }
+
+func GetLogger(ctx context.Context) logger.LoggerFuncT {
+	if fn, ok := ctx.Value(logger.LoggerKey).(logger.LoggerFuncT); ok {
+		return fn
+	}
+	return nil
+}
+

@@ -1,12 +1,12 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -160,11 +160,11 @@ func (c *ComfyNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *ComfyNode) Get(ctx context.Context) error {
+func (c *ComfyNode) Get(e echo.Context) error {
 	content := NewComfyNodeTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "comfynode"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -175,11 +175,11 @@ func (c *ComfyNode) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c *ComfyNode) GetShallow(ctx context.Context) error {
+func (c *ComfyNode) GetShallow(e echo.Context) error {
 	content := NewComfyNodeTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "comfynode"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -196,12 +196,12 @@ func NewComfyNodeTypeContent() Content {
 	return c
 }
 
-func (c ComfyNode) Delete(ctx context.Context) error {
+func (c ComfyNode) Delete(e echo.Context) error {
 	content := NewSSHNodeTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "comfynode", Function: "delete"}.Wrap(err)
 	}
 	return nil
@@ -233,7 +233,7 @@ func NewComfyNode(id *string) ComfyNode {
 	return c
 }
 
-func (c ComfyNode) Set(ctx context.Context) error {
+func (c ComfyNode) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
@@ -242,17 +242,17 @@ func (c ComfyNode) Set(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	content.ID = c.Model.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c ComfyNode) List(ctx context.Context) ([]ComfyNode, error) {
+func (c ComfyNode) List(e echo.Context) ([]ComfyNode, error) {
 	content := NewComfyModelContent(nil)
 	content.Model.ContentType = "comfynode"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -261,7 +261,26 @@ func (c ComfyNode) List(ctx context.Context) ([]ComfyNode, error) {
 		cut := ComfyNode{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Job", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ComfyNode", Function: "List"}.Wrap(err)
+		}
+		cuts = append(cuts, cut)
+	}
+	return cuts, nil
+}
+
+func (c ComfyNode) ListBy(e echo.Context, key string, value interface{}) ([]ComfyNode, error) {
+	content := NewComfyModelContent(nil)
+	content.Model.ContentType = "comfynode"
+	list, err := content.ListBy(e, key, value)
+	if err != nil {
+		return nil, merrors.ContentListByError{Info: fmt.Sprintf("{\"%s\":\"%s\"}", key, value), Package: "types", Struct: "ComfyNode", Function: "ListBy"}.Wrap(err)
+	}
+	cuts := make([]ComfyNode, 0)
+	for _, model := range list {
+		cut := ComfyNode{}
+		err = json.Unmarshal([]byte(model.Content), &cut)
+		if err != nil {
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ComfyNode", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -135,10 +134,10 @@ func (c *Node) New(id *string) {
 	c.Model.UpdatedAt = c.Model.CreatedAt
 }
 
-func (c Node) List(ctx context.Context) ([]Node, error) {
+func (c Node) List(e echo.Context) ([]Node, error) {
 	content := NewNodeModelContent()
 	content.Model.ContentType = "node"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -156,9 +155,9 @@ func (c Node) List(ctx context.Context) ([]Node, error) {
 	return cuts, nil
 }
 
-func (c Node) ListBy(ctx context.Context, key string, value interface{}) ([]Node, error) {
+func (c Node) ListBy(e echo.Context, key string, value interface{}) ([]Node, error) {
 	content := NewNodeModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -176,11 +175,11 @@ func (c Node) ListBy(ctx context.Context, key string, value interface{}) ([]Node
 	return cuts, nil
 }
 
-func (c *Node) Get(ctx context.Context) error {
+func (c *Node) Get(e echo.Context) error {
 	content := NewNodeTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "node"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -195,7 +194,7 @@ func (c *Node) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c Node) Set(ctx context.Context) error {
+func (c Node) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
@@ -204,19 +203,19 @@ func (c Node) Set(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.ID.String()
 	content.ID = c.ID.String()
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c Node) Delete(ctx context.Context) error {
+func (c Node) Delete(e echo.Context) error {
 	content := NewNodeTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID.String()
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
@@ -253,8 +252,8 @@ func (c Node) Bind(e echo.Context) (Node, error) {
 	return c, err
 }
 
-func (c Node) Next(e echo.Context, ctx context.Context) (*models.Context, error) {
-	systemContext, err := models.Context{}.GetCtx(ctx)
+func (c Node) Next(e echo.Context) (*models.Context, error) {
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
 		return nil, merrors.ContextGetError{Package: "types", Struct: "Node", Function: "Next"}.Wrap(err)
 	}

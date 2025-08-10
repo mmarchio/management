@@ -1,6 +1,8 @@
 package types
 
-import "context"
+import (
+	"github.com/labstack/echo/v4"
+)
 
 type ShallowOllamaResponse struct {
 	ShallowModel
@@ -14,7 +16,7 @@ func (c ShallowOllamaResponse) GetResponse() string {
 	return c.Response
 }
 
-func (c ShallowOllamaResponse) Expand(ctx context.Context) (*OllamaResponse, error) {
+func (c ShallowOllamaResponse) Expand(e echo.Context) (*OllamaResponse, error) {
 	r := OllamaResponse{}
 	r.Model = c.Model
 	r.CreatedAt = c.CreatedAt

@@ -1,12 +1,12 @@
 package models
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -56,9 +56,9 @@ func NewShallowOllamaNode(id *string) ShallowOllamaNode {
 	return c
 }
 
-func (c ShallowOllamaNode) Get(ctx context.Context, mode string) (*OllamaNode, *ShallowOllamaNode, error) {
+func (c ShallowOllamaNode) Get(e echo.Context, mode string) (*OllamaNode, *ShallowOllamaNode, error) {
 	content := Content{ID: c.Model.ID}
-	if err := content.Get(ctx); err != nil {
+	if err := content.Get(e); err != nil {
 		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
@@ -79,7 +79,7 @@ func (c ShallowOllamaNode) Get(ctx context.Context, mode string) (*OllamaNode, *
 		m.SystemPrompt = c.SystemPrompt
 		m.Prompt = c.Prompt
 		m.PromptTemplate = c.PromptTemplate
-		ollamaresponseptr, _, err := NewShallowOllamaResponse(&c.Response).Get(ctx, "full")
+		ollamaresponseptr, _, err := NewShallowOllamaResponse(&c.Response).Get(e, "full")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -90,7 +90,7 @@ func (c ShallowOllamaNode) Get(ctx context.Context, mode string) (*OllamaNode, *
 		m.Enabled = c.Enabled
 		m.Bypass = c.Bypass
 		m.Output = c.Output
-		contextptr, _, err := NewShallowContext(&c.Context).Get(ctx, "full")
+		contextptr, _, err := NewShallowContext(&c.Context).Get(e, "full")
 		if err != nil {
 			return nil, nil, err
 		}

@@ -6,7 +6,9 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/models"
 )
 
@@ -73,8 +75,8 @@ func NewContext(prompt Prompt, jobRunID RunID, disposition Disposition) Context 
 	return c
 }
 
-func (c *Context) GetCtx(ctx context.Context) error {
-	systemContext, err := models.Context{}.GetCtx(ctx)
+func (c *Context) GetCtx(e echo.Context) error {
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
 		return merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
 	}
@@ -82,12 +84,18 @@ func (c *Context) GetCtx(ctx context.Context) error {
 	return nil
 }
 
-func (c Context) SetCtx(ctx context.Context) (context.Context, error) {
+func (c Context) SetCtx(e echo.Context) (context.Context, error) {
+	var ctx context.Context
+	var cc logger.LoggingContext
+	var ok bool 
+	if cc, ok = e.(logger.LoggingContext); ok {
+		ctx = cc.GetEchoCtx()
+	}
 	s, err := c.ToModel()
 	if err != nil {
 		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
 	}
-	ctx = s.SetCtx(ctx)
+	ctx = s.SetCtx(e)
 	return ctx, nil
 }
 
@@ -119,26 +127,25 @@ func (c *Context) FromModel(ptr *models.Context) error {
 	return nil
 }
 
-func (c *Context) Unmarshal(ctx context.Context, j string) error {
+func (c *Context) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c Context) Marshal(ctx context.Context) (string, error) {
+func (c Context) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
 
-func GetSystemPrompts() ([]SystemPrompt, error) {
-	ctx := context.Background()
+func GetSystemPrompts(e echo.Context) ([]SystemPrompt, error) {
 	systemPrompt := NewSystemPrompt(nil)
-	systemPrompts, err := systemPrompt.List(ctx)
+	systemPrompts, err := systemPrompt.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
 	}
 	return systemPrompts, nil
 }
 
-func (c Context) Truncate() (*TruncatedContext, error) {
+func (c Context) Truncate(e echo.Context) (*TruncatedContext, error) {
 	var err error
 	truncated := TruncatedContext{}
 	truncated.JobRunID = c.JobRunID.String()
@@ -235,7 +242,7 @@ func (c Context) Truncate() (*TruncatedContext, error) {
 	stats["publish_social_x"] = c.PublishSocialXModel
 	stats["publish_social_youtube"] = c.PublishSocialYoutubeModel
 	stats["publish_social_truth"] = c.PublishSocialTruthModel
-	sysPrompts, err := GetSystemPrompts()
+	sysPrompts, err := GetSystemPrompts(e)
 	if err != nil {
 		return nil, err
 	}

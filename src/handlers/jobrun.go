@@ -10,6 +10,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
+	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 	"golang.org/x/net/websocket"
 )
@@ -27,10 +28,12 @@ func RegisterJobRunRoutes(e *echo.Echo) {
 var wg sync.WaitGroup
 
 func HandleAPIGetJobRun(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIGetJobRun called")
+	}
 	if id := c.Param("id"); id != "" {
 		jobRun := types.NewJobRun(&id)
-		if err := jobRun.Get(ctx); err != nil {
+		if err := jobRun.Get(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, fmt.Sprintf("internal server error: %w", err))
 		}
 		return c.JSON(http.StatusOK, jobRun)
@@ -39,9 +42,11 @@ func HandleAPIGetJobRun(c echo.Context) error {
 }
 
 func HandleAPIListJobRun(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIListJobRun called")
+	}
 	jobRun := types.NewJobRun(nil)
-	jobRuns, err := jobRun.List(ctx)
+	jobRuns, err := jobRun.List(c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("internal server error: %w", err))
 	}
@@ -49,10 +54,12 @@ func HandleAPIListJobRun(c echo.Context) error {
 }
 
 func HandleAPIListJobRunBy(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIListJobRunBy called")
+	}
 	if id := c.Param("id"); id != "" {
 		jobRun := types.NewJobRun(nil)
-		jobruns, err := jobRun.ListBy(ctx, "job_id", id)
+		jobruns, err := jobRun.ListBy(c, "job_id", id)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, fmt.Sprintf("internal server error: %w", err))
 		}
@@ -62,18 +69,23 @@ func HandleAPIListJobRunBy(c echo.Context) error {
 }
 
 func HandleAPISaveJobRun(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPISaveJobRun called")
+	}
 	job := types.NewJobRun(nil)
 	if err := c.Bind(&job); err != nil {
 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJobRun"}.Wrap(err))
 	}
-	if err := job.Set(ctx); err != nil {
+	if err := job.Set(c); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, job)
 }
 
 func HandleJobRuns(c echo.Context) error {
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobRuns called")
+	}
 	dt := DisplayJobRun{
 		JobRun: types.JobRun{},
 		DisplayType: "none",
@@ -86,9 +98,11 @@ func HandleJobRuns(c echo.Context) error {
 }
 
 func HandleJobRunsList(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobRunsList called")
+	}
 	jobRun := types.NewJobRun(nil)
-	jobRuns, err := jobRun.List(ctx)
+	jobRuns, err := jobRun.List(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -105,10 +119,12 @@ func HandleJobRunsList(c echo.Context) error {
 }
 
 func HandleJobRunsDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobRunsDelete called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
-		if err := entity.Delete(ctx); err != nil {
+		if err := entity.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleJobRunsList(c)
@@ -117,10 +133,12 @@ func HandleJobRunsDelete(c echo.Context) error {
 }
 
 func HandleJobRunsContextGet(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobRunsContextGet called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		b, err := json.MarshalIndent(entity.TruncatedContextModel, "", "  ")
@@ -133,14 +151,16 @@ func HandleJobRunsContextGet(c echo.Context) error {
 }
 
 func HandleAPIJobRunsContextGet(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIJobRunsContextGet called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 		if entity.TruncatedContextModel.ID == "" {
-			tc, err := entity.ContextModel.Truncate()
+			tc, err := entity.ContextModel.Truncate(c)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, err.Error())
 			}
@@ -154,14 +174,16 @@ func HandleAPIJobRunsContextGet(c echo.Context) error {
 }
 
 func HandleAPIJobRunsContextSet(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPIJobRunsContextSet called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 		if entity.TruncatedContextModel.ID == "" {
-			tc, err := entity.ContextModel.Truncate()
+			tc, err := entity.ContextModel.Truncate(c)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, err.Error())
 			}
@@ -173,7 +195,7 @@ func HandleAPIJobRunsContextSet(c echo.Context) error {
 		if err := json.NewDecoder(c.Request().Body).Decode(&tc); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		if err := entity.Set(ctx); err != nil {
+		if err := entity.Set(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 		return c.JSON(http.StatusCreated, entity.ID)
@@ -182,13 +204,15 @@ func HandleAPIJobRunsContextSet(c echo.Context) error {
 }
 
 func HandleJobRunsContextSet(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobRunsContextSet called")
+	}
 	if id := c.Param("id"); id != "" {
 		jobRun := types.NewJobRun(&id)
-		if err := jobRun.Get(ctx); err != nil {
+		if err := jobRun.Get(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		Ctx, err := jobRun.ContextModel.Truncate()
+		Ctx, err := jobRun.ContextModel.Truncate(c)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
@@ -198,10 +222,12 @@ func HandleJobRunsContextSet(c echo.Context) error {
 }
 
 func HandleAPINextJobRun(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleAPINextJobRun called")
+	}
 	entity := types.NewJobRun(nil)
 	q := fmt.Sprintf("SELECT id, created_at, updated_at, content_type, content FROM content WHERE content_type = 'jobrun' AND content @> '{\"latest_status_type\":\"start\"}' AND content @> '{\"latest_status_value\":\"queued\"}' ORDER BY updated_at ASC LIMIT 1")
-	res, err := entity.CustomQuery(ctx, false, q)
+	res, err := entity.CustomQuery(c, false, q)
 	if err != nil {
 		if e, ok := err.(merrors.WrappedError); ok {
 			if e.GetCode() == merrors.ErrorCode(404) || len(res) == 0 {
@@ -214,15 +240,17 @@ func HandleAPINextJobRun(c echo.Context) error {
 }
 
 func HandleWorkflowRun(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleWorkflowRun called")
+	}
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		wfid := entity.WorkflowID.String()
 		wf := types.NewWorkflow(&wfid)
-		if err := wf.Get(ctx); err != nil {
+		if err := wf.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 	}
@@ -230,21 +258,23 @@ func HandleWorkflowRun(c echo.Context) error {
 }
 
 func HandleJobRunRun(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("HandleJobRunRun called")
+	}
 	if entityID := c.Param("id"); entityID != "" {
 		entity := types.NewJobRun(&entityID)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		jobid := entity.JobID.String()
 		job := types.NewJob(&jobid)
-		if err := job.Get(ctx); err != nil {
+		if err := job.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		wfid := job.WorkflowID.String()
 		wf := types.NewWorkflow(&wfid)
 		wf.ID = job.WorkflowID
-		if err := wf.Get(ctx); err != nil {
+		if err := wf.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		for k := range wf.NodeOrder {
@@ -255,7 +285,7 @@ func HandleJobRunRun(c echo.Context) error {
 				case "ollamanode":
 					onode := types.NewOllamaNode(nil)
 					onode.GetNodeFromWorkflow(parts[0], wf)
-					if err := onode.Exec(ctx); err != nil {
+					if err := onode.Exec(c); err != nil {
 						return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 					}
 				case "sshnode":
@@ -269,6 +299,9 @@ func HandleJobRunRun(c echo.Context) error {
 }
 
 func run(c echo.Context, resp types.OllamaResponse, Response chan types.OllamaResponse, Error chan error, sleep int, semaphore chan struct{}) {
+	if cc, ok := (c).(logger.LoggingContext); ok {
+		cc.Flogger("run called")
+	}
 	fmt.Printf("websocket worker starting\n")
 	defer wg.Done()
 	defer func() { <-semaphore }()

@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -49,10 +49,10 @@ func (c ShallowComfyUITemplate) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowComfyUITemplate) Expand(ctx context.Context) (*ComfyUITemplate, error) {
+func (c ShallowComfyUITemplate) Expand(e echo.Context) (*ComfyUITemplate, error) {
 	r := ComfyUITemplate{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -77,9 +77,9 @@ func (c *ShallowComfyUITemplate) New() {
 	c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 }
 
-func (c ShallowComfyUITemplate) List(ctx context.Context) ([]ShallowComfyUITemplate, error) {
+func (c ShallowComfyUITemplate) List(e echo.Context) ([]ShallowComfyUITemplate, error) {
 	content := NewShallowComfyUIModelContent()
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
@@ -95,9 +95,9 @@ func (c ShallowComfyUITemplate) List(ctx context.Context) ([]ShallowComfyUITempl
 	return cuts, nil
 }
 
-func (c ShallowComfyUITemplate) ListBy(ctx context.Context, key string, value interface{}) ([]ShallowComfyUITemplate, error) {
+func (c ShallowComfyUITemplate) ListBy(e echo.Context, key string, value interface{}) ([]ShallowComfyUITemplate, error) {
 	content := NewShallowComfyUIModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
@@ -113,11 +113,11 @@ func (c ShallowComfyUITemplate) ListBy(ctx context.Context, key string, value in
 	return cuts, nil
 }
 
-func (c *ShallowComfyUITemplate) Get(ctx context.Context) error {
+func (c *ShallowComfyUITemplate) Get(e echo.Context) error {
 	content := NewShallowComfyUITypeContent()
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ShallowModel.ContentType = "shallowcomfyuitemplate"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -128,21 +128,21 @@ func (c *ShallowComfyUITemplate) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c ShallowComfyUITemplate) Set(ctx context.Context) error {
+func (c ShallowComfyUITemplate) Set(e echo.Context) error {
 	content := NewShallowComfyUITypeContent()
 	content.FromType(c)
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c ShallowComfyUITemplate) Delete(ctx context.Context) error {
+func (c ShallowComfyUITemplate) Delete(e echo.Context) error {
 	content := NewShallowComfyUITypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil

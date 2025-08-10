@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -13,12 +12,12 @@ import (
 
 type Workflow struct {
 	Model
-	ID 						WorkflowID 		`form: "id" json:"id"`
-	Name 					string 			`form: "name" json:"name"`
-	ComfyNodesArrayModel 	[]ComfyNode 	`form: "comfy_nodes" json: "comfy_nodes_array_model"`
-	OllamaNodesArrayModel 	[]OllamaNode 	`form: "ollama_nodes" json: "ollama_nodes_array_model"`
-	SSHNodesArrayModel 		[]SSHNode 		`form: "ssh_nodes" json: "ssh_nodes_array_model"`
-	NodeOrder 				map[string]int 	`form: "node_order" "json: "node_order"`
+	ID 						WorkflowID 		`form:"id" json:"id"`
+	Name 					string 			`form:"name" json:"name"`
+	ComfyNodesArrayModel 	[]ComfyNode 	`form:"comfy_nodes" json: "comfy_nodes_array_model"`
+	OllamaNodesArrayModel 	[]OllamaNode 	`form:"ollama_nodes" json: "ollama_nodes_array_model"`
+	SSHNodesArrayModel 		[]SSHNode 		`form:"ssh_nodes" json: "ssh_nodes_array_model"`
+	NodeOrder 				map[string]int 	`form:"node_order" "json: "node_order"`
 }
 
 func (c Workflow) Pack() []shallowmodel {
@@ -74,8 +73,7 @@ func (c *Workflow) Validate() {
 		}
 	}
 	for _, node := range c.OllamaNodesArrayModel {
-		node.Validate()
-		if !node.Model.Validated {
+		if !node.ValidateV2() {
 			fmt.Printf("types.workflow.node[%s] failed validation\n", node.Model.ID)
 			valid = false
 		}
@@ -122,10 +120,10 @@ func (c *Workflow) New(id *string) {
 }
 
 
-func (c Workflow) List(ctx context.Context) ([]Workflow, error) {
+func (c Workflow) List(e echo.Context) ([]Workflow, error) {
 	content := NewWorkflowModelContent()
 	content.Model.ContentType = "workflow"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -140,9 +138,9 @@ func (c Workflow) List(ctx context.Context) ([]Workflow, error) {
 	return cuts, nil
 }
 
-func (c Workflow) ListBy(ctx context.Context, key string, value interface{}) ([]Workflow, error) {
+func (c Workflow) ListBy(e echo.Context, key string, value interface{}) ([]Workflow, error) {
 	content := NewWorkflowModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -158,13 +156,12 @@ func (c Workflow) ListBy(ctx context.Context, key string, value interface{}) ([]
 	return cuts, nil
 }
 
-func (c *Workflow) Get(ctx context.Context) error {
-	fmt.Printf("types:workflow:get model.id: %s id: %s\n", c.Model.ID, c.ID.String())
+func (c *Workflow) Get(e echo.Context) error {
 	content := NewWorkflowTypeContent()
 	content.Model.ID = c.Model.ID
 	content.ID = c.Model.ID
 	content.Model.ContentType = "workflow"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -174,7 +171,7 @@ func (c *Workflow) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c Workflow) Set(ctx context.Context) error {
+func (c Workflow) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "workflow", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
@@ -182,18 +179,18 @@ func (c Workflow) Set(ctx context.Context) error {
 	content := NewWorkflowTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ID.String()
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c Workflow) Delete(ctx context.Context) error {
+func (c Workflow) Delete(e echo.Context) error {
 	content := NewWorkflowTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
@@ -230,8 +227,8 @@ func (c Workflow) Bind(e echo.Context) (Workflow, error) {
 	return c, err
 }
 
-func (c Workflow) Next(e echo.Context, ctx context.Context) (*models.Context, error) {
-	systemContext, err := models.Context{}.GetCtx(ctx)
+func (c Workflow) Next(e echo.Context) (*models.Context, error) {
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
 		return nil, merrors.ContextGetError{Package: "types", Struct: "Workflow", Function: "Next"}.Wrap(err)
 	}

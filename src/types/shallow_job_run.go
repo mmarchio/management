@@ -1,11 +1,11 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -54,10 +54,10 @@ func (c ShallowJobRun) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowJobRun) Expand(ctx context.Context) (*JobRun, error) {
+func (c ShallowJobRun) Expand(e echo.Context) (*JobRun, error) {
 	r := JobRun{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -70,26 +70,26 @@ func (c ShallowJobRun) Expand(ctx context.Context) (*JobRun, error) {
 	r.ID = c.ID
 	r.JobID = c.JobID
 	r.WorkflowID = c.WorkflowID
-	context, err := r.Model.GetCtx(ctx)
+	context, err := r.Model.GetCtx(e)
 	if err != nil {
 		return nil, merrors.ContextGetError{}.Wrap(err)
 	}
 	r.ContextModel = *context
-	truncated, err := r.ContextModel.Truncate()
+	truncated, err := r.ContextModel.Truncate(e)
 	if err != nil {
 		return nil, merrors.ContextGetError{}.Wrap(err)
 	}
 	r.TruncatedContextModel = *truncated
 	ss := ShallowSettings{}
 	ss.ShallowModel.ID = c.SettingsModel
-	settings, err := ss.Expand(ctx)
+	settings, err := ss.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	r.SettingsModel = *settings
 	sd := ShallowDisposition{}
 	sd.ShallowModel.ID = c.DispositionModel
-	disposition, err := sd.Expand(ctx)
+	disposition, err := sd.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
@@ -112,10 +112,10 @@ func (c *ShallowJobRun) New(id *string) {
 	c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 }
 
-func (c ShallowJobRun) List(ctx context.Context) ([]ShallowJobRun, error) {
+func (c ShallowJobRun) List(e echo.Context) ([]ShallowJobRun, error) {
 	content := NewJobRunModelContent()
 	content.Model.ContentType = "jobrun"
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 	}
@@ -127,10 +127,10 @@ func (c ShallowJobRun) List(ctx context.Context) ([]ShallowJobRun, error) {
 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 		}
 		contextModel := Context{}
-		if err := contextModel.GetCtx(ctx); err != nil {
+		if err := contextModel.GetCtx(e); err != nil {
 			return nil, err
 		}
-		ctx, err = contextModel.SetCtx(ctx)
+		_, err = contextModel.SetCtx(e)
 		if err != nil {
 			return nil, err
 		}
@@ -139,9 +139,9 @@ func (c ShallowJobRun) List(ctx context.Context) ([]ShallowJobRun, error) {
 	return cuts, nil
 }
 
-func (c ShallowJobRun) ListBy(ctx context.Context, key string, value interface{}) ([]ShallowJobRun, error) {
+func (c ShallowJobRun) ListBy(e echo.Context, key string, value interface{}) ([]ShallowJobRun, error) {
 	content := NewShallowJobRunModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(err)
 	}
@@ -157,11 +157,11 @@ func (c ShallowJobRun) ListBy(ctx context.Context, key string, value interface{}
 	return cuts, nil
 }
 
-func (c *ShallowJobRun) Get(ctx context.Context) error {
+func (c *ShallowJobRun) Get(e echo.Context) error {
 	content := NewShallowJobRunTypeContent()
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ShallowModel.ContentType = "shallowjobrun"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -172,17 +172,17 @@ func (c *ShallowJobRun) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c *ShallowJobRun) FindBy(ctx context.Context) error {
+func (c *ShallowJobRun) FindBy(e echo.Context) error {
 	var err error
 	content := NewShallowJobRunTypeContent()
 	if !c.ID.IsNil() {
-		content, err = content.FindBy(ctx, "id", c.ID.String())
+		content, err = content.FindBy(e, "id", c.ID.String())
 	}
 	if !c.JobID.IsNil() {
-		content, err = content.FindBy(ctx, "job_id", c.JobID.String())
+		content, err = content.FindBy(e, "job_id", c.JobID.String())
 	}
 	if !c.WorkflowID.IsNil() {
-		content, err = content.FindBy(ctx, "workflow_id", c.WorkflowID.String())
+		content, err = content.FindBy(e, "workflow_id", c.WorkflowID.String())
 	}
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
@@ -194,20 +194,20 @@ func (c *ShallowJobRun) FindBy(ctx context.Context) error {
 	return nil
 }
 
-func (c *ShallowJobRun) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]ShallowJobRun, error) {
+func (c *ShallowJobRun) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]ShallowJobRun, error) {
 	content := NewShallowJobRunTypeContent()
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ShallowModel.ContentType = "jobrun"
 	content.ID = content.ShallowModel.ID
 	if write {
 		content.FromType(c)
-		_, err := content.CustomQuery(ctx, write, q, vars)
+		_, err := content.CustomQuery(e, write, q, vars)
 		if err != nil {
 			return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID}.Wrap(err)
 		}
 		return nil, nil
 	}
-	res, err := content.CustomQuery(ctx, write, q, vars)
+	res, err := content.CustomQuery(e, write, q, vars)
 	if err != nil {
 		if err != nil {
 			return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID}.Wrap(err).BubbleCode()
@@ -224,23 +224,23 @@ func (c *ShallowJobRun) CustomQuery(ctx context.Context, write bool, q string, v
 	return r, nil
 }
 
-func (c ShallowJobRun) Set(ctx context.Context) error {
+func (c ShallowJobRun) Set(e echo.Context) error {
 	content := NewShallowJobRunTypeContent()
 	content.FromType(c)
 	content.ContentType = "shallowjobrun"
 	content.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c ShallowJobRun) Delete(ctx context.Context) error {
+func (c ShallowJobRun) Delete(e echo.Context) error {
 	content := NewShallowJobRunTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil

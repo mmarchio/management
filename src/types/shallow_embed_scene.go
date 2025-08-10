@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -30,10 +30,10 @@ func (c ShallowScene) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowScene) Expand(ctx context.Context) (*Scene, error) {
+func (c ShallowScene) Expand(e echo.Context) (*Scene, error) {
 	r := Scene{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -52,7 +52,7 @@ func (c ShallowScene) Expand(ctx context.Context) (*Scene, error) {
 	for _, id := range c.FilesArrayModel {
 		sf := ShallowFile{}
 		sf.ShallowModel.ID = id
-		f, err := sf.Expand(ctx)
+		f, err := sf.Expand(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -60,7 +60,7 @@ func (c ShallowScene) Expand(ctx context.Context) (*Scene, error) {
 	}
 	sf := ShallowFile{}
 	sf.ShallowModel.ID = c.SceneFileModel
-	f, err := sf.Expand(ctx)
+	f, err := sf.Expand(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
@@ -68,11 +68,11 @@ func (c ShallowScene) Expand(ctx context.Context) (*Scene, error) {
 	return &r, nil	
 }
 
-func (c *ShallowScene) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowScene) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowScene) Marshal(ctx context.Context) (string, error) {
+func (c ShallowScene) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }

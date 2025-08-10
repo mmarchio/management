@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -44,9 +44,9 @@ func (c *JobStatus) New() {
 	c.Model.UpdatedAt = c.Model.CreatedAt
 }
 
-func (c JobStatus) List(ctx context.Context) ([]JobStatus, error) {
+func (c JobStatus) List(e echo.Context) ([]JobStatus, error) {
 	content := NewJobStatusModelContent()
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -62,9 +62,9 @@ func (c JobStatus) List(ctx context.Context) ([]JobStatus, error) {
 	return cuts, nil
 }
 
-func (c JobStatus) ListBy(ctx context.Context, key string, value interface{}) ([]JobStatus, error) {
+func (c JobStatus) ListBy(e echo.Context, key string, value interface{}) ([]JobStatus, error) {
 	content := NewJobStatusModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListByError{Info: c.Model.ContentType}.Wrap(err)
 	}
@@ -80,11 +80,11 @@ func (c JobStatus) ListBy(ctx context.Context, key string, value interface{}) ([
 	return cuts, nil
 }
 
-func (c *JobStatus) Get(ctx context.Context) error {
+func (c *JobStatus) Get(e echo.Context) error {
 	content := NewJobStatusTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "jobstatus"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
@@ -95,11 +95,11 @@ func (c *JobStatus) Get(ctx context.Context) error {
 	return nil
 }
 
-func (c JobStatus) Delete(ctx context.Context) error {
+func (c JobStatus) Delete(e echo.Context) error {
 	content := NewJobStatusTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil

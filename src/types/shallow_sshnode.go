@@ -1,12 +1,12 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -35,10 +35,10 @@ func (c ShallowSSHNode) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowSSHNode) Expand(ctx context.Context) (*SSHNode, error) {
+func (c ShallowSSHNode) Expand(e echo.Context) (*SSHNode, error) {
 	r := SSHNode{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, err
 		}
@@ -158,11 +158,11 @@ func (c *ShallowSSHNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *ShallowSSHNode) Get(ctx context.Context) error {
+func (c *ShallowSSHNode) Get(e echo.Context) error {
 	content := NewSSHNodeTypeContent()
 	content.Model.ID = c.ShallowModel.ID
 	content.Model.ContentType = "sshnode"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -179,12 +179,12 @@ func NewShallowSSHNodeTypeContent() Content {
 	return c
 }
 
-func (c ShallowSSHNode) Delete(ctx context.Context) error {
+func (c ShallowSSHNode) Delete(e echo.Context) error {
 	content := NewSSHNodeTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ShallowModel.ID
 	content.ID = c.ID
-	if err := content.Delete(ctx); err != nil {
+	if err := content.Delete(e); err != nil {
 		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err)
 	}
 	return nil
@@ -216,7 +216,7 @@ func NewShallowSSHNode(id *string) SSHNode {
 	return c
 }
 
-func (c ShallowSSHNode) Set(ctx context.Context) error {
+func (c ShallowSSHNode) Set(e echo.Context) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
@@ -225,7 +225,7 @@ func (c ShallowSSHNode) Set(ctx context.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.ShallowModel.ID
 	content.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	err := content.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}

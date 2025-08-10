@@ -1,11 +1,11 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -33,7 +33,7 @@ func (c ShallowStats) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowStats) Expand(ctx context.Context) (*Stats, error) {
+func (c ShallowStats) Expand(e echo.Context) (*Stats, error) {
 	r := Stats{}
 	r.EmbedModel.ID = c.ShallowModel.ID
 	r.EmbedModel.CreatedAt = c.ShallowModel.CreatedAt
@@ -50,7 +50,7 @@ func (c ShallowStats) Expand(ctx context.Context) (*Stats, error) {
 	for _, id := range c.FilesArrayModel {
 		sf := ShallowFile{}
 		sf.ShallowModel.ID = id
-		sc, err := sf.ShallowModel.Get(ctx)
+		sc, err := sf.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -64,11 +64,11 @@ func (c ShallowStats) Expand(ctx context.Context) (*Stats, error) {
 	return &r, nil
 }
 
-func (c *ShallowStats) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowStats) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowStats) Marshal(ctx context.Context) (string, error) {
+func (c ShallowStats) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }

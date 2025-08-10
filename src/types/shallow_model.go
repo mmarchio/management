@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -94,53 +94,53 @@ func (c ShallowModel) ToModel() models.Model {
 	return m
 }
 
-func (c ShallowModel) Get(ctx context.Context) (*ShallowContent, error) {
+func (c ShallowModel) Get(e echo.Context) (*ShallowContent, error) {
 	sc := ShallowContent{}
 	sc.ShallowModel = c
-	rc, err := sc.Get(ctx)
+	rc, err := sc.Get(e)
 	if err != nil {
 		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	return &rc, nil
 }
 
-func (c ShallowModel) Set(ctx context.Context, content ShallowContent) error {
-	if err := content.Set(ctx); err != nil {
+func (c ShallowModel) Set(e echo.Context, content ShallowContent) error {
+	if err := content.Set(e); err != nil {
 		return merrors.ContentSetError{}.Wrap(err)
 	}
 	return nil
 }
 
-func (c ShallowModel) List(ctx context.Context) ([]ShallowContent, error) {
+func (c ShallowModel) List(e echo.Context) ([]ShallowContent, error) {
 	sc := ShallowContent{}
-	list, err := sc.List(ctx)
+	list, err := sc.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{}.Wrap(err)
 	}
 	return list, nil
 }
 
-func (c ShallowModel) ListBy(ctx context.Context, key, value interface{}) ([]*ShallowContent, error) {
+func (c ShallowModel) ListBy(e echo.Context, key, value interface{}) ([]*ShallowContent, error) {
 	sc := ShallowContent{}
-	list, err := sc.ListBy(ctx, key, value)
+	list, err := sc.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListByError{}.Wrap(err)
 	}
 	return list, nil
 }
 
-func (c ShallowModel) FindBy(ctx context.Context, key, value string) (*ShallowContent, error) {
+func (c ShallowModel) FindBy(e echo.Context, key, value string) (*ShallowContent, error) {
 	sc := ShallowContent{}
-	rc, err := sc.FindBy(ctx, key, value)
+	rc, err := sc.FindBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentFindByError{}.Wrap(err)
 	}
 	return &rc, nil
 }
 
-func (c ShallowModel) CustomQuery(ctx context.Context, write bool, q string, vars []interface{}) ([]ShallowContent, error) {
+func (c ShallowModel) CustomQuery(e echo.Context, write bool, q string, vars []interface{}) ([]ShallowContent, error) {
 	sc := ShallowContent{}
-	list, err := sc.CustomQuery(ctx, write, q, vars...)
+	list, err := sc.CustomQuery(e, write, q, vars...)
 	if err != nil {
 		return nil, merrors.ContentCustomQueryError{}.Wrap(err)
 	}

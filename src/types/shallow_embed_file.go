@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -29,10 +29,10 @@ func (c ShallowFile) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowFile) Expand(ctx context.Context) (*File, error) {
+func (c ShallowFile) Expand(e echo.Context) (*File, error) {
 	r := File{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -51,11 +51,11 @@ func (c ShallowFile) Expand(ctx context.Context) (*File, error) {
 	return &r, nil
 }
 
-func (c *ShallowFile) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowFile) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowFile) Marshal(ctx context.Context) (string, error) {
+func (c ShallowFile) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }

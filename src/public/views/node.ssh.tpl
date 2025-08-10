@@ -1,12 +1,11 @@
 {{define "form.sshnode"}}
                <ul>
-                    <li><input type="text" name="name" id="name" value="" placeholder="name"></li>
-                    <li><textarea name="prompt" id="prompt" placeholder="prompt"></textarea></li>
-                    <li><textarea name="api_base" id="api_base" placeholder="api base"></textarea></li>
-                    <li><textarea name="api_template" id="api_template" placeholder="api template"></textarea></li>
-                    <li><textarea name="template_values" id="template_values" placeholder="template values"></textarea></li>
-                    <li>{{template "element.toggle" .}}</li>
-                    <li>{{template "element.toggle" .}}</li>
+                    <li><input type="text" name="name" id="name" value="{{if .Name}}{{.Name}}{{end}}" placeholder="name"></li>
+                    <li><input type="text" name="command" id="command" placeholder="prompt" value="{{if .Command}}{{.Command}}{{end}}"></li>
+                    <li><input type="text" name="user" id="user" placeholder="user" value="{{if .User}}{{.User}}{{end}}"></li>
+                    <li><input type="text" name="host" id="host" placeholder="host" value="{{if .Host}}{{.Host}}{{else}}172.17.0.1{{end}}"></li>
+                    <li>{{template "element.toggle" .Enabled}}</li>
+                    <li>{{template "element.toggle" .Bypass}}</li>
                     <li><textarea name="output" id="output" value="" placeholder="output"></textarea></li>
                 </ul>
  {{end}}
@@ -22,7 +21,7 @@
             {{end}}
             {{if eq .DisplayType "new"}}
             <form action="/node/ssh/save" method="post">
-            {{template "form.sshnode .}}
+            {{template "form.sshnode" .}}
             </form>
             {{end}}
             {{if eq .DisplayType "edit"}}
@@ -35,10 +34,3 @@
         {{end}}
     </body>
 </html>
-
-	ID 				string 					`json:"id"`
-	WorkflowID  	string 					`form:"workflow_id" json:"workflow_id"`
-	Type 			string 					`form:"type" json:"type"`
-	Enabled 		bool   					`json:"enabled"`
-	Bypass 			bool   					`json:"bypass"`
-	Output 			string 					`form:"output" json:"output"`

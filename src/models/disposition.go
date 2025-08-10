@@ -1,10 +1,10 @@
 package models
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 )
 
 type Disposition struct {
@@ -47,6 +47,6 @@ func NewShallowDisposition(id *string) ShallowDisposition {
 	return c
 }
 
-func (c ShallowDisposition) Get(ctx context.Context, mode string) (*Disposition, *ShallowDisposition, error) {
+func (c ShallowDisposition) Get(e echo.Context, mode string) (*Disposition, *ShallowDisposition, error) {
 	return nil, nil, nil 
 }

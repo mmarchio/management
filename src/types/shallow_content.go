@@ -1,12 +1,12 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -23,10 +23,10 @@ func (c ShallowContent) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowContent) Expand(ctx context.Context) (*Content, error) {
+func (c ShallowContent) Expand(e echo.Context) (*Content, error) {
 	r := Content{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
 			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
@@ -51,11 +51,11 @@ func (c ShallowContent) New(ct string) ShallowContent {
 	return c
 } 
 
-func (c *ShallowContent) Get(ctx context.Context) (ShallowContent, error) {
+func (c *ShallowContent) Get(e echo.Context) (ShallowContent, error) {
 	contentModel :=  models.ShallowContent{}
 	contentModel.ShallowModel.ID = c.ShallowModel.ID
 	contentModel.ID = c.ID
-	err := contentModel.Get(ctx)
+	err := contentModel.Get(e)
 	if err != nil {
 		return *c, merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
@@ -63,13 +63,13 @@ func (c *ShallowContent) Get(ctx context.Context) (ShallowContent, error) {
 	return d, nil
 }
 
-func (c ShallowContent) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]ShallowContent, error) {
+func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]ShallowContent, error) {
 	if write {
 		contentModel := c.ToModel()
 		contentModel.ShallowModel.ID = c.ShallowModel.ID
 		contentModel.ID = contentModel.ShallowModel.ID
 		contentModel.ContentType = c.ContentType
-		_, err := contentModel.CustomQuery(ctx, write, q, vars...)
+		_, err := contentModel.CustomQuery(e, write, q, vars...)
 		if err != nil {
 			return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
 		}
@@ -79,7 +79,7 @@ func (c ShallowContent) CustomQuery(ctx context.Context, write bool, q string, v
 	contentModel.ShallowModel.ID = c.ShallowModel.ID
 	contentModel.ID = contentModel.ShallowModel.ID
 	contentModel.ContentType = c.ContentType
-	res, err := contentModel.CustomQuery(ctx, write, q, vars...)
+	res, err := contentModel.CustomQuery(e, write, q, vars...)
 	if err != nil {
 		return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).BubbleCode()
 	}
@@ -91,21 +91,21 @@ func (c ShallowContent) CustomQuery(ctx context.Context, write bool, q string, v
 	return r, nil
 }
 
-func (c ShallowContent) Set(ctx context.Context) error {
+func (c ShallowContent) Set(e echo.Context) error {
 	contentModel := c.ToModel()
 	contentModel.ShallowModel.ID = c.ShallowModel.ID
 	contentModel.ID = c.ShallowModel.ID
-	err := contentModel.Set(ctx)
+	err := contentModel.Set(e)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
 
-func (c *ShallowContent) FindBy(ctx context.Context, key, value string) (ShallowContent, error) {
+func (c *ShallowContent) FindBy(e echo.Context, key, value string) (ShallowContent, error) {
 	contentModel := models.ShallowContent{}
 	contentModel.ShallowModel.ID = c.ShallowModel.ID
-	if err := contentModel.FindBy(ctx, key, value); err != nil {
+	if err := contentModel.FindBy(e, key, value); err != nil {
 		return *c, merrors.ContentFindByError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	if contentModel.Content == "" {
@@ -115,11 +115,11 @@ func (c *ShallowContent) FindBy(ctx context.Context, key, value string) (Shallow
 	return d, nil
 }
 
-func (c ShallowContent) Delete(ctx context.Context) error {
+func (c ShallowContent) Delete(e echo.Context) error {
 	contentModel := models.Content{}
 	contentModel.Model.ID = c.ShallowModel.ID
 	contentModel.ID = c.ID
-	if err := contentModel.Delete(ctx); err != nil {
+	if err := contentModel.Delete(e); err != nil {
 		return merrors.ContentModelDeleteError{}.Wrap(err)
 	}
 	return nil
