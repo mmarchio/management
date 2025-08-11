@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -75,12 +76,15 @@ func (c Model) GetCtx(e echo.Context) (*Context, error) {
 }
 
 func (c Model) SetCtx(e echo.Context) (context.Context, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool 
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, merrors.ContextGetError{}.Wrap(fmt.Errorf("context is nil"))
 	}
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Get called")
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
@@ -125,12 +129,15 @@ func (c EmbedModel) GetCtx(e echo.Context) (*Context, error) {
 }
 
 func (c EmbedModel) SetCtx(e echo.Context) (context.Context, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool 
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, fmt.Errorf("ctx is nil")
 	}
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Get called")
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {

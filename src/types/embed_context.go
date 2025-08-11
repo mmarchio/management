@@ -85,12 +85,15 @@ func (c *Context) GetCtx(e echo.Context) error {
 }
 
 func (c Context) SetCtx(e echo.Context) (context.Context, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool 
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, fmt.Errorf("ctx is nil")
 	}
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Get called")
 	s, err := c.ToModel()
 	if err != nil {
 		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)

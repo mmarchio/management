@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -21,9 +22,11 @@ func RegisterPromptTemplateRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetPromptTemplate(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIGetPromptTemplate called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIGetPromptTemplate called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewPromptTemplate(&id)
 		if err := entity.Get(c); err != nil {
@@ -36,9 +39,11 @@ func HandleAPIGetPromptTemplate(c echo.Context) error {
 
 func HandleAPISetPromptTemplate(c echo.Context) error {
 	var err error
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPISetPromptTemplate called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPISetPromptTemplate called")
 	entity := types.NewPromptTemplate(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -54,9 +59,11 @@ func HandleAPISetPromptTemplate(c echo.Context) error {
 }
 
 func HandleAPIListPromptTemplate(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIListPromptTemplate called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIListPromptTemplate called")
 	prompt := types.NewPromptTemplate(nil)
 	prompts, err := prompt.List(c)
 	if err != nil {
@@ -66,9 +73,11 @@ func HandleAPIListPromptTemplate(c echo.Context) error {
 }
 
 func HandlePromptTemplates(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandlePromptTemplates called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandlePromptTemplates called")
 	dt := DisplayPromptTemplate{
 		PromptTemplate: types.PromptTemplate{},
 		DisplayType: "new",
@@ -81,9 +90,11 @@ func HandlePromptTemplates(c echo.Context) error {
 }
 
 func HandlePromptTemplatesNew(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandlePromptTemplatesNew called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandlePromptTemplatesNew called")
 	ctx := types.Context{}
 	b, err := json.MarshalIndent(ctx, "", "  ")
 	if err != nil {
@@ -103,9 +114,11 @@ func HandlePromptTemplatesNew(c echo.Context) error {
 
 func HandlePromptTemplateSave(c echo.Context) error {
 	var err error
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandlePromptTemplateSave called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandlePromptTemplateSave called")
 	entity := types.NewPromptTemplate(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptTemplateSave"}.Wrap(err))
@@ -134,9 +147,11 @@ func HandlePromptTemplateSave(c echo.Context) error {
 
 func HandlePromptTemplateList(c echo.Context) error {
 	var err error
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandlePromptTemplateList called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandlePromptTemplateList called")
 	entity := types.NewPromptTemplate(nil)
 	entities, err := entity.List(c)
 	if err != nil {
@@ -156,9 +171,11 @@ func HandlePromptTemplateList(c echo.Context) error {
 }
 
 func HandlePromptTemplatesGet(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandlePromptTemplatesGet called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandlePromptTemplatesGet called")
 	if cutid := c.Param("id"); cutid != "" {
 		entity := types.NewPromptTemplate(&cutid)
 		if err := entity.Get(c); err != nil {
@@ -178,9 +195,11 @@ func HandlePromptTemplatesGet(c echo.Context) error {
 }
 
 func HandlePromptTemplatesDelete(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandlePromptTemplatesDelete called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandlePromptTemplatesDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewPromptTemplate(&id)
 		if err := entity.Delete(c); err != nil {

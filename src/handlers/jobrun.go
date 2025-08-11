@@ -28,9 +28,11 @@ func RegisterJobRunRoutes(e *echo.Echo) {
 var wg sync.WaitGroup
 
 func HandleAPIGetJobRun(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIGetJobRun called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIGetJobRun called")
 	if id := c.Param("id"); id != "" {
 		jobRun := types.NewJobRun(&id)
 		if err := jobRun.Get(c); err != nil {
@@ -42,9 +44,11 @@ func HandleAPIGetJobRun(c echo.Context) error {
 }
 
 func HandleAPIListJobRun(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIListJobRun called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIListJobRun called")
 	jobRun := types.NewJobRun(nil)
 	jobRuns, err := jobRun.List(c)
 	if err != nil {
@@ -54,9 +58,11 @@ func HandleAPIListJobRun(c echo.Context) error {
 }
 
 func HandleAPIListJobRunBy(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIListJobRunBy called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIListJobRunBy called")
 	if id := c.Param("id"); id != "" {
 		jobRun := types.NewJobRun(nil)
 		jobruns, err := jobRun.ListBy(c, "job_id", id)
@@ -69,9 +75,11 @@ func HandleAPIListJobRunBy(c echo.Context) error {
 }
 
 func HandleAPISaveJobRun(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPISaveJobRun called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPISaveJobRun called")
 	job := types.NewJobRun(nil)
 	if err := c.Bind(&job); err != nil {
 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJobRun"}.Wrap(err))
@@ -83,9 +91,11 @@ func HandleAPISaveJobRun(c echo.Context) error {
 }
 
 func HandleJobRuns(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleJobRuns called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleJobRuns called")
 	dt := DisplayJobRun{
 		JobRun: types.JobRun{},
 		DisplayType: "none",
@@ -98,9 +108,11 @@ func HandleJobRuns(c echo.Context) error {
 }
 
 func HandleJobRunsList(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleJobRunsList called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleJobRunsList called")
 	jobRun := types.NewJobRun(nil)
 	jobRuns, err := jobRun.List(c)
 	if err != nil {
@@ -119,9 +131,11 @@ func HandleJobRunsList(c echo.Context) error {
 }
 
 func HandleJobRunsDelete(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleJobRunsDelete called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleJobRunsDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
 		if err := entity.Delete(c); err != nil {
@@ -133,9 +147,11 @@ func HandleJobRunsDelete(c echo.Context) error {
 }
 
 func HandleJobRunsContextGet(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleJobRunsContextGet called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleJobRunsContextGet called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
 		if err := entity.Get(c); err != nil {
@@ -151,9 +167,11 @@ func HandleJobRunsContextGet(c echo.Context) error {
 }
 
 func HandleAPIJobRunsContextGet(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIJobRunsContextGet called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIJobRunsContextGet called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
 		if err := entity.Get(c); err != nil {
@@ -174,9 +192,11 @@ func HandleAPIJobRunsContextGet(c echo.Context) error {
 }
 
 func HandleAPIJobRunsContextSet(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIJobRunsContextSet called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIJobRunsContextSet called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
 		if err := entity.Get(c); err != nil {
@@ -204,9 +224,11 @@ func HandleAPIJobRunsContextSet(c echo.Context) error {
 }
 
 func HandleJobRunsContextSet(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleJobRunsContextSet called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleJobRunsContextSet called")
 	if id := c.Param("id"); id != "" {
 		jobRun := types.NewJobRun(&id)
 		if err := jobRun.Get(c); err != nil {
@@ -222,9 +244,11 @@ func HandleJobRunsContextSet(c echo.Context) error {
 }
 
 func HandleAPINextJobRun(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPINextJobRun called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPINextJobRun called")
 	entity := types.NewJobRun(nil)
 	q := fmt.Sprintf("SELECT id, created_at, updated_at, content_type, content FROM content WHERE content_type = 'jobrun' AND content @> '{\"latest_status_type\":\"start\"}' AND content @> '{\"latest_status_value\":\"queued\"}' ORDER BY updated_at ASC LIMIT 1")
 	res, err := entity.CustomQuery(c, false, q)
@@ -240,9 +264,11 @@ func HandleAPINextJobRun(c echo.Context) error {
 }
 
 func HandleWorkflowRun(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleWorkflowRun called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleWorkflowRun called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJobRun(&id)
 		if err := entity.Get(c); err != nil {
@@ -258,9 +284,11 @@ func HandleWorkflowRun(c echo.Context) error {
 }
 
 func HandleJobRunRun(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleJobRunRun called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleJobRunRun called")
 	if entityID := c.Param("id"); entityID != "" {
 		entity := types.NewJobRun(&entityID)
 		if err := entity.Get(c); err != nil {
@@ -299,9 +327,9 @@ func HandleJobRunRun(c echo.Context) error {
 }
 
 func run(c echo.Context, resp types.OllamaResponse, Response chan types.OllamaResponse, Error chan error, sleep int, semaphore chan struct{}) {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("run called")
-	}
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {}
+	log.Flogger("run called")
 	fmt.Printf("websocket worker starting\n")
 	defer wg.Done()
 	defer func() { <-semaphore }()

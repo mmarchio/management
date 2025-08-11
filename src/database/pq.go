@@ -6,8 +6,28 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
+	"github.com/mmarchio/management/config"
 	"github.com/mmarchio/management/errors"
 )
+
+type DBKeyT 	int64
+type DBTXKeyT 	int64
+
+var DBKey DBKeyT = 1
+var DBTXKey DBTXKeyT = 2
+
+func generateConnectionString() string {
+	//postgres://<username>:<password>@<host>:<port>/<database_name>?<options>
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s?%s", 
+		config.DBUser, 
+		config.DBPass, 
+		config.DBHost, 
+		config.DBPort, 
+		config.DBName, 
+		config.DBOptions,
+	)
+}
 
 func GetPQContext(ctx context.Context) context.Context {
 	if GetPQDatabase(ctx) != nil {

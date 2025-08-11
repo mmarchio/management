@@ -230,11 +230,11 @@ func (c *OllamaNode) FromMSI(msi map[string]interface{}) error {
 }
 
 func (c *OllamaNode) Call(e echo.Context, respchan chan OllamaResponse, errchan chan error) error {
-	var cc logger.LoggingContext
-	var ok bool
-	if cc, ok = (e).(logger.LoggingContext); ok {
-		cc.Flogger("CustomQuery called")
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("Get called")
 	start := time.Now()
 	if c.OllamaModel == "" {
 		errchan <- fmt.Errorf("OllamaNode:OllamaModel is nil\n")
@@ -251,7 +251,7 @@ func (c *OllamaNode) Call(e echo.Context, respchan chan OllamaResponse, errchan 
 	if err != nil {
 		return merrors.JSONMarshallingError{Package: "types", Struct:"OllamaNode", Function: "Call"}.Wrap(err)
 	}
-	cc.Flogger(fmt.Sprintf("req data %#v", oreq))
+	log.Flogger(fmt.Sprintf("req data %#v", oreq))
 	c.ResponseModel = OllamaResponse{}
 	semaphore := make(chan struct{}, 1)
 	ctr := 1
@@ -272,9 +272,9 @@ func (c *OllamaNode) Call(e echo.Context, respchan chan OllamaResponse, errchan 
 	wg.Wait()
 	end := time.Now()
 
-	cc.Flogger(fmt.Sprintf("start time: %s\n", start.Format(time.RFC3339)))
-	cc.Flogger(fmt.Sprintf("end time: %s\n", end.Format(time.RFC3339)))
-	cc.Flogger(fmt.Sprintf("time elapsed: %f\n", time.Since(start).Seconds()))
+	log.Flogger(fmt.Sprintf("start time: %s\n", start.Format(time.RFC3339)))
+	log.Flogger(fmt.Sprintf("end time: %s\n", end.Format(time.RFC3339)))
+	log.Flogger(fmt.Sprintf("time elapsed: %f\n", time.Since(start).Seconds()))
 	return nil
 }
 
@@ -365,12 +365,11 @@ func (c *OllamaNode) GetNodeFromWorkflow(id string, wf Workflow) {
 }
 
 func (c OllamaNode) Exec(e echo.Context) error {
-	var cc logger.LoggingContext
-	var ok bool
-	if cc, ok = (e).(logger.LoggingContext); ok {
-		cc.Flogger("CustomQuery called")
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
-	cc.Flogger(fmt.Sprintf("ollama node found: %s\n", c.Name))
+	log.Flogger("Exec called")
 	start := time.Now()
 	if c.SystemPrompt != "" && len(c.SystemPrompt) == 36 {
 		spid := c.SystemPrompt
@@ -386,7 +385,7 @@ func (c OllamaNode) Exec(e echo.Context) error {
 	go func(){
 		if len(Error) > 0 {
 			err := <- Error
-			fmt.Printf("err from errchan: %s\n", err.Error())
+			log.Flogger("err from errchan: %s\n", err.Error())
 		}
 	}()
 	wg.Add(1)

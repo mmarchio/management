@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -808,14 +807,16 @@ func (c Context) Marshal(e echo.Context) (string, error) {
 }
 
 func (c *Context) Get(e echo.Context) (*Context, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool
-	var tx *sql.Tx
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, fmt.Errorf("ctx is nil")
 	}
-	tx = database.GetPQTx(ctx)
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Get called")
+	tx := database.GetPQTx(ctx)
 	var j string
 	err := tx.QueryRow("SELECT status_context FROM job_status WHERE id = $1", c.JobRunID).Scan(&j)
 	if err != nil {
@@ -830,14 +831,16 @@ func (c *Context) Get(e echo.Context) (*Context, error) {
 }
 
 func (c Context) Set(e echo.Context) (*Context, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool
-	var tx *sql.Tx
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, fmt.Errorf("ctx is nil")
 	}
-	tx = database.GetPQTx(ctx)
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Set called")
+	tx := database.GetPQTx(ctx)
 	j, err := c.Marshal(e)
 	if err != nil {
 		tx.Rollback()
@@ -855,12 +858,15 @@ func (c Context) Set(e echo.Context) (*Context, error) {
 }
 
 func (c Context) GetCtx(e echo.Context) (*Context, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool 
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, fmt.Errorf("ctx is nil")
 	}
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("GetCtx called")
 	eInterface := ctx.Value(contextKey)
 	if innerContext, ok := eInterface.(Context); ok {
 		return &innerContext, nil
@@ -871,12 +877,15 @@ func (c Context) GetCtx(e echo.Context) (*Context, error) {
 }
 
 func (c Context) SetCtx(e echo.Context) context.Context {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool 
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil
 	}
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil
+	}
+	log.Flogger("SetCtx called")
 	ctx = context.WithValue(ctx, contextKey, c)
 	return ctx
 }

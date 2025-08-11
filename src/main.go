@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mmarchio/management/config"
+	"github.com/mmarchio/management/database"
 	"github.com/mmarchio/management/handlers"
 	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
@@ -25,8 +26,12 @@ type Template struct {
 
 func LoggingContextMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		cc := &logger.LoggingContext{c}
-		return next(cc)
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, logger.LoggerKey, logger.Logger)
+		ctx = database.GetPQContext(ctx)
+		c.Set("context", ctx)
+		c.Set("logger", &logger.LoggingContext{c})
+		return next(c)
 	}
 }
 
@@ -105,15 +110,6 @@ func main() {
         Browse:     false,
         IgnoreBase: false,
     }))
-
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, logger.LoggerKey, logger.Logger)
-			c.Set("context", ctx)
-			return next(c)
-		}
-	})
 
 	t := &Template{
 		Templates: template.Must(template.New("").Funcs(template.FuncMap{

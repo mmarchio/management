@@ -27,8 +27,8 @@ type LoggingContext struct {
 	echo.Context
 }
 
-func (c LoggingContext) Flogger(msg string) error {
-	return Logger(msg)
+func (c LoggingContext) Flogger(msg string, vars ...any) error {
+	return Logger(fmt.Sprintf(msg, vars...))
 }
 
 func (c LoggingContext) GetEchoCtx() context.Context {
@@ -36,6 +36,7 @@ func (c LoggingContext) GetEchoCtx() context.Context {
 	if ctx, ok := ctxInterface.(context.Context); ok {
 		return ctx
 	}
+	fmt.Printf("GetEchoCtx not working\n")
 	return nil
 }
 
@@ -49,7 +50,7 @@ func Logger(msg string) error {
 		return err
 	}
 	defer f.Close()
-	_, file, line, _ := runtime.Caller(1)
+	_, file, line, _ := runtime.Caller(2)
 	cnf.File = file
 	cnf.LineNumber = line
 	log := fmt.Sprintf("%s:%d %s: %s", cnf.File, cnf.LineNumber, cnf.DateTime.Format(time.RFC3339), cnf.Msg)

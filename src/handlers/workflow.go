@@ -23,9 +23,11 @@ func RegisterWorkflowRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetWorkflow(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIGetWorkflow called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIGetWorkflow called")
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
 		if err := entity.Get(c); err != nil {
@@ -37,9 +39,11 @@ func HandleAPIGetWorkflow(c echo.Context) error {
 }
 
 func HandleAPIListWorkflow(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPIListWorkflow called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPIListWorkflow called")
 	entity := types.NewWorkflow(nil)
 	entities, err := entity.List(c)
 	if err != nil {
@@ -49,9 +53,11 @@ func HandleAPIListWorkflow(c echo.Context) error {
 }
 
 func HandleAPISaveWorkflow(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleAPISaveWorkflow called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleAPISaveWorkflow called")
 	entity := types.NewWorkflow(nil)
 	if err := c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveWorkflow"}.Wrap(err))
@@ -66,9 +72,11 @@ func HandleAPISaveWorkflow(c echo.Context) error {
 }
 
 func HandleWorkflow(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleWorkflow called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleWorkflow called")
 	dt := DisplayWorkflow{
 		Workflow: types.Workflow{},
 		DisplayType: "none",
@@ -81,9 +89,11 @@ func HandleWorkflow(c echo.Context) error {
 }
 
 func HandleWorkflowList(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleWorkflowList called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleWorkflowList called")
 	entity := types.NewWorkflow(nil)
 	list, err := entity.List(c)
 	if err != nil {
@@ -102,9 +112,11 @@ func HandleWorkflowList(c echo.Context) error {
 }
 
 func HandleWorkflowDelete(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleWorkflowDelete called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleWorkflowDelete called")
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
 		if err := entity.Delete(c); err != nil {
@@ -116,9 +128,11 @@ func HandleWorkflowDelete(c echo.Context) error {
 }
 
 func HandleWorkflowSave(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleWorkflowSave called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleWorkflowSave called")
 	entity := types.NewWorkflow(nil)
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
@@ -150,9 +164,11 @@ func HandleWorkflowSave(c echo.Context) error {
 }
 
 func HandleWorkflowNew(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleWorkflowNew called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleWorkflowNew called")
 	entity := types.NewWorkflow(nil)
 	entity.Model.ID = ""
 	entity.ID = types.WorkflowID("")
@@ -168,9 +184,11 @@ func HandleWorkflowNew(c echo.Context) error {
 }
 
 func HandleWorkflowEdit(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleWorkflowEdit called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleWorkflowEdit called")
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
 		if err := entity.Get(c); err != nil {

@@ -36,9 +36,11 @@ func RegisterNodesRoutes(e *echo.Echo) {
 }
 
 func HandleComfyNew(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleComfyNew called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleComfyNew called")
 	if workflowid := c.Param("workflowid"); workflowid != "" {
 		dt := DisplayComfyNode{
 			ComfyNode: types.NewComfyNode(nil),
@@ -66,9 +68,11 @@ func HandleComfyNew(c echo.Context) error {
 }
 
 func HandleComfyEdit(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleComfyEdit called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleComfyEdit called")
 	dt := DisplayComfyNode{
 		DisplayType: "edit",
 	}
@@ -85,9 +89,11 @@ func HandleComfyEdit(c echo.Context) error {
 }
 
 func HandleComfySave(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleComfySave called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleComfySave called")
 	dt := DisplayComfyNode{
 		DisplayType: "edit",
 	}
@@ -129,9 +135,11 @@ func HandleComfySave(c echo.Context) error {
 }
 
 func HandleComfyDelete(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleComfyDelete called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleComfyDelete called")
 	dt := DisplayComfyNode{
 		DisplayType: "list",
 	}
@@ -148,9 +156,11 @@ func HandleComfyDelete(c echo.Context) error {
 }
 
 func HandleComfyList(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleComfyList called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleComfyList called")
 	dt := DisplayComfyNode{
 		DisplayType: "list",
 	}
@@ -166,9 +176,11 @@ func HandleComfyList(c echo.Context) error {
 }
 
 func HandleOllamaNew(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleOllamaNew called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleOllamaNew called")
 	if workflowid := c.Param("workflowid"); workflowid != "" {
 		dt := DisplayOllamaNode{
 			OllamaNode: types.NewOllamaNode(nil),
@@ -209,9 +221,11 @@ func HandleOllamaNew(c echo.Context) error {
 }
 
 func HandleOllamaEdit(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleOllamaEdit called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleOllamaEdit called")
 	dt := DisplayOllamaNode{
 		DisplayType: "edit",
 		Enabled: types.Toggle{
@@ -254,9 +268,11 @@ func HandleOllamaEdit(c echo.Context) error {
 }
 
 func HandleOllamaSave(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleOllamaSave called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleOllamaSave called")
 	dt := DisplayOllamaNode{
 		DisplayType: "edit",
 	}
@@ -301,9 +317,11 @@ func HandleOllamaSave(c echo.Context) error {
 }
 
 func HandleOllamaDelete(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleOllamaDelete called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleOllamaDelete called")
 	dt := DisplayOllamaNode{
 		DisplayType: "list",
 	}
@@ -320,9 +338,11 @@ func HandleOllamaDelete(c echo.Context) error {
 }
 
 func HandleOllamaList(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleOllamaList called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleOllamaList called")
 	dt := DisplayOllamaNode{
 		DisplayType: "list",
 	}
@@ -338,9 +358,11 @@ func HandleOllamaList(c echo.Context) error {
 }
 
 func HandleSSHNew(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleSSHNew called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleSSHNew called")
 	if workflowid := c.Param("workflowid"); workflowid != "" {
 		dt := DisplaySSHNode{
 			SSHNode: types.NewSSHNode(nil),
@@ -367,9 +389,11 @@ func HandleSSHNew(c echo.Context) error {
 }
 
 func HandleSSHEdit(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleSSHEdit called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleSSHEdit called")
 	dt := DisplaySSHNode{
 		DisplayType: "edit",
 	}
@@ -386,9 +410,11 @@ func HandleSSHEdit(c echo.Context) error {
 }
 
 func HandleSSHSave(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleSSHSave called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleSSHSave called")
 	dt := DisplaySSHNode{
 		DisplayType: "edit",
 	}
@@ -430,9 +456,11 @@ func HandleSSHSave(c echo.Context) error {
 }
 
 func HandleSSHDelete(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleSSHDelete called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleSSHDelete called")
 	dt := DisplaySSHNode{
 		DisplayType: "list",
 	}
@@ -449,9 +477,11 @@ func HandleSSHDelete(c echo.Context) error {
 }
 
 func HandleSSHList(c echo.Context) error {
-	if cc, ok := (c).(logger.LoggingContext); ok {
-		cc.Flogger("HandleSSHList called")
+	log, ok := c.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
 	}
+	log.Flogger("HandleSSHList called")
 	dt := DisplaySSHNode{
 		DisplayType: "list",
 	}

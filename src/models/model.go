@@ -75,13 +75,15 @@ func (c *ShallowModel) Init() {
 }
 
 func (c Model) Get(e echo.Context, table ITable) (ITable, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool 
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, fmt.Errorf("ctx is nil")
 	}
-	ctx = database.GetPQContext(ctx)
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Get called")
 	db := database.GetPQDatabase(ctx)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = $1", c.Columns)
 	rows, err := db.Query(q, c.ID)
@@ -96,12 +98,15 @@ func (c Model) Get(e echo.Context, table ITable) (ITable, error) {
 }
 
 func (c Model) Set(e echo.Context, table ITable) error {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool 
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return fmt.Errorf("ctx is nil")
 	}
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Get called")
 	tx := database.GetPQTx(ctx)
 	q := fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s) ON CONFLICT(id) %s",
@@ -118,18 +123,20 @@ func (c Model) Set(e echo.Context, table ITable) error {
 		tx.Rollback()
 		return fmt.Errorf("err: %w\nq: %s", err, q)
 	}
-	fmt.Printf("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
+	log.Flogger("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
 	return nil
 }
 
 func (c Model) List(e echo.Context, table Content) ([]Content, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, fmt.Errorf("ctx is nil")
 	}
-	ctx = database.GetPQContext(ctx)
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Get called")
 	db := database.GetPQDatabase(ctx)
 	r := make([]Content, 0)
 	textOut := strings.Replace(c.Columns, "id", "id::text", 1)
@@ -152,13 +159,15 @@ func (c Model) List(e echo.Context, table Content) ([]Content, error) {
 }
 
 func (c Model) ListBy(e echo.Context, table ITable, column string, value string) ([]ITable, error) {
-	var ctx context.Context
-	var cc logger.LoggingContext
-	var ok bool 
-	if cc, ok = e.(logger.LoggingContext); ok {
-		ctx = cc.GetEchoCtx()
+	ctx, ok := e.Get("context").(context.Context)
+	if !ok {
+		return nil, fmt.Errorf("ctx is nil")
 	}
-	ctx = database.GetPQContext(ctx)
+	log, ok := e.Get("logger").(logger.LoggingContext)
+	if !ok {
+		return nil, fmt.Errorf("logger is nil")
+	}
+	log.Flogger("Get called")
 	db := database.GetPQDatabase(ctx)
 	r := make([]ITable, 0)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE %s = $1", c.Columns, column)
