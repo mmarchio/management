@@ -1,7 +1,6 @@
 package models
 
 import (
-	"context"
 	"regexp"
 
 	"github.com/mmarchio/management/logger"
@@ -41,10 +40,8 @@ func replaceUUID(input, match, replace string) (string, error) {
     return result, nil
 }
 
-func GetLogger(ctx context.Context) logger.LoggerFuncT {
-	if fn, ok := ctx.Value(logger.LoggerKey).(logger.LoggerFuncT); ok {
-		return fn
-	}
-	return nil
+func GetLogger() logger.LoggingContext {
+	r := logger.LoggingContext{}
+	r.Init()
+	return r
 }
-

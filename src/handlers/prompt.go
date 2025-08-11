@@ -8,7 +8,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
@@ -24,11 +23,7 @@ func RegisterPromptsRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetPrompt(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIGetPrompt called")
+	GetLogger().Flogger("HandleAPIGetPrompt called")
 	if id := c.Param("id"); id != "" {
 		prompt := types.NewPrompt(&id)
 		if err := prompt.Get(c); err != nil {
@@ -41,11 +36,7 @@ func HandleAPIGetPrompt(c echo.Context) error {
 
 func HandleAPISetPrompt(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPISetPrompt called")
+	GetLogger().Flogger("HandleAPISetPrompt called")
 	entity := types.NewPrompt(nil)
 	if err := c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -61,11 +52,7 @@ func HandleAPISetPrompt(c echo.Context) error {
 }
 
 func HandleAPIListPrompt(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIListPrompt called")
+	GetLogger().Flogger("HandleAPIListPrompt called")
 	prompt := types.NewPrompt(nil)
 	prompts, err := prompt.List(c)
 	if err != nil {
@@ -75,11 +62,7 @@ func HandleAPIListPrompt(c echo.Context) error {
 }
 
 func HandlePrompts(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandlePrompts called")
+	GetLogger().Flogger("HandlePrompts called")
 	dt := DisplayPrompt{
 		Prompt: types.Prompt{},
 		DisplayType: "none",
@@ -93,11 +76,7 @@ func HandlePrompts(c echo.Context) error {
 
 func HandlePromptsNew(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandlePromptsNew called")
+	GetLogger().Flogger("HandlePromptsNew called")
 	prompt := types.NewPrompt(nil)
 	prompt.ID = types.PromptID("")
 	prompt.Model.ID = ""
@@ -126,20 +105,12 @@ func HandlePromptsNew(c echo.Context) error {
 		},
 		Debug: msi,
 	}
-	fmt.Printf("len available: %d\n", len(dt.Prompt.SettingsModel.TemplateModel.AvailableDispositions))
-	for _, ad := range dt.Prompt.SettingsModel.TemplateModel.AvailableDispositions {
-		fmt.Printf("ad.id: %s at.name: %s\n", ad.ID, ad.Name)
-	}
 	return c.Render(http.StatusOK, "prompts.tpl", dt)
 }
 
 func HandlePromptSave(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandlePromptSave called")
+	GetLogger().Flogger("HandlePromptSave called")
 	prompt := types.NewPrompt(nil)
 	if id := c.Param("id"); id != "" {
 		//existing entity
@@ -149,7 +120,7 @@ func HandlePromptSave(c echo.Context) error {
 		}
 	}
 	if err = c.Bind(&prompt); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(nil, err))
 	}
 	prompt, err = prompt.GetDispositions(c)
 	if err != nil {
@@ -301,11 +272,7 @@ func createPromptJobRuns(e echo.Context, job *types.Job, prompt types.Prompt) er
 
 func HandlePromptsList(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandlePromptsList called")
+	GetLogger().Flogger("HandlePromptsList called")
 	prompt := types.NewPrompt(nil)
 	prompts, err := prompt.List(c)
 	if err != nil {
@@ -325,11 +292,7 @@ func HandlePromptsList(c echo.Context) error {
 
 func HandlePromptsGet(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandlePromptsGet called")
+	GetLogger().Flogger("HandlePromptsGet called")
 	if id := c.Param("id"); id != "" {
 		prompt := types.NewPrompt(&id)
 		if err = prompt.Get(c); err != nil {
@@ -357,11 +320,7 @@ func HandlePromptsGet(c echo.Context) error {
 }
 
 func HandlePromptDelete(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandlePromptDelete called")
+	GetLogger().Flogger("HandlePromptDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewPrompt(&id)
 		if err := entity.Delete(c); err != nil {

@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/mmarchio/management/database"
 )
 
 type LoggerKeyT int64
@@ -24,23 +24,27 @@ type LogConfig struct {
 }
 
 type LoggingContext struct {
-	echo.Context
+	Ctx context.Context
+	Err error
 }
 
-func (c LoggingContext) Flogger(msg string, vars ...any) error {
-	return Logger(fmt.Sprintf(msg, vars...))
+func (c *LoggingContext) Init() {
+	ctx := context.Background()
+	ctx = database.GetPQContext(ctx)
+	c.Ctx = ctx
+}
+
+func (c LoggingContext) Flogger(msg string, vars ...any) LoggingContext {
+	c.Err = Logger(fmt.Sprintf(msg, vars...))
+	return c
 }
 
 func (c LoggingContext) GetEchoCtx() context.Context {
-	ctxInterface := c.Get("context")
-	if ctx, ok := ctxInterface.(context.Context); ok {
-		return ctx
+	if c.Ctx == nil {
+		c.Init()
 	}
-	fmt.Printf("GetEchoCtx not working\n")
-	return nil
+	return c.Ctx
 }
-
-
 
 func Logger(msg string) error {
 	cnf := LogConfig{Msg: msg}
@@ -53,7 +57,7 @@ func Logger(msg string) error {
 	_, file, line, _ := runtime.Caller(2)
 	cnf.File = file
 	cnf.LineNumber = line
-	log := fmt.Sprintf("%s:%d %s: %s", cnf.File, cnf.LineNumber, cnf.DateTime.Format(time.RFC3339), cnf.Msg)
+	log := fmt.Sprintf("%s:%d %s: %s\n", cnf.File, cnf.LineNumber, time.Now().Format(time.RFC3339Nano), cnf.Msg)
 	if _, err := f.WriteString(log); err != nil {
 		return err
 	}

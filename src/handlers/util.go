@@ -20,9 +20,8 @@ func SetEchoCtx(c echo.Context, ctx context.Context) echo.Context {
 	return c
 }
 
-func GetLogger(ctx context.Context) logger.LoggerFuncT {
-	if fn, ok := ctx.Value(logger.LoggerKey).(logger.LoggerFuncT); ok {
-		return fn
-	}
-	return nil
+func GetLogger() logger.LoggingContext {
+	r := logger.LoggingContext{}
+	r.Init()
+	return r
 }

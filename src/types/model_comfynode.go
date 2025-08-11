@@ -136,13 +136,13 @@ func (c *ComfyNode) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(nil, err)
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(nil, err)
 		}
 	}
 	if ct, ok := msi["ContentType"].(string); ok {
@@ -166,11 +166,11 @@ func (c *ComfyNode) Get(e echo.Context) error {
 	content.Model.ContentType = "comfynode"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -181,11 +181,11 @@ func (c *ComfyNode) GetShallow(e echo.Context) error {
 	content.Model.ContentType = "comfynode"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -202,7 +202,18 @@ func (c ComfyNode) Delete(e echo.Context) error {
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "comfynode", Function: "delete"}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "comfynode", Function: "delete"}.Wrap(nil, err)
+	}
+	wf := NewWorkflow(nil)
+	wf.Model.ID = c.WorkflowID.String()
+	wf.ID = c.WorkflowID
+	if err := wf.Get(e); err != nil {
+		return merrors.ContentGetError{}.Wrap(nil, err)
+	}
+	wf.CutNode(c.Model.ID)
+	wf.CutNodeOrder(c.Model.ID)
+	if err := wf.Set(e); err != nil {
+		return merrors.ContentSetError{}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -236,7 +247,7 @@ func NewComfyNode(id *string) ComfyNode {
 func (c ComfyNode) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New(nil, "validation failed")
 	}
 	content := NewComfyNodeTypeContent()
 	content.FromType(c)
@@ -244,7 +255,7 @@ func (c ComfyNode) Set(e echo.Context) error {
 	content.ID = c.Model.ID
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -254,14 +265,14 @@ func (c ComfyNode) List(e echo.Context) ([]ComfyNode, error) {
 	content.Model.ContentType = "comfynode"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
 	}
 	cuts := make([]ComfyNode, 0)
 	for _, model := range contents {
 		cut := ComfyNode{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ComfyNode", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ComfyNode", Function: "List"}.Wrap(nil, err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -273,14 +284,14 @@ func (c ComfyNode) ListBy(e echo.Context, key string, value interface{}) ([]Comf
 	content.Model.ContentType = "comfynode"
 	list, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: fmt.Sprintf("{\"%s\":\"%s\"}", key, value), Package: "types", Struct: "ComfyNode", Function: "ListBy"}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: fmt.Sprintf("{\"%s\":\"%s\"}", key, value), Package: "types", Struct: "ComfyNode", Function: "ListBy"}.Wrap(nil, err)
 	}
 	cuts := make([]ComfyNode, 0)
 	for _, model := range list {
 		cut := ComfyNode{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ComfyNode", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ComfyNode", Function: "ListBy"}.Wrap(nil, err)
 		}
 		cuts = append(cuts, cut)
 	}

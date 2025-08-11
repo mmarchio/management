@@ -1,7 +1,6 @@
 package models
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -10,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 )
 
 type Model struct {
@@ -75,15 +73,7 @@ func (c *ShallowModel) Init() {
 }
 
 func (c Model) Get(e echo.Context, table ITable) (ITable, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("ctx is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Get called")
+	ctx := GetLogger().Flogger("Get called").Ctx
 	db := database.GetPQDatabase(ctx)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = $1", c.Columns)
 	rows, err := db.Query(q, c.ID)
@@ -98,15 +88,9 @@ func (c Model) Get(e echo.Context, table ITable) (ITable, error) {
 }
 
 func (c Model) Set(e echo.Context, table ITable) error {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return fmt.Errorf("ctx is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Get called")
+	ctx := GetLogger().Flogger("Get called").Ctx
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
 	tx := database.GetPQTx(ctx)
 	q := fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s) ON CONFLICT(id) %s",
@@ -121,37 +105,31 @@ func (c Model) Set(e echo.Context, table ITable) error {
 	_, err = tx.Exec(q, values...)
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("err: %w\nq: %s", err, q)
+		return merrors.DBQueryError{}.New(db, "err: %w\nq: %s", err, q)
 	}
-	log.Flogger("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
+	if err := tx.Commit(); err != nil {
+		return merrors.TransactionCommitError{}.Wrap(db, err)
+	}
+	GetLogger().Flogger("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
 	return nil
 }
 
 func (c Model) List(e echo.Context, table Content) ([]Content, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("ctx is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Get called")
+	ctx := GetLogger().Flogger("Get called").Ctx
 	db := database.GetPQDatabase(ctx)
 	r := make([]Content, 0)
 	textOut := strings.Replace(c.Columns, "id", "id::text", 1)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1", textOut)
-	fmt.Printf("q: %s\n", q)
 	rows, err := db.Query(q, table.Model.ContentType)
 	if err != nil {
-		fmt.Println(err)
-		return nil, merrors.SQLQueryError{Info: "model list"}.Wrap(err)
+		GetLogger().Flogger(err.Error())
+		return nil, merrors.SQLQueryError{Info: "model list"}.Wrap(db, err)
 	}
 	for rows.Next() {
 		itable, err := table.Scan(e, rows)
 		if err != nil {
-			fmt.Println(err)
-			return nil, merrors.DBContentScanError{Info: "model list"}.Wrap(err)
+			GetLogger().Flogger(err.Error())
+			return nil, merrors.DBContentScanError{Info: "model list"}.Wrap(db, err)
 		}
 		r = append(r, itable)
 	}
@@ -159,15 +137,7 @@ func (c Model) List(e echo.Context, table Content) ([]Content, error) {
 }
 
 func (c Model) ListBy(e echo.Context, table ITable, column string, value string) ([]ITable, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("ctx is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Get called")
+	ctx := GetLogger().Flogger("Get called").Ctx
 	db := database.GetPQDatabase(ctx)
 	r := make([]ITable, 0)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE %s = $1", c.Columns, column)

@@ -47,7 +47,7 @@ func (c ShallowDisposition) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -68,7 +68,7 @@ func (c ShallowDisposition) Expand(e echo.Context) (*Disposition, error) {
 	entitlements.ShallowModel.ID = c.EntitlementsModel
 	entitlementsModel, err := entitlements.Expand(e);
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.EntitlementsModel = *entitlementsModel
 	steps := ShallowSteps{}
@@ -77,7 +77,7 @@ func (c ShallowDisposition) Expand(e echo.Context) (*Disposition, error) {
 	steps.ShallowModel.ContentType = "shallowverification"
 	verificationModel, err := steps.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.VerificationModel = *verificationModel
 	steps.ShallowModel.ID = c.BypassModel
@@ -85,7 +85,7 @@ func (c ShallowDisposition) Expand(e echo.Context) (*Disposition, error) {
 	steps.ContentType = "shallowbypass"
 	bypassModel, err := steps.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.BypassModel = *bypassModel
 	return &r, nil
@@ -108,14 +108,14 @@ func (c ShallowDisposition) List(e echo.Context) ([]ShallowDisposition, error) {
 	content := NewDispositionModelContent()
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(nil, err)
 	}
 	cuts := make([]ShallowDisposition, 0)
 	for _, model := range contents {
 		cut := NewShallowDisposition(nil)
 		cut, err = cut.Unmarshal(model.Content)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(nil, err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -126,14 +126,14 @@ func (c ShallowDisposition) ListBy(e echo.Context, key string, value interface{}
 	content := NewShallowDispositionModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(nil, err)
 	}
 	cuts := make([]ShallowDisposition, 0)
 	for _, model := range contents {
 		cut := ShallowDisposition{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowDisposition", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowDisposition", Function: "List"}.Wrap(nil, err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -146,11 +146,11 @@ func (c *ShallowDisposition) Get(e echo.Context) error {
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Disposition", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Disposition", Function: "Get"}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -161,7 +161,7 @@ func (c ShallowDisposition) Set(e echo.Context) error {
 	content.ShallowModel.ID = c.ShallowModel.ID
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -171,7 +171,7 @@ func (c ShallowDisposition) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -188,7 +188,7 @@ func (c ShallowDisposition) SetID() (ShallowDisposition, error) {
 	var err error
 	c.ID = DispositionID(c.ShallowModel.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "shallow_disposition"}.Wrap(err)
+		return c, merrors.IDSetError{Info: "shallow_disposition"}.Wrap(nil, err)
 	}
 	return c, nil
 }
@@ -197,13 +197,13 @@ func (c ShallowDisposition) Unmarshal(j string) (ShallowDisposition, error) {
 	model := models.ShallowDisposition{}
 	model.ShallowModel.ContentType = "disposition"
 	if err := json.Unmarshal([]byte(j), &model); err != nil {
-		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "Disposition", Function: "Unmarshal"}.Wrap(err)
+		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "Disposition", Function: "Unmarshal"}.Wrap(nil, err)
 	}
 	c.ShallowModel.FromModel(model.ShallowModel)
 
 	d, err := c.SetID()
 	if err != nil {
-		return c, merrors.IDSetError{Info: "disposition"}.Wrap(err)
+		return c, merrors.IDSetError{Info: "disposition"}.Wrap(nil, err)
 	}
 	c = d
 	c.Name = model.Name

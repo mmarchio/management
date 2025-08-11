@@ -2,13 +2,11 @@ package types
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/models"
 )
 
@@ -69,26 +67,18 @@ func (c Model) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(nil, err)
 	}
 	typesContext.FromModel(systemContext)
 	return &typesContext, nil
 }
 
 func (c Model) SetCtx(e echo.Context) (context.Context, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, merrors.ContextGetError{}.Wrap(fmt.Errorf("context is nil"))
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Get called")
+	ctx := GetLogger().Flogger("Get called").Ctx
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(nil, err)
 	}
 	ctx = s.SetCtx(e)
 	return ctx, nil
@@ -122,26 +112,18 @@ func (c EmbedModel) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(nil, err)
 	}
 	typesContext.FromModel(systemContext)
 	return &typesContext, nil
 }
 
 func (c EmbedModel) SetCtx(e echo.Context) (context.Context, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("ctx is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Get called")
+	ctx := GetLogger().Flogger("Get called").Ctx
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(nil, err)
 	}
 	ctx = s.SetCtx(e)
 	return ctx, nil

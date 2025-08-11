@@ -1,7 +1,6 @@
 package models
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -10,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 )
 
 type Content struct {
@@ -46,23 +44,14 @@ func NewShallowContent(id *string) ShallowContent {
 }
 
 func (c Content) ShallowGetIn(e echo.Context) ([]ShallowContent, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("ShallowGetIn called")
+	ctx := GetLogger().Flogger("ShallowGetIn called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id IN ('%s'::uuid)", c.Columns, strings.Join(c.Model.Manifest, "'::uuid, '"))
 	rows, err := db.Query(q)
 	if err != nil {
-		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "ShallowGetIn"}.Wrap(err)
+		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "ShallowGetIn"}.Wrap(db, err)
 	}
 	ta := make([]ShallowContent, 0)
 	for rows.Next() {
@@ -77,23 +66,14 @@ func (c Content) ShallowGetIn(e echo.Context) ([]ShallowContent, error) {
 }
 
 func (c Content) GetIn(e echo.Context) ([]Content, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("GetIn called")
+	ctx := GetLogger().Flogger("GetIn called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id IN ('%s'::uuid)", c.Columns, strings.Join(c.Model.Manifest, "'::uuid, '"))
 	rows, err := db.Query(q)
 	if err != nil {
-		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "GetIn"}.Wrap(err)
+		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "GetIn"}.Wrap(db, err)
 	}
 	ta := make([]Content, 0)
 	for rows.Next() {
@@ -107,18 +87,10 @@ func (c Content) GetIn(e echo.Context) ([]Content, error) {
 }
 
 func (c *Content) Get(e echo.Context) error {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
 	c.Init()
-	log.Flogger("get called")
-	ctx = database.GetPQContext(ctx)
+	ctx := GetLogger().Flogger("Get called").Ctx
 	db := database.GetPQDatabase(ctx)
+	defer db.Close()
 	var id string
 	if c.Model.ID != "" {
 		id = c.Model.ID
@@ -126,17 +98,16 @@ func (c *Content) Get(e echo.Context) error {
 	if c.ID != "" {
 		id = c.ID
 	}
-	defer db.Close()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = '%s'::uuid OR content @> '{\"id\":\"%s\"}'", c.Columns, id, id)
 	rows, err := db.Query(q)
 	if err != nil {
-		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(err)
+		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(db, err)
 	}
 	var t Content
 	for rows.Next() {
 		t, err = c.Scan(e, rows)
 		if err != nil {
-			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(err)
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(db, err)
 		}
 		*c = t
 	}
@@ -144,18 +115,10 @@ func (c *Content) Get(e echo.Context) error {
 }
 
 func (c *ShallowContent) Get(e echo.Context) error {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Get called")
+	ctx := GetLogger().Flogger("Get called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
+	defer db.Close()
 	var id string
 	if c.ShallowModel.ID != "" {
 		id = c.ShallowModel.ID
@@ -163,17 +126,16 @@ func (c *ShallowContent) Get(e echo.Context) error {
 	if c.ID != "" {
 		id = c.ID
 	}
-	defer db.Close()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = '%s'::uuid OR content @> '{\"id\":\"%s\"}'", c.Columns, id, id)
 	rows, err := db.Query(q)
 	if err != nil {
-		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(err)
+		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(db, err)
 	}
 	var t ShallowContent
 	for rows.Next() {
 		t, err = c.Scan(e, rows)
 		if err != nil {
-			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(err)
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(db, err)
 		}
 		*c = t
 	}
@@ -181,23 +143,14 @@ func (c *ShallowContent) Get(e echo.Context) error {
 }
 
 func (c *Content) FindBy(e echo.Context, key, value string) error {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("FindBy called")
+	ctx := GetLogger().Flogger("FindBy called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content @> '{\"%s\":\"%s\"}'", c.Columns, key, value)
 	rows, err := db.Query(q)
 	if err != nil {
-		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q)}.Wrap(err)
+		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q)}.Wrap(db, err)
 	}
 	var t Content
 	ctr := 0
@@ -205,37 +158,28 @@ func (c *Content) FindBy(e echo.Context, key, value string) error {
 		ctr++
 		t, err = c.Scan(e, rows)
 		if err != nil {
-			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q)}.Wrap(err)
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q)}.Wrap(db, err)
 		}
 	}
 	if ctr == 0 {
 		return merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}
 	}
 	if t.Content == "" {
-		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(err).BubbleCode()
+		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(db, err).BubbleCode()
 	}
 	*c = t
 	return nil
 }
 
 func (c *ShallowContent) FindBy(e echo.Context, key, value string) error {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("FindBy called")
+	ctx := GetLogger().Flogger("FindBy called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content @> '{\"%s\":\"%s\"}'", c.Columns, key, value)
 	rows, err := db.Query(q)
 	if err != nil {
-		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(err)
+		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(db, err)
 	}
 	var t ShallowContent
 	ctr := 0
@@ -243,31 +187,22 @@ func (c *ShallowContent) FindBy(e echo.Context, key, value string) error {
 		ctr++
 		t, err = c.Scan(e, rows)
 		if err != nil {
-			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(err)
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(db, err)
 		}
 	}
 	if ctr == 0 {
 		return merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}
 	}
 	if t.Content == "" {
-		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(err).BubbleCode()
+		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(db, err).BubbleCode()
 	}
 	*c = t
 	return nil
 }
 
 func (c Content) Set(e echo.Context) error {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Set called")
+	ctx := GetLogger().Flogger("Set called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	tx := database.GetPQTx(database.GetPQContext(ctx))
@@ -275,28 +210,19 @@ func (c Content) Set(e echo.Context) error {
 	_, err := tx.Exec(q, c.Values()...)
 	if err != nil {
 		tx.Rollback()
-		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0])}.Wrap(err)
+		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0])}.Wrap(db, err)
 	}
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return merrors.TransactionCommitError{Info: "content set"}.Wrap(err)
+		return merrors.TransactionCommitError{Info: "content set"}.Wrap(db, err)
 	}
 	return nil
 }
 
 func (c ShallowContent) Set(e echo.Context) error {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Set called")
+	ctx := GetLogger().Flogger("Set called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	tx := database.GetPQTx(ctx)
@@ -304,132 +230,105 @@ func (c ShallowContent) Set(e echo.Context) error {
 	_, err := tx.Exec(q, c.Values()...)
 	if err != nil {
 		tx.Rollback()
-		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0])}.Wrap(err)
+		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0])}.Wrap(db, err)
 	}
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return merrors.TransactionCommitError{Info: "content set"}.Wrap(err)
+		return merrors.TransactionCommitError{Info: "content set"}.Wrap(db, err)
 	}
 	return nil
 }
 
 func (c Content) List(e echo.Context) ([]Content, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("List called")
+	ctx := GetLogger().Flogger("List called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	if db == nil {
-		return nil, merrors.DBConnectionError{}.Wrap(fmt.Errorf("db is nil"))
+		return nil, merrors.DBConnectionError{}.New(db, "db is nil")
 	}
 
 	textOut := strings.Replace(c.Model.Columns, "e, content", "e, content::text", 1)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1", textOut)
 	stmt, err := db.Prepare(q)
 	if err != nil {
-		return nil, merrors.DBPrepareStatementError{Info: q}.Wrap(err)
+		return nil, merrors.DBPrepareStatementError{Info: q}.Wrap(db, err)
 	}
 	rows, err := stmt.Query(c.Model.ContentType)
 	if err != nil {
-		return nil, merrors.DBStatementQueryQueryError{Info: q}.Wrap(err)
+		return nil, merrors.DBStatementQueryQueryError{Info: q}.Wrap(db, err)
 	}
 	r := make([]Content, 0)
 	for rows.Next() {
 		content, err := c.Scan(e, rows)
 		r = append(r, content)
 		if err != nil {
-			return nil, merrors.DBContentScanError{}.Wrap(err)
+			return nil, merrors.DBContentScanError{}.Wrap(db, err)
 		}
 		if rows.Err() != nil {
-			return nil, merrors.DBConnectionError{}.Wrap(err)
+			return nil, merrors.DBConnectionError{}.Wrap(db, err)
 		}
 	}
 	if rows.Err() != nil {
-		return nil, merrors.DBContentScanError{}.Wrap(err)
+		return nil, merrors.DBContentScanError{}.Wrap(db, err)
 	}
 	rows.Close()
 	return r, nil
 }
 
 func (c ShallowContent) List(e echo.Context) ([]ShallowContent, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("List called")
+	ctx := GetLogger().Flogger("List called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	if db == nil {
-		return nil, merrors.DBConnectionError{}.Wrap(fmt.Errorf("db is nil"))
+		return nil, merrors.DBConnectionError{}.New(db, "db is nil")
 	}
 
 	textOut := strings.Replace(c.ShallowModel.Columns, "e, content", "e, content::text", 1)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1", textOut)
 	stmt, err := db.Prepare(q)
 	if err != nil {
-		return nil, merrors.DBPrepareStatementError{Info: q}.Wrap(err)
+		return nil, merrors.DBPrepareStatementError{Info: q}.Wrap(db, err)
 	}
 	rows, err := stmt.Query(c.ShallowModel.ContentType)
 	if err != nil {
-		return nil, merrors.DBStatementQueryQueryError{Info: q}.Wrap(err)
+		return nil, merrors.DBStatementQueryQueryError{Info: q}.Wrap(db, err)
 	}
 	r := make([]ShallowContent, 0)
 	for rows.Next() {
 		content, err := c.Scan(e, rows)
 		r = append(r, content)
 		if err != nil {
-			return nil, merrors.DBContentScanError{}.Wrap(err)
+			return nil, merrors.DBContentScanError{}.Wrap(db, err)
 		}
 		if rows.Err() != nil {
-			return nil, merrors.DBConnectionError{}.Wrap(err)
+			return nil, merrors.DBConnectionError{}.Wrap(db, err)
 		}
 	}
 	if rows.Err() != nil {
-		return nil, merrors.DBContentScanError{}.Wrap(err)
+		return nil, merrors.DBContentScanError{}.Wrap(db, err)
 	}
 	rows.Close()
 	return r, nil
 }
 
 func (c Content) ListBy(e echo.Context, key, value interface{}) ([]Content, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("ListBy called")
-	ctx = database.GetPQContext(ctx)
+	ctx := GetLogger().Flogger("ListBy called").Ctx
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	c.Init()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1 AND content @> '{\"%s\":\"%v\"}'", c.Model.Columns, key, value)
 	rows, err := db.Query(q, c.Model.ContentType)
 	if err != nil {
-		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(db, err)
 	}
 	r := make([]Content, 0)
 	for rows.Next() {
 		content, err := c.Scan(e, rows)
 		if err != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(db, err)
 		}
 		r = append(r, content)
 	}
@@ -437,29 +336,20 @@ func (c Content) ListBy(e echo.Context, key, value interface{}) ([]Content, erro
 }
 
 func (c ShallowContent) ListBy(e echo.Context, key, value interface{}) ([]ShallowContent, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("ListBy called")
-	ctx = database.GetPQContext(ctx)
+	ctx := GetLogger().Flogger("ListBy called").Ctx
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	c.Init()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1 AND content @> '{\"%s\":\"%v\"}'", c.ShallowModel.Columns, key, value)
 	rows, err := db.Query(q, c.ShallowModel.ContentType)
 	if err != nil {
-		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(db, err)
 	}
 	r := make([]ShallowContent, 0)
 	for rows.Next() {
 		content, err := c.Scan(e, rows)
 		if err != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(db, err)
 		}
 		r = append(r, content)
 	}
@@ -467,16 +357,7 @@ func (c ShallowContent) ListBy(e echo.Context, key, value interface{}) ([]Shallo
 }
 
 func (c Content) Delete(e echo.Context) error {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Delete called")
-	ctx = database.GetPQContext(ctx)
+	ctx := GetLogger().Flogger("Delete called").Ctx
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	tx := database.GetPQTx(ctx)
@@ -484,29 +365,21 @@ func (c Content) Delete(e echo.Context) error {
 	_, err := tx.Exec(q, c.Model.ID)
 	if err != nil {
 		tx.Rollback()
-		return merrors.SQLDeleteErorr{Info: q, Package: "models", Struct: "Content", Function: "Delete"}.Wrap(err)
+		GetLogger().Flogger("")
+		return merrors.SQLDeleteErorr{Info: q, Package: "models", Struct: "Content", Function: "Delete"}.Wrap(db, err)
 	}
 	if err = tx.Commit(); err != nil {
-		fmt.Printf("rollback: models:content:delete\n")
+		GetLogger().Flogger("rollback: models:content:delete\n")
 		tx.Rollback()
-		return merrors.TransactionCommitError{Package: "models", Struct: "Content", Function: "Delete"}.Wrap(err)
+		return merrors.TransactionCommitError{Package: "models", Struct: "Content", Function: "Delete"}.Wrap(db, err)
 	}
 	
 	return nil
 }
 
 func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]Content, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("CustomQuery called")
+	ctx := GetLogger().Flogger("CustomQuery called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	if write {
@@ -524,20 +397,16 @@ func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 			if err = tx.Commit(); err != nil {
 				panic(fmt.Errorf("commit error: %w", err))
 			}
-			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)
 		}
 		if err = tx.Commit(); err != nil {
 			panic(fmt.Errorf("commit error: %w", err))
 		}
 		return nil, nil
 	}
-	// vals = append(vals, c.Model.Columns)
-	// vals = append(vals, vars)
-	// TODO: fix error when another use case arises
-	// rows, err := db.Query(q, vals...)
 	rows, err := db.Query(q)
 	if err != nil {
-		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)			
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)			
 	}
 	ctr := 0
 	r := make([]Content, 0)
@@ -545,36 +414,27 @@ func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 		ctr++
 		content, err := c.Scan(e, rows)
 		if err != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)
 		}
 		r = append(r, content)
 	}
 	if rows.Err() != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(rows.Err())
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, rows.Err())
 	}
 	if ctr == 0 {
-		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(err).BubbleCode()
+		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(db, err).BubbleCode()
 	}
 	for _, t := range r {
 		if t.Content == "" {
-			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500}.Wrap(err)
+			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500}.Wrap(db, err)
 		}
 	}
 	return r, nil
 }
 
 func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]ShallowContent, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("context is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("CustomQuery called")
+	ctx := GetLogger().Flogger("CustomQuery called").Ctx
 	c.Init()
-	ctx = database.GetPQContext(ctx)
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	if write {
@@ -592,7 +452,7 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 			if err = tx.Commit(); err != nil {
 				panic(fmt.Errorf("commit error: %w", err))
 			}
-			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)
 		}
 		if err = tx.Commit(); err != nil {
 			panic(fmt.Errorf("commit error: %w", err))
@@ -605,7 +465,7 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 	// rows, err := db.Query(q, vals...)
 	rows, err := db.Query(q)
 	if err != nil {
-		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)			
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)			
 	}
 	ctr := 0
 	r := make([]ShallowContent, 0)
@@ -613,30 +473,26 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 		ctr++
 		content, err := c.Scan(e, rows)
 		if err != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)
 		}
 		r = append(r, content)
 	}
 	if rows.Err() != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(rows.Err())
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, rows.Err())
 	}
 	if ctr == 0 {
-		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(err).BubbleCode()
+		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(db, err).BubbleCode()
 	}
 	for _, t := range r {
 		if t.Content == "" {
-			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500}.Wrap(err)
+			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500}.Wrap(db, err)
 		}
 	}
 	return r, nil
 }
 
 func (c Content) Scan(e echo.Context, rows Scannable) (Content, error) {
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return c, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Scan called")
+	GetLogger().Flogger("Scan called")
 	err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Model.ContentType, &c.Content)
 	if err != nil {
 		return c, err
@@ -645,11 +501,7 @@ func (c Content) Scan(e echo.Context, rows Scannable) (Content, error) {
 }
 
 func (c ShallowContent) Scan(e echo.Context, rows Scannable) (ShallowContent, error) {
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return c, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Scan called")
+	GetLogger().Flogger("Scan called")
 	err := rows.Scan(&c.ShallowModel.ID, &c.ShallowModel.CreatedAt, &c.ShallowModel.UpdatedAt, &c.ShallowModel.ContentType, &c.Content)
 	if err != nil {
 		return c, err
@@ -690,7 +542,7 @@ func (c ShallowContent) Values() []any {
 }
 
 func (c Content) New(ct string) Content {
-	c.Model.ID = uuid.New().String()
+	c.Model.ID = uuid.NewString()
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
 	c.Model.ContentType = ct

@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,10 +27,10 @@ func (c ShallowContent) Expand(e echo.Context) (*Content, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(nil, err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
 		}
 		return &r, nil
 	}
@@ -57,7 +56,7 @@ func (c *ShallowContent) Get(e echo.Context) (ShallowContent, error) {
 	contentModel.ID = c.ID
 	err := contentModel.Get(e)
 	if err != nil {
-		return *c, merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return *c, merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	d := c.FromModel(contentModel)
 	return d, nil
@@ -71,7 +70,7 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 		contentModel.ContentType = c.ContentType
 		_, err := contentModel.CustomQuery(e, write, q, vars...)
 		if err != nil {
-			return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+			return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(nil, err)
 		}
 		return nil, nil
 	}
@@ -81,7 +80,7 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 	contentModel.ContentType = c.ContentType
 	res, err := contentModel.CustomQuery(e, write, q, vars...)
 	if err != nil {
-		return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).BubbleCode()
+		return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(nil, err).BubbleCode()
 	}
 	r := make([]ShallowContent, 0)
 	for _, t := range res {
@@ -97,7 +96,7 @@ func (c ShallowContent) Set(e echo.Context) error {
 	contentModel.ID = c.ShallowModel.ID
 	err := contentModel.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -106,10 +105,10 @@ func (c *ShallowContent) FindBy(e echo.Context, key, value string) (ShallowConte
 	contentModel := models.ShallowContent{}
 	contentModel.ShallowModel.ID = c.ShallowModel.ID
 	if err := contentModel.FindBy(e, key, value); err != nil {
-		return *c, merrors.ContentFindByError{Info: c.ShallowModel.ID}.Wrap(err)
+		return *c, merrors.ContentFindByError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	if contentModel.Content == "" {
-		return *c, merrors.NilContentError{Package: "types", Struct: "ShallowContent", Function: "FindBy"}.Wrap(fmt.Errorf("nil content error")).BubbleCode()
+		return *c, merrors.NilContentError{Package: "types", Struct: "ShallowContent", Function: "FindBy"}.New(nil, "nil content error").BubbleCode()
 	}
 	d := c.FromModel(contentModel)
 	return d, nil
@@ -120,7 +119,7 @@ func (c ShallowContent) Delete(e echo.Context) error {
 	contentModel.Model.ID = c.ShallowModel.ID
 	contentModel.ID = c.ID
 	if err := contentModel.Delete(e); err != nil {
-		return merrors.ContentModelDeleteError{}.Wrap(err)
+		return merrors.ContentModelDeleteError{}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -146,7 +145,7 @@ func (c ShallowContent) ToModel() models.ShallowContent {
 func (c *ShallowContent) FromType(m ITable) error {
 	b, err := json.Marshal(m)
 	if err != nil {
-		return merrors.JSONMarshallingError{Info: m.GetContentType()}.Wrap(err)
+		return merrors.JSONMarshallingError{Info: m.GetContentType()}.Wrap(nil, err)
 	}
 	c.Content = string(b)
 	return nil

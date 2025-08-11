@@ -2,9 +2,9 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
@@ -12,12 +12,12 @@ import (
 
 type Workflow struct {
 	Model
-	ID 						WorkflowID 		`form:"id" json:"id"`
-	Name 					string 			`form:"name" json:"name"`
-	ComfyNodesArrayModel 	[]ComfyNode 	`form:"comfy_nodes" json: "comfy_nodes_array_model"`
-	OllamaNodesArrayModel 	[]OllamaNode 	`form:"ollama_nodes" json: "ollama_nodes_array_model"`
-	SSHNodesArrayModel 		[]SSHNode 		`form:"ssh_nodes" json: "ssh_nodes_array_model"`
-	NodeOrder 				map[string]int 	`form:"node_order" "json: "node_order"`
+	ID 						WorkflowID 			`form:"id" json:"id"`
+	Name 					string 				`form:"name" json:"name"`
+	ComfyNodesArrayModel 	[]ComfyNode 		`form:"comfy_nodes" json:"comfy_nodes_array_model"`
+	OllamaNodesArrayModel 	[]OllamaNode 		`form:"ollama_nodes" json:"ollama_nodes_array_model"`
+	SSHNodesArrayModel 		[]SSHNode 			`form:"ssh_nodes" json:"ssh_nodes_array_model"`
+	NodeOrder 				map[int]NodeOrder 	`form:"node_order" json:"node_order"`
 }
 
 func (c Workflow) Pack() []shallowmodel {
@@ -45,7 +45,7 @@ func (c Workflow) ToContent() (*Content, error) {
 	m.Model = c.Model
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -54,34 +54,34 @@ func (c Workflow) ToContent() (*Content, error) {
 func (c *Workflow) Validate() {
 	valid := true
 	if !c.Model.Validate() {
-		fmt.Printf("types.workflow.model is not valid\n")
+		GetLogger().Flogger("types.workflow.model is not valid")
 		valid = false
 	}
 	if c.ID.IsNil() || c.ID.String() != c.Model.ID {
-		fmt.Printf("types.workflow.id does not match model")
+		GetLogger().Flogger("types.workflow.id does not match model")
 		valid = false
 	}
 	if c.Name == "" {
-		fmt.Printf("types.workflow.name is nil")
+		GetLogger().Flogger("types.workflow.name is nil")
 		valid = false
 	}
 	for _, node := range c.ComfyNodesArrayModel {
 		node.Validate()
 		if !node.Model.Validated {
-			fmt.Printf("types.workflow.node[%s] failed validation\n", node.Model.ID)
+			GetLogger().Flogger("types.workflow.node[%s] failed validation", node.Model.ID)
 			valid = false
 		}
 	}
 	for _, node := range c.OllamaNodesArrayModel {
 		if !node.ValidateV2() {
-			fmt.Printf("types.workflow.node[%s] failed validation\n", node.Model.ID)
+			GetLogger().Flogger("types.workflow.node[%s] failed validation", node.Model.ID)
 			valid = false
 		}
 	}
 	for _, node := range c.SSHNodesArrayModel {
 		node.Validate()
 		if !node.Model.Validated {
-			fmt.Printf("types.workflow.node[%s] failed validation\n", node.Model.ID)
+			GetLogger().Flogger("types.workflow.node[%s] failed validation", node.Model.ID)
 			valid = false
 		}
 	}
@@ -119,19 +119,18 @@ func (c *Workflow) New(id *string) {
 	c.Model.UpdatedAt = c.Model.CreatedAt
 }
 
-
 func (c Workflow) List(e echo.Context) ([]Workflow, error) {
 	content := NewWorkflowModelContent()
 	content.Model.ContentType = "workflow"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
 	}
 	cuts := make([]Workflow, 0)
 	for _, model := range contents {
 		cut := NewWorkflow(&model.Model.ID)
 		if err := json.Unmarshal([]byte(model.Content), &cut); err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Workflow", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Workflow", Function: "List"}.Wrap(nil, err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -142,14 +141,14 @@ func (c Workflow) ListBy(e echo.Context, key string, value interface{}) ([]Workf
 	content := NewWorkflowModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
 	}
 	cuts := make([]Workflow, 0)
 	for _, model := range contents {
 		cut := Workflow{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Workflow", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Workflow", Function: "ListBy"}.Wrap(nil, err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -163,25 +162,26 @@ func (c *Workflow) Get(e echo.Context) error {
 	content.Model.ContentType = "workflow"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Workflow", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Workflow", Function: "Get"}.Wrap(nil, err)
 	}
+	c.NodeCleanup(e)
 	return nil
 }
 
 func (c Workflow) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "workflow", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "workflow", Function: "set"}.New(nil, "validation failed")
 	}
 	content := NewWorkflowTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ID.String()
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ func (c Workflow) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -212,7 +212,7 @@ func (c Workflow) SetID() (Workflow, error) {
 	var err error
 	c.ID = WorkflowID(c.Model.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "workflow"}.Wrap(err)
+		return c, merrors.IDSetError{Info: "workflow"}.Wrap(nil, err)
 	}
 	return c, nil
 }
@@ -230,58 +230,150 @@ func (c Workflow) Bind(e echo.Context) (Workflow, error) {
 func (c Workflow) Next(e echo.Context) (*models.Context, error) {
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Workflow", Function: "Next"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Workflow", Function: "Next"}.Wrap(nil, err)
 	}
 	return systemContext, nil
 }
 
-func (c *Workflow) CutNodeOrder(index string) {
-	iv := c.NodeOrder[index]
-	toslice := make([]string, len(c.NodeOrder))
-	for k, v := range c.NodeOrder {
-		toslice[v] = k
+func (c *Workflow) CutNodeOrder(nodeid string) {
+	nodeSlice := make([]NodeOrder, 0)
+	newOrder := make(map[int]NodeOrder)
+	for _, n := range c.NodeOrder {
+		if n.NodeID == nodeid {
+			continue
+		}
+		n.Order = len(nodeSlice)
+		nodeSlice = append(nodeSlice, n)
+		newOrder[n.Order] = n
 	}
-	newslice := append(toslice[:iv], toslice[iv:]...)
-	tomap := make(map[string]int)
-	for k, v := range newslice {
-		tomap[v] = k 
-	}
-	c.NodeOrder = tomap
+	c.NodeOrder = newOrder
 }
 
 func (c *Workflow) CutNode(id string) {
-	found := false
-	if !found {
-		comfynodes := make([]ComfyNode, 0)
-		for _, v := range c.ComfyNodesArrayModel {
-			if v.Model.ID == id {
-				found = true
-				continue
+	for _, n := range c.NodeOrder {
+		if n.NodeID == id {
+			switch n.NodeType {
+			case "comfynode":
+				for i, cn := range c.ComfyNodesArrayModel {
+					if cn.ID == id {
+						c.ComfyNodesArrayModel = append(c.ComfyNodesArrayModel[:i], c.ComfyNodesArrayModel[i:]...)
+						break
+					}
+				}
+			case "ollamanode":
+				for i, cn := range c.OllamaNodesArrayModel {
+					if cn.ID == id {
+						c.OllamaNodesArrayModel = append(c.OllamaNodesArrayModel[:i], c.OllamaNodesArrayModel[i:]...)
+						break
+					}
+				}
+			case "sshnode":
+				for i, cn := range c.SSHNodesArrayModel {
+					if cn.ID == id {
+						c.SSHNodesArrayModel = append(c.SSHNodesArrayModel[:i], c.SSHNodesArrayModel[i:]...)
+						break
+					}
+				}
+			default:
 			}
-			comfynodes = append(comfynodes, v)
 		}
-		c.ComfyNodesArrayModel = comfynodes
 	}
-	if !found {
-		ollamanodes := make([]OllamaNode, 0)
-		for _, v := range c.OllamaNodesArrayModel {
-			if v.Model.ID == id {
-				found = true
-				continue
-			}
-			ollamanodes = append(ollamanodes, v)
+}
+
+func (c *Workflow) NodeCleanup(e echo.Context) {
+	newComfyNodes := make([]ComfyNode, 0)
+	for _, node := range c.ComfyNodesArrayModel {
+		if err := node.Get(e); err != nil {
+			c.CutNodeOrder(node.ID)
+			GetLogger().Flogger("err: %s", err.Error())
+			continue
 		}
-		c.OllamaNodesArrayModel = ollamanodes
+		newComfyNodes = append(newComfyNodes, node)
 	}
-	if !found {
-		sshnodes := make([]SSHNode, 0)
-		for _, v := range c.SSHNodesArrayModel {
-			if v.Model.ID == id {
-				found = true
-				continue
-			}
-			sshnodes = append(sshnodes, v)
+	c.ComfyNodesArrayModel = newComfyNodes
+	newOllamaNodes := make([]OllamaNode, 0)
+	for _, node := range c.OllamaNodesArrayModel {
+		if err := node.Get(e); err != nil {
+			c.CutNodeOrder(node.ID)
+			GetLogger().Flogger("err: %s", err.Error())
+			continue
 		}
-		c.SSHNodesArrayModel = sshnodes
+		newOllamaNodes = append(newOllamaNodes, node)
 	}
+	c.OllamaNodesArrayModel = newOllamaNodes
+	newSSHNodes := make([]SSHNode, 0)
+	for _, node := range c.SSHNodesArrayModel {
+		if err := node.Get(e); err != nil {
+			c.CutNodeOrder(node.ID)
+			GetLogger().Flogger("err: %s", err.Error())
+		}
+		newSSHNodes = append(newSSHNodes, node)
+	}
+	c.SSHNodesArrayModel = newSSHNodes
+}
+
+func (c *Workflow) ComfyNodeAppend(node ComfyNode) {
+	if c.ComfyNodesArrayModel == nil {
+		c.ComfyNodesArrayModel = make([]ComfyNode, 0)
+	}
+	c.ComfyNodesArrayModel = append(c.ComfyNodesArrayModel, node)
+	if c.NodeOrder == nil {
+		c.NodeOrder = make(map[int]NodeOrder)
+	}
+	n := NodeOrder{
+		ID: NodeOrderID(uuid.NewString()),
+		WorkflowID: node.WorkflowID,
+		NodeID: node.ID,
+		NodeType: node.Model.ContentType,
+		Order: len(c.NodeOrder),
+	}
+	n.EmbedModel.ID = n.ID.String()
+	n.CreatedAt = time.Now()
+	n.UpdatedAt = n.CreatedAt
+	n.ContentType = "nodeorder"
+	c.NodeOrder[len(c.NodeOrder)] = n
+}
+
+func (c *Workflow) OllamaNodeAppend(node OllamaNode) {
+	if c.OllamaNodesArrayModel == nil {
+		c.OllamaNodesArrayModel = make([]OllamaNode, 0)
+	}
+	c.OllamaNodesArrayModel = append(c.OllamaNodesArrayModel, node)
+	if c.NodeOrder == nil {
+		c.NodeOrder = make(map[int]NodeOrder)
+	}
+	n := NodeOrder{
+		ID: NodeOrderID(uuid.NewString()),
+		WorkflowID: node.WorkflowID,
+		NodeID: node.ID,
+		NodeType: node.Model.ContentType,
+		Order: len(c.NodeOrder),
+	}
+	n.EmbedModel.ID = n.ID.String()
+	n.CreatedAt = time.Now()
+	n.UpdatedAt = n.CreatedAt
+	n.ContentType = "nodeorder"
+	c.NodeOrder[len(c.NodeOrder)] = n
+}
+
+func (c *Workflow) SSHNodeAppend(node SSHNode) {
+	if c.SSHNodesArrayModel == nil {
+		c.SSHNodesArrayModel = make([]SSHNode, 0)
+	}
+	c.SSHNodesArrayModel = append(c.SSHNodesArrayModel, node)
+	if c.NodeOrder == nil {
+		c.NodeOrder = make(map[int]NodeOrder)
+	}
+	n := NodeOrder{
+		ID: NodeOrderID(uuid.NewString()),
+		WorkflowID: node.WorkflowID,
+		NodeID: node.ID,
+		NodeType: node.Model.ContentType,
+		Order: len(c.NodeOrder),
+	}
+	n.EmbedModel.ID = n.ID.String()
+	n.CreatedAt = time.Now()
+	n.UpdatedAt = n.CreatedAt
+	n.ContentType = "nodeorder"
+	c.NodeOrder[len(c.NodeOrder)] = n
 }

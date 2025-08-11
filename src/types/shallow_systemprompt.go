@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -46,7 +45,7 @@ func (c ShallowSystemPrompt) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -57,10 +56,10 @@ func (c ShallowSystemPrompt) Expand(e echo.Context) (*SystemPrompt, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(nil, err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
 		}
 		return &r, nil
 	}
@@ -92,7 +91,7 @@ func (c ShallowSystemPrompt) List(e echo.Context) ([]ShallowSystemPrompt, error)
 	content.ShallowModel.ContentType = "systemprompt"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(nil, err)
 	}
 	ct := "shallowsystemprompt"
 	cuts := make([]ShallowSystemPrompt, 0)
@@ -100,7 +99,7 @@ func (c ShallowSystemPrompt) List(e echo.Context) ([]ShallowSystemPrompt, error)
 		cut := NewShallowSystemPrompt(nil, &ct)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "List"}.Wrap(nil, err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -111,7 +110,7 @@ func (c ShallowSystemPrompt) ListBy(e echo.Context, key string, value interface{
 	content := NewShallowSystemPromptModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(nil, err)
 	}
 	ct := "shallowsystemprompt"
 	cuts := make([]ShallowSystemPrompt, 0)
@@ -119,7 +118,7 @@ func (c ShallowSystemPrompt) ListBy(e echo.Context, key string, value interface{
 		cut := NewShallowSystemPrompt(nil, &ct)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "ListBy"}.Wrap(nil, err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -128,10 +127,10 @@ func (c ShallowSystemPrompt) ListBy(e echo.Context, key string, value interface{
 
 func (c *ShallowSystemPrompt) FromContent(content *ShallowContent) error {
 	if content == nil {
-		return merrors.ContentToTypeError{}.Wrap(fmt.Errorf("content is nil"))
+		return merrors.ContentToTypeError{}.New(nil, "content is nil")
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
-		return merrors.JSONUnmarshallingError{}.Wrap(err)
+		return merrors.JSONUnmarshallingError{}.Wrap(nil, err)
 	}
 	return nil	
 }
@@ -139,14 +138,14 @@ func (c *ShallowSystemPrompt) FromContent(content *ShallowContent) error {
 func (c *ShallowSystemPrompt) Get(e echo.Context) error {
 	content, err := c.ShallowModel.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "Get"}.Wrap(nil, err)
 	}
 	if err := c.FromContent(content); err != nil {
-		return merrors.ContentToTypeError{}.Wrap(err)
+		return merrors.ContentToTypeError{}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -156,7 +155,7 @@ func (c ShallowSystemPrompt) Set(e echo.Context) error {
 	content.FromType(c)
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -166,7 +165,7 @@ func (c ShallowSystemPrompt) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -187,7 +186,7 @@ func (c ShallowSystemPrompt) SetID() (ShallowSystemPrompt, error) {
 	var err error
 	c.ID = SystemPromptID(c.ShallowModel.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "systemprompt"}.Wrap(err)
+		return c, merrors.IDSetError{Info: "systemprompt"}.Wrap(nil, err)
 	}
 	return c, nil
 }

@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -62,10 +61,10 @@ func NewOllamaResponse(id *string) OllamaResponse {
 func (c ShallowOllamaResponse) Get(e echo.Context, mode string) (*OllamaResponse, *ShallowOllamaResponse, error) {
 	content := Content{ID: c.Model.ID}
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
 	}
 	if mode == "shallow" {
 		return nil, &c, nil
@@ -79,5 +78,5 @@ func (c ShallowOllamaResponse) Get(e echo.Context, mode string) (*OllamaResponse
 		m.Response = c.Response
 		return &m, nil, nil
 	}
-	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowOllamaResponse", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowOllamaResponse", Function: "Get"}.New(nil, "unknown mode: %s", mode)
 } 

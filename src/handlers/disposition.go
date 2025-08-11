@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
@@ -22,11 +20,7 @@ func RegisterDispositionRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetDisposition(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIGetDisposition called")
+	GetLogger().Flogger("HandleAPIGetDisposition called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewDisposition(&id)
 		if err := entity.Get(c); err != nil {
@@ -39,14 +33,10 @@ func HandleAPIGetDisposition(c echo.Context) error {
 
 func HandleAPISetDisposition(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPISetDisposition called")
+	GetLogger().Flogger("HandleAPISetDisposition called")
 	entity := types.NewDisposition(nil)
 	if err := c.Bind(&entity); err != nil {
-		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISetDisposition"}.Wrap(err))
+		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISetDisposition"}.Wrap(nil, err))
 	}
 	entity.Model.ID = c.FormValue("id")
 	entity, err = entity.SetID()
@@ -61,11 +51,7 @@ func HandleAPISetDisposition(c echo.Context) error {
 }
 
 func HandleAPIListDisposition(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIListDisposition called")
+	GetLogger().Flogger("HandleAPIListDisposition called")
 	disposition := types.NewDisposition(nil)
 	dispositions, err := disposition.List(c)
 	if err != nil {
@@ -75,11 +61,7 @@ func HandleAPIListDisposition(c echo.Context) error {
 }
 
 func HandleDispositions(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleDispositions called")
+	GetLogger().Flogger("HandleDispositions called")
 	dt := DisplayDisposition{
 		DisplayType: "none",
 		Menu: Menu{
@@ -91,11 +73,7 @@ func HandleDispositions(c echo.Context) error {
 }
 
 func HandleDispositionsNew(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleDispositionsNew called")
+	GetLogger().Flogger("HandleDispositionsNew called")
 	dt := DisplayDisposition{
 		Disposition: types.Disposition{},
 		DisplayType: "new",
@@ -109,11 +87,7 @@ func HandleDispositionsNew(c echo.Context) error {
 }
 
 func HandleDispositionGet(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleDispositionGet called")
+	GetLogger().Flogger("HandleDispositionGet called")
 	if id := c.Param("id"); id != "" {
 		disposition := types.NewDisposition(&id)
 		if err := disposition.Get(c); err != nil {
@@ -133,11 +107,7 @@ func HandleDispositionGet(c echo.Context) error {
 }
 
 func HandleDispositionsList(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleDispositionsList called")
+	GetLogger().Flogger("HandleDispositionsList called")
 	disposition := types.NewDisposition(nil)
 	dispositions, err := disposition.List(c)
 	if err != nil {
@@ -158,14 +128,10 @@ func HandleDispositionsList(c echo.Context) error {
 
 func HandleDispositionsSave(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleDispositionsSave called")
+	GetLogger().Flogger("HandleDispositionsSave called")
 	entity := types.NewDisposition(nil)
 	if err := c.Bind(&entity); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleDispositionsSave"}.Wrap(err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleDispositionsSave"}.Wrap(nil, err))
 	}
 	entity, err = entity.Bind(c)
 	if err != nil {
@@ -187,11 +153,7 @@ func HandleDispositionsSave(c echo.Context) error {
 }
 
 func HandleDispositionsDelete(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleDispositionsDelete called")
+	GetLogger().Flogger("HandleDispositionsDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewDisposition(&id)
 		entity.Model.ID = c.Param("id")

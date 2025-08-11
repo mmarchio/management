@@ -51,7 +51,7 @@ func (c Prompt) Scan(e echo.Context, rows Scannable) (ITable, error) {
 	for rows.Next() {
 		err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Name, &c.Domain, &c.Category, &c.Settings)
 		if err != nil {
-			return nil, merrors.DBContentScanError{}.Wrap(err)
+			return nil, merrors.DBContentScanError{}.Wrap(nil, err)
 		}
 	}
 	return c, nil
@@ -79,7 +79,7 @@ func (c *Prompt) New() {
 func (c *Prompt) Get(e echo.Context) error {
 	var err error
 	if err != nil {
-		return merrors.ContentGetError{}.Wrap(err)
+		return merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -87,7 +87,7 @@ func (c *Prompt) Get(e echo.Context) error {
 func (c Prompt) Set(e echo.Context) error {
 	err := c.Model.Set(e, c)
 	if err != nil {
-		return merrors.ContentSetError{}.Wrap(err)
+		return merrors.ContentSetError{}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -99,18 +99,18 @@ func (c Prompt) GetSlice(e echo.Context) []Prompt {
 // func (c Prompt) List(e echo.Context) ([]Prompt, error) {
 // 	contents, err := c.Model.List(e, c)
 // 	if err != nil {
-// 		return nil, merrors.PromptListError{}.Wrap(err)
+// 		return nil, merrors.PromptListError{}.Wrap(db, err)
 // 	}
 // 	r := make([]Prompt, 0)
 // 	var prompt Prompt
 // 	for _, i := range contents {
 // 		err = json.Unmarshal([]byte(i.Content), &prompt)
 // 		if err != nil {
-// 			return nil, merrors.JSONUnmarshallingError{Info: i.Content}.Wrap(err)
+// 			return nil, merrors.JSONUnmarshallingError{Info: i.Content}.Wrap(db, err)
 // 		}
 // 		err = prompt.Unpack()
 // 		if err != nil {
-// 			return nil, merrors.PromptUnpackError{Info: c.Settings}.Wrap(err)
+// 			return nil, merrors.PromptUnpackError{Info: c.Settings}.Wrap(db, err)
 // 		}
 // 		r = append(r, prompt)
 // 	}

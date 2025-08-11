@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -12,9 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mmarchio/management/config"
-	"github.com/mmarchio/management/database"
 	"github.com/mmarchio/management/handlers"
-	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 	"github.com/swaggo/echo-swagger"
 	_ "github.com/swaggo/echo-swagger/example/docs"
@@ -22,17 +19,6 @@ import (
 
 type Template struct {
 	Templates *template.Template
-}
-
-func LoggingContextMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		ctx := context.Background()
-		ctx = context.WithValue(ctx, logger.LoggerKey, logger.Logger)
-		ctx = database.GetPQContext(ctx)
-		c.Set("context", ctx)
-		c.Set("logger", &logger.LoggingContext{c})
-		return next(c)
-	}
 }
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
@@ -48,7 +34,6 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 
 func main() {
 	e := echo.New()
-	e.Use(LoggingContextMiddleware)
 	
 	e.GET("/", handleIndex)
 

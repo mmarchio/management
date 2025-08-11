@@ -652,4 +652,29 @@ func (c PromptTemplateID) Scan(s interface{}) (PromptTemplateID, error) {
 	return PromptTemplateID(n.String()), nil
 }
 
+type NodeOrderID string
+
+func (c NodeOrderID) New(id *string) NodeOrderID {
+	if id != nil {
+		return NodeOrderID(*id)
+	}
+	return NodeOrderID(uuid.NewString())
+}
+
+func (c NodeOrderID) IsNil() bool {
+	return string(c) == ""
+}
+
+func (c NodeOrderID) String() string {
+	return string(c)
+}
+
+func (c NodeOrderID) Scan(s interface{}) (NodeOrderID, error) {
+	n := uuid.New()
+	err := n.Scan(s)
+	if err != nil {
+		return c, err
+	}
+	return NodeOrderID(n.String()), nil
+}
 

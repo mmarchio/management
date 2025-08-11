@@ -25,7 +25,7 @@ func (c ShallowToggle) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -36,11 +36,11 @@ func (c ShallowToggle) Expand(e echo.Context) (*Toggle, error) {
 	if c.CreatedAt.IsZero() {
 		m, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(nil, err)
 		}
 		c.ShallowModel = m.ShallowModel
 		if err := json.Unmarshal([]byte(m.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
 		}
 		return &r, nil
 	}

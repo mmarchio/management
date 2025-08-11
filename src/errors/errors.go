@@ -1,6 +1,9 @@
 package merrors
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+)
 
 type Merror struct {
 	Err      error
@@ -12,12 +15,26 @@ type Merror struct {
 	Code     ErrorCode
 }
 
+func (c Merror) DBCloseAll(db *sql.DB) {
+	if db != nil {
+        db.Close()
+    }
+}
+
 type ErrorCode int16
 
 //Echo Errors
 type EchoBindError Merror
 
-func (c EchoBindError) Wrap(err error) EchoBindError {
+func (c EchoBindError) New(db *sql.DB, s string, vars ...any) EchoBindError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c EchoBindError) Wrap(db *sql.DB, err error) EchoBindError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("EchoBindError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -34,7 +51,15 @@ func (c EchoBindError) ErrorCode(code int16) {
 //DB Errors
 type DBConnectionError Merror
 
-func (c DBConnectionError) Wrap(err error) DBConnectionError {
+func (c DBConnectionError) New(db *sql.DB, s string, vars ...any) DBConnectionError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c DBConnectionError) Wrap(db *sql.DB, err error) DBConnectionError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBConnectionError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -50,7 +75,15 @@ func (c DBConnectionError) ErrorCode(code int16) {
 
 type DBQueryError Merror
 
-func (c DBQueryError) Wrap(err error) DBQueryError {
+func (c DBQueryError) New(db *sql.DB, s string, vars ...any) DBQueryError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c DBQueryError) Wrap(db *sql.DB, err error) DBQueryError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBConnectionError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -66,7 +99,15 @@ func (c DBQueryError) ErrorCode(code int16) {
 
 type DBContentScanError Merror
 
-func (c DBContentScanError) Wrap(err error) DBContentScanError {
+func (c DBContentScanError) New(db *sql.DB, s string, vars ...any) DBContentScanError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c DBContentScanError) Wrap(db *sql.DB, err error) DBContentScanError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBContentScanError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -82,7 +123,15 @@ func (c DBContentScanError) ErrorCode(code int16) {
 
 type DBTransactionCommitError Merror
 
-func (c DBTransactionCommitError) Wrap(err error) DBTransactionCommitError {
+func (c DBTransactionCommitError) New(db *sql.DB, s string, vars ...any) DBTransactionCommitError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c DBTransactionCommitError) Wrap(db *sql.DB, err error) DBTransactionCommitError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBTransactionCommitError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -98,7 +147,15 @@ func (c DBTransactionCommitError) ErrorCode(code int16) {
 
 type SQLDeleteErorr Merror
 
-func (c SQLDeleteErorr) Wrap(err error) SQLDeleteErorr {
+func (c SQLDeleteErorr) New(db *sql.DB, s string, vars ...any) SQLDeleteErorr {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c SQLDeleteErorr) Wrap(db *sql.DB, err error) SQLDeleteErorr {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("SQLDeleteErorr", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -114,7 +171,15 @@ func (c SQLDeleteErorr) ErrorCode(code int16) {
 
 type SQLQueryError Merror
 
-func (c SQLQueryError) Wrap(err error) SQLQueryError {
+func (c SQLQueryError) New(db *sql.DB, s string, vars ...any) SQLQueryError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c SQLQueryError) Wrap(db *sql.DB, err error) SQLQueryError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("SQLQueryError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -130,7 +195,15 @@ func (c SQLQueryError) ErrorCode(code int16) {
 
 type TransactionCommitError Merror
 
-func (c TransactionCommitError) Wrap(err error) TransactionCommitError {
+func (c TransactionCommitError) New(db *sql.DB, s string, vars ...any) TransactionCommitError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c TransactionCommitError) Wrap(db *sql.DB, err error) TransactionCommitError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("TransactionCommitError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -146,7 +219,15 @@ func (c TransactionCommitError) ErrorCode(code int16) {
 
 type DBPrepareStatementError Merror
 
-func (c DBPrepareStatementError) Wrap(err error) DBPrepareStatementError {
+func (c DBPrepareStatementError) New(db *sql.DB, s string, vars ...any) DBPrepareStatementError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c DBPrepareStatementError) Wrap(db *sql.DB, err error) DBPrepareStatementError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBPrepareStatementError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -162,7 +243,15 @@ func (c DBPrepareStatementError) ErrorCode(code int16) {
 
 type DBStatementQueryQueryError Merror
 
-func (c DBStatementQueryQueryError) Wrap(err error) DBStatementQueryQueryError {
+func (c DBStatementQueryQueryError) New(db *sql.DB, s string, vars ...any) DBStatementQueryQueryError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c DBStatementQueryQueryError) Wrap(db *sql.DB, err error) DBStatementQueryQueryError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBStatementQueryQueryError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -179,7 +268,15 @@ func (c DBStatementQueryQueryError) ErrorCode(code int16) {
 //JSON Errors
 type JSONUnmarshallingError Merror
 
-func (c JSONUnmarshallingError) Wrap(err error) JSONUnmarshallingError {
+func (c JSONUnmarshallingError) New(db *sql.DB, s string, vars ...any) JSONUnmarshallingError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c JSONUnmarshallingError) Wrap(db *sql.DB, err error) JSONUnmarshallingError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("JSONUnmarshallingError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -195,7 +292,15 @@ func (c JSONUnmarshallingError) ErrorCode(code int16) {
 
 type JSONMarshallingError Merror
 
-func (c JSONMarshallingError) Wrap(err error) JSONMarshallingError {
+func (c JSONMarshallingError) New(db *sql.DB, s string, vars ...any) JSONMarshallingError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c JSONMarshallingError) Wrap(db *sql.DB, err error) JSONMarshallingError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("JSONMarshallingError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -212,7 +317,15 @@ func (c JSONMarshallingError) ErrorCode(code int16) {
 //ID errors
 type IDSetError Merror
 
-func (c IDSetError) Wrap(err error) IDSetError {
+func (c IDSetError) New(db *sql.DB, s string, vars ...any) IDSetError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c IDSetError) Wrap(db *sql.DB, err error) IDSetError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("IDSetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -229,7 +342,15 @@ func (c IDSetError) ErrorCode(code int16) {
 //Context Error
 type ContextSetError Merror
 
-func (c ContextSetError) Wrap(err error) ContextSetError {
+func (c ContextSetError) New(db *sql.DB, s string, vars ...any) ContextSetError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContextSetError) Wrap(db *sql.DB, err error) ContextSetError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContextSetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -245,7 +366,15 @@ func (c ContextSetError) ErrorCode(code int16) {
 
 type ContextGetError Merror
 
-func (c ContextGetError) Wrap(err error) ContextGetError {
+func (c ContextGetError) New(db *sql.DB, s string, vars ...any) ContextGetError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContextGetError) Wrap(db *sql.DB, err error) ContextGetError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContextGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -263,7 +392,15 @@ func (c ContextGetError) ErrorCode(code int16) {
 //Content Errors
 type ContentGetError Merror
 
-func (c ContentGetError) Wrap(err error) ContentGetError {
+func (c ContentGetError) New(db *sql.DB, s string, vars ...any) ContentGetError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentGetError) Wrap(db *sql.DB, err error) ContentGetError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -279,7 +416,15 @@ func (c ContentGetError) ErrorCode(code int16) {
 
 type ContentSetError Merror
 
-func (c ContentSetError) Wrap(err error) ContentSetError {
+func (c ContentSetError) New(db *sql.DB, s string, vars ...any) ContentSetError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentSetError) Wrap(db *sql.DB, err error) ContentSetError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentSetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -295,7 +440,15 @@ func (c ContentSetError) ErrorCode(code int16) {
 
 type ContentListError Merror
 
-func (c ContentListError) Wrap(err error) ContentListError {
+func (c ContentListError) New(db *sql.DB, s string, vars ...any) ContentListError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentListError) Wrap(db *sql.DB, err error) ContentListError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentListError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -311,7 +464,15 @@ func (c ContentListError) ErrorCode(code int16) {
 
 type ContentListByError Merror
 
-func (c ContentListByError) Wrap(err error) ContentListByError {
+func (c ContentListByError) New(db *sql.DB, s string, vars ...any) ContentListByError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentListByError) Wrap(db *sql.DB, err error) ContentListByError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentListByError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -327,7 +488,15 @@ func (c ContentListByError) ErrorCode(code int16) {
 
 type ContentModelDeleteError Merror
 
-func (c ContentModelDeleteError) Wrap(err error) ContentModelDeleteError {
+func (c ContentModelDeleteError) New(db *sql.DB, s string, vars ...any) ContentModelDeleteError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentModelDeleteError) Wrap(db *sql.DB, err error) ContentModelDeleteError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentModelDeleteError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -343,7 +512,15 @@ func (c ContentModelDeleteError) ErrorCode(code int16) {
 
 type ContentFindByError Merror
 
-func (c ContentFindByError) Wrap(err error) ContentFindByError {
+func (c ContentFindByError) New(db *sql.DB, s string, vars ...any) ContentFindByError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentFindByError) Wrap(db *sql.DB, err error) ContentFindByError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentFindByError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -359,7 +536,15 @@ func (c ContentFindByError) ErrorCode(code int16) {
 
 type ContentValidationError Merror 
 
-func (c ContentValidationError) Wrap(err error) ContentValidationError {
+func (c ContentValidationError) New(db *sql.DB, s string, vars ...any) ContentValidationError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentValidationError) Wrap(db *sql.DB, err error) ContentValidationError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentValidationError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -375,7 +560,15 @@ func (c ContentValidationError) ErrorCode(code int16) {
 
 type NilContentError Merror
 
-func (c NilContentError) Wrap(err error) NilContentError {
+func (c NilContentError) New(db *sql.DB, s string, vars ...any) NilContentError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c NilContentError) Wrap(db *sql.DB, err error) NilContentError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("NilContentError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -407,7 +600,15 @@ func (c NilContentError) BubbleCode() NilContentError {
 
 type ContentCustomQueryError Merror
 
-func (c ContentCustomQueryError) Wrap(err error) ContentCustomQueryError {
+func (c ContentCustomQueryError) New(db *sql.DB, s string, vars ...any) ContentCustomQueryError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentCustomQueryError) Wrap(db *sql.DB, err error) ContentCustomQueryError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentCustomQueryError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -439,7 +640,15 @@ func (c ContentCustomQueryError) BubbleCode() ContentCustomQueryError {
 
 type ContentDeleteError Merror
 
-func (c ContentDeleteError) Wrap(err error) ContentDeleteError {
+func (c ContentDeleteError) New(db *sql.DB, s string, vars ...any) ContentDeleteError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentDeleteError) Wrap(db *sql.DB, err error) ContentDeleteError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentDeleteError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -471,7 +680,15 @@ func (c ContentDeleteError) BubbleCode() ContentDeleteError {
 
 type MSIConversionError Merror
 
-func (c MSIConversionError) Wrap(err error) MSIConversionError {
+func (c MSIConversionError) New(db *sql.DB, s string, vars ...any) MSIConversionError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c MSIConversionError) Wrap(db *sql.DB, err error) MSIConversionError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("MSIConversionError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -503,7 +720,15 @@ func (c MSIConversionError) BubbleCode() MSIConversionError {
 
 type HTTPRequestError Merror
 
-func (c HTTPRequestError) Wrap(err error) HTTPRequestError {
+func (c HTTPRequestError) New(db *sql.DB, s string, vars ...any) HTTPRequestError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c HTTPRequestError) Wrap(db *sql.DB, err error) HTTPRequestError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("HTTPRequestError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -535,7 +760,15 @@ func (c HTTPRequestError) BubbleCode() HTTPRequestError {
 
 type SetContextError Merror
 
-func (c SetContextError) Wrap(err error) SetContextError {
+func (c SetContextError) New(db *sql.DB, s string, vars ...any) SetContextError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c SetContextError) Wrap(db *sql.DB, err error) SetContextError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("SetContextError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -567,7 +800,15 @@ func (c SetContextError) BubbleCode() SetContextError {
 
 type ContentToTypeError Merror 
 
-func (c ContentToTypeError) Wrap(err error) ContentToTypeError {
+func (c ContentToTypeError) New(db *sql.DB, s string, vars ...any) ContentToTypeError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentToTypeError) Wrap(db *sql.DB, err error) ContentToTypeError {
+	if db != nil {
+        db.Close()
+    }
 	c.Wrapped = err
 	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
 	return c
@@ -599,6 +840,20 @@ func (c ContentToTypeError) BubbleCode() ContentToTypeError {
 
 type ContentToTypeGetError Merror
 
+func (c ContentToTypeGetError) New(db *sql.DB, s string, vars ...any) ContentToTypeGetError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentToTypeGetError) Wrap(db *sql.DB, err error) ContentToTypeGetError {
+	if db != nil {
+        db.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
 func (c ContentToTypeGetError) Error() string {
 	return c.Err.Error()
 }
@@ -624,6 +879,20 @@ func (c ContentToTypeGetError) BubbleCode() ContentToTypeGetError {
 }
 
 type ContentToTypeSetError Merror 
+
+func (c ContentToTypeSetError) New(db *sql.DB, s string, vars ...any) ContentToTypeSetError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentToTypeSetError) Wrap(db *sql.DB, err error) ContentToTypeSetError {
+	if db != nil {
+        db.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
 
 func (c ContentToTypeSetError) Error() string {
 	return c.Err.Error()
@@ -651,6 +920,20 @@ func (c ContentToTypeSetError) BubbleCode() ContentToTypeSetError {
 
 type ContentToTypeListError Merror
 
+func (c ContentToTypeListError) New(db *sql.DB, s string, vars ...any) ContentToTypeListError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentToTypeListError) Wrap(db *sql.DB, err error) ContentToTypeListError {
+	if db != nil {
+        db.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
 func (c ContentToTypeListError) Error() string {
 	return c.Err.Error()
 }
@@ -676,6 +959,20 @@ func (c ContentToTypeListError) BubbleCode() ContentToTypeListError {
 }
 
 type ContentToTypeListByError Merror
+
+func (c ContentToTypeListByError) New(db *sql.DB, s string, vars ...any) ContentToTypeListByError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentToTypeListByError) Wrap(db *sql.DB, err error) ContentToTypeListByError {
+	if db != nil {
+        db.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
 
 func (c ContentToTypeListByError) Error() string {
 	return c.Err.Error()
@@ -703,6 +1000,20 @@ func (c ContentToTypeListByError) BubbleCode() ContentToTypeListByError {
 
 type ContentToTypeFindByError Merror
 
+func (c ContentToTypeFindByError) New(db *sql.DB, s string, vars ...any) ContentToTypeFindByError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c ContentToTypeFindByError) Wrap(db *sql.DB, err error) ContentToTypeFindByError {
+	if db != nil {
+        db.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
 func (c ContentToTypeFindByError) Error() string {
 	return c.Err.Error()
 }
@@ -727,8 +1038,51 @@ func (c ContentToTypeFindByError) BubbleCode() ContentToTypeFindByError {
 	return c
 }
 
+type JPATHError Merror
+
+func (c JPATHError) New(db *sql.DB, s string, vars ...any) JPATHError {
+	c.Wrap(db, fmt.Errorf(s, vars...))
+	return c
+}
+
+func (c JPATHError) Wrap(db *sql.DB, err error) JPATHError {
+	if db != nil {
+        db.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("JPATHError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	return c
+}
+
+func (c JPATHError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c JPATHError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c JPATHError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c JPATHError) BubbleCode() JPATHError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
 type WrappedError interface {
-	Wrap(error)
+	Wrap(*sql.DB, error)
 	ErrorCode(int16)
 	GetCode() ErrorCode
 	Error() string

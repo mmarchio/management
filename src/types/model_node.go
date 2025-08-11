@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -42,60 +41,60 @@ type Node struct {
 func (c *Node) Validate() {
 	valid := true
 	if !c.Model.Validate() {
-		fmt.Printf("types.node.model failed validation\n")
+		GetLogger().Flogger("types.node.model failed validation")
 		valid = false
 	}
 	if c.Model.ContentType != "node" {
-		fmt.Printf("types.node.model.contenttype is wrong\n")
+		GetLogger().Flogger("types.node.model.contenttype is wrong")
 		valid = false
 	}
 	if c.ID.IsNil() || c.ID.String() != c.Model.ID {
-		fmt.Printf("types.node.id does not match model\n")
+		GetLogger().Flogger("types.node.id does not match model")
 		valid = false
 	}
 	if c.WorkflowID.IsNil() {
-		fmt.Printf("types.node.workflow_id is nil\n")
+		GetLogger().Flogger("types.node.workflow_id is nil")
 		valid = false
 	}
 	if c.Name == "" {
-		fmt.Printf("types.node.name is nil\n")
+		GetLogger().Flogger("types.node.name is nil")
 		valid = false
 	}
 	if c.Type == "" {
-		fmt.Printf("types.node.type is nil\n")
+		GetLogger().Flogger("types.node.type is nil")
 		valid = false
 	}
 	if c.Params != nil {
 		if o, ok := c.Params.(OllamaNode); ok {
 			if c.Type != "ollama_node" {
-				fmt.Printf("type is wrong\n")
+				GetLogger().Flogger("type is wrong")
 				valid = false
 			}
 			o.Validate()
 			if !o.GetValidated() {
-				fmt.Printf("types.node.OllamaNode is not valid\n")
+				GetLogger().Flogger("types.node.OllamaNode is not valid")
 				valid = false
 			}
 		}
 		if o, ok := c.Params.(ComfyNode); ok {
 			if c.Type != "comfy_node" {
-				fmt.Printf("type is wrong\n")
+				GetLogger().Flogger("type is wrong")
 				valid = false
 			}
 			o.Validate()
 			if !o.GetValidated() {
-				fmt.Printf("types.node.ComfyNode is not valid\n")
+				GetLogger().Flogger("types.node.ComfyNode is not valid")
 				valid = false
 			}
 		}
 		if o, ok := c.Params.(SSHNode); ok {
 			if c.Type != "ssh_node" {
-				fmt.Printf("type is wrong\n")
+				GetLogger().Flogger("type is wrong")
 				valid = false
 			}
 			o.Validate()
 			if !o.GetValidated() {
-				fmt.Printf("types.node.SSHNode is not valid\n")
+				GetLogger().Flogger("types.node.SSHNode is not valid")
 				valid = false
 			}
 		}
@@ -139,7 +138,7 @@ func (c Node) List(e echo.Context) ([]Node, error) {
 	content.Model.ContentType = "node"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
 	}
 	cuts := make([]Node, 0)
 	for _, model := range contents {
@@ -147,7 +146,7 @@ func (c Node) List(e echo.Context) ([]Node, error) {
 		msi := make(map[string]interface{})
 		err = json.Unmarshal([]byte(model.Content), &msi)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "List"}.Wrap(nil, err)
 		}
 		cut.FromMSI(msi)
 		cuts = append(cuts, cut)
@@ -159,7 +158,7 @@ func (c Node) ListBy(e echo.Context, key string, value interface{}) ([]Node, err
 	content := NewNodeModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
 	}
 	cuts := make([]Node, 0)
 	for _, model := range contents {
@@ -167,7 +166,7 @@ func (c Node) ListBy(e echo.Context, key string, value interface{}) ([]Node, err
 		msi := make(map[string]interface{})
 		err = json.Unmarshal([]byte(model.Content), &msi)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "ListBy"}.Wrap(nil, err)
 		}
 		cut.FromMSI(msi)
 		cuts = append(cuts, cut)
@@ -181,15 +180,15 @@ func (c *Node) Get(e echo.Context) error {
 	content.Model.ContentType = "node"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	msi := make(map[string]interface{})
 	err = json.Unmarshal([]byte(content.Content), &msi)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(nil, err)
 	}
 	if err := c.FromMSI(msi); err != nil {
-		return merrors.JSONUnmarshallingError{Info: "from msi", Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: "from msi", Package: "types", Struct: "node", Function: "Get"}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -197,7 +196,7 @@ func (c *Node) Get(e echo.Context) error {
 func (c Node) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New(nil, "validation failed")
 	}
 	content := NewNodeTypeContent()
 	content.FromType(c)
@@ -205,7 +204,7 @@ func (c Node) Set(e echo.Context) error {
 	content.ID = c.ID.String()
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -216,7 +215,7 @@ func (c Node) Delete(e echo.Context) error {
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID.String()
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -237,7 +236,7 @@ func (c Node) SetID() (Node, error) {
 	var err error
 	c.ID = NodeID(c.Model.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "node"}.Wrap(err)
+		return c, merrors.IDSetError{Info: "node"}.Wrap(nil, err)
 	}
 	return c, nil
 }
@@ -255,7 +254,7 @@ func (c Node) Bind(e echo.Context) (Node, error) {
 func (c Node) Next(e echo.Context) (*models.Context, error) {
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Node", Function: "Next"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Node", Function: "Next"}.Wrap(nil, err)
 	}
 	return systemContext, nil
 }
@@ -268,13 +267,13 @@ func (c *Node) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(nil, err)
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(nil, err)
 		}
 	}
 	if contentType, ok := msi["ContentType"].(string); ok {
@@ -304,13 +303,13 @@ func (c *Node) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(nil, err)
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(nil, err)
 		}
 	}
 	if contentType, ok := msi["ContentType"].(string); ok {

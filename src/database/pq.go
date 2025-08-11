@@ -36,7 +36,7 @@ func GetPQContext(ctx context.Context) context.Context {
 	dburl := generateConnectionString()
 	conn, err := sql.Open("postgres", dburl)
 	if err != nil {
-		panic(fmt.Errorf("database connection error: %w", merrors.DBConnectionError{}.Wrap(err)))
+		panic(fmt.Errorf("database connection error: %w", merrors.DBConnectionError{}.Wrap(conn, err)))
 	}
 	ctx = SetContextPQ(ctx, conn)
 	ctx = SetContextPQTx(ctx, conn)
@@ -83,4 +83,10 @@ func ClearDB(ctx context.Context) context.Context {
 	ctx = context.WithValue(ctx, DBKey, nil)
 	return ctx
 } 
+
+func DBStats(db *sql.DB) map[string]interface{} {
+	r := make(map[string]interface{})
+	r["stats"] = db.Stats()
+	return r
+}
 

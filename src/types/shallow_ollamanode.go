@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,7 +31,7 @@ func (c ShallowOllamaNode) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -43,10 +42,10 @@ func (c ShallowOllamaNode) Expand(e echo.Context) (*OllamaNode, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(nil, err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
 		}
 		return &r, nil
 	}
@@ -163,11 +162,11 @@ func (c *ShallowOllamaNode) ParsePromptTemplate(e echo.Context) error {
 			id := c.PromptTemplate
 			pt := NewPromptTemplate(&id)
 			if err := pt.Get(e); err != nil {
-				return merrors.ContentGetError{Package: "types", Struct:"ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
+				return merrors.ContentGetError{Package: "types", Struct:"ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(nil, err)
 			}
 			msi := make(map[string]interface{})
 			if err := json.Unmarshal([]byte(pt.Vars), &msi); err != nil {
-				return merrors.JSONUnmarshallingError{Info: pt.Vars, Package: "types", Struct:"ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
+				return merrors.JSONUnmarshallingError{Info: pt.Vars, Package: "types", Struct:"ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(nil, err)
 			}
 			c.Prompt = strrep.Strrep(pt.Template, msi)
 		}
@@ -184,13 +183,13 @@ func (c *ShallowOllamaNode) FromMSI(msi map[string]interface{}) error {
 		if createdAt, ok := p["CreatedAt"].(string); ok {
 			c.ShallowModel.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 			if err != nil {
-				return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"ShallowOllamaNode", Function: "FromMSI"}.Wrap(err)
+				return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"ShallowOllamaNode", Function: "FromMSI"}.Wrap(nil, err)
 			}
 		}
 		if updatedAt, ok := p["UpdatedAt"].(string); ok {
 			c.ShallowModel.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 			if err != nil {
-				return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ShallowOllamaNode", Function: "FromMSI"}.Wrap(err)
+				return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ShallowOllamaNode", Function: "FromMSI"}.Wrap(nil, err)
 			}
 		}
 		if ct, ok := p["ContentType"].(string); ok {
@@ -220,11 +219,11 @@ func (c *ShallowOllamaNode) Get(e echo.Context) error {
 	content.Model.ID = c.ShallowModel.ID
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -241,7 +240,7 @@ func (c ShallowOllamaNode) Delete(e echo.Context) error {
 	content.Model.ID = c.ShallowModel.ID
 	content.ID = c.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(nil, err)
 	}
 	return nil
 }
@@ -257,7 +256,7 @@ func (c ShallowOllamaNode) GetID() string {
 func (c ShallowOllamaNode) Set(e echo.Context) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New(nil, "validation failed")
 	}
 	content := NewShallowOllamaNodeTypeContent()
 	content.FromType(c)
@@ -265,7 +264,7 @@ func (c ShallowOllamaNode) Set(e echo.Context) error {
 	content.ID = c.ShallowModel.ID
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
 	}
 	return nil
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
@@ -23,11 +22,7 @@ func RegisterWorkflowRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetWorkflow(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIGetWorkflow called")
+	GetLogger().Flogger("HandleAPIGetWorkflow called")
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
 		if err := entity.Get(c); err != nil {
@@ -39,11 +34,7 @@ func HandleAPIGetWorkflow(c echo.Context) error {
 }
 
 func HandleAPIListWorkflow(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIListWorkflow called")
+	GetLogger().Flogger("HandleAPIListWorkflow called")
 	entity := types.NewWorkflow(nil)
 	entities, err := entity.List(c)
 	if err != nil {
@@ -53,14 +44,10 @@ func HandleAPIListWorkflow(c echo.Context) error {
 }
 
 func HandleAPISaveWorkflow(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPISaveWorkflow called")
+	GetLogger().Flogger("HandleAPISaveWorkflow called")
 	entity := types.NewWorkflow(nil)
 	if err := c.Bind(&entity); err != nil {
-		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveWorkflow"}.Wrap(err))
+		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveWorkflow"}.Wrap(nil, err))
 	}
 	if entity.Name == "" && c.FormValue("name") != "" {
 		entity.Name = c.FormValue("name")
@@ -72,11 +59,7 @@ func HandleAPISaveWorkflow(c echo.Context) error {
 }
 
 func HandleWorkflow(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleWorkflow called")
+	GetLogger().Flogger("HandleWorkflow called")
 	dt := DisplayWorkflow{
 		Workflow: types.Workflow{},
 		DisplayType: "none",
@@ -89,11 +72,7 @@ func HandleWorkflow(c echo.Context) error {
 }
 
 func HandleWorkflowList(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleWorkflowList called")
+	GetLogger().Flogger("HandleWorkflowList called")
 	entity := types.NewWorkflow(nil)
 	list, err := entity.List(c)
 	if err != nil {
@@ -112,11 +91,7 @@ func HandleWorkflowList(c echo.Context) error {
 }
 
 func HandleWorkflowDelete(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleWorkflowDelete called")
+	GetLogger().Flogger("HandleWorkflowDelete called")
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
 		if err := entity.Delete(c); err != nil {
@@ -128,11 +103,7 @@ func HandleWorkflowDelete(c echo.Context) error {
 }
 
 func HandleWorkflowSave(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleWorkflowSave called")
+	GetLogger().Flogger("HandleWorkflowSave called")
 	entity := types.NewWorkflow(nil)
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
@@ -164,11 +135,7 @@ func HandleWorkflowSave(c echo.Context) error {
 }
 
 func HandleWorkflowNew(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleWorkflowNew called")
+	GetLogger().Flogger("HandleWorkflowNew called")
 	entity := types.NewWorkflow(nil)
 	entity.Model.ID = ""
 	entity.ID = types.WorkflowID("")
@@ -184,11 +151,7 @@ func HandleWorkflowNew(c echo.Context) error {
 }
 
 func HandleWorkflowEdit(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleWorkflowEdit called")
+	GetLogger().Flogger("HandleWorkflowEdit called")
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
 		if err := entity.Get(c); err != nil {
@@ -202,37 +165,7 @@ func HandleWorkflowEdit(c echo.Context) error {
 				Title: "Workflow",
 			},
 		}
-		// cn := types.ComfyNode{WorkflowID: dt.Workflow.ID}
-		// cns, err := cn.ListBy(ctx, "workflow_id", cn.WorkflowID)
-		// if err != nil {
-		// 	return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		// }
-		// dt.Workflow.ComfyNodesArrayModel = cns
-		// on := types.OllamaNode{WorkflowID: dt.Workflow.ID}
-		// ons, err := on.ListBy(ctx, "workflow_id", on.WorkflowID)
-		// if err != nil {
-		// 	return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		// }
-		// dt.Workflow.OllamaNodesArrayModel = ons
-		// sn := types.SSHNode{WorkflowID: dt.Workflow.ID}
-		// sns, err := sn.ListBy(ctx, "workflow_id", sn.WorkflowID)
-		// if err != nil {
-		// 	return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		// }
-		// dt.Workflow.SSHNodesArrayModel = sns
 		return c.Render(http.StatusOK, "workflow.tpl", dt)
 	}
 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 }
-
-// func get(id string) (*types.Workflow, error) {
-// 	ctx := GetEchoCtx(c)
-
-// 	entity := types.NewWorkflow()
-// 	entity.Model.ID = id
-// 	entity.ID = types.WorkflowID(entity.Model.ID)
-// 	if err := entity.Get(ctx); err != nil {
-// 		return nil, err
-// 	}
-// 	return &entity, nil
-// }

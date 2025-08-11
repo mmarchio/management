@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
@@ -22,15 +20,11 @@ func RegisterSystemPromptsRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetSystemPrompt(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIGetSystemPrompt called")
+	GetLogger().Flogger("HandleAPIGetSystemPrompt called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewSystemPrompt(&id)
 		if err := entity.Get(c); err != nil {
-			return c.JSON(http.StatusInternalServerError, fmt.Sprintf("internal server error: %w", err))
+			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 		return c.JSON(http.StatusOK, entity)
 	}
@@ -39,11 +33,7 @@ func HandleAPIGetSystemPrompt(c echo.Context) error {
 
 func HandleAPISetSystemPrompt(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPISetSystemPrompt called")
+	GetLogger().Flogger("HandleAPISetSystemPrompt called")
 	entity := types.NewSystemPrompt(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -55,11 +45,7 @@ func HandleAPISetSystemPrompt(c echo.Context) error {
 }
 
 func HandleAPIListSystemPrompt(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIListSystemPrompt called")
+	GetLogger().Flogger("HandleAPIListSystemPrompt called")
 	prompt := types.NewSystemPrompt(nil)
 	prompts, err := prompt.List(c)
 	if err != nil {
@@ -69,11 +55,7 @@ func HandleAPIListSystemPrompt(c echo.Context) error {
 }
 
 func HandleSystemPrompts(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleSystemPrompts called")
+	GetLogger().Flogger("HandleSystemPrompts called")
 	dt := DisplaySystemPrompt{
 		SystemPrompt: types.SystemPrompt{},
 		DisplayType: "none",
@@ -86,11 +68,7 @@ func HandleSystemPrompts(c echo.Context) error {
 }
 
 func HandleSystemPromptsNew(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleSystemPromptsNew called")
+	GetLogger().Flogger("HandleSystemPromptsNew called")
 	dt := DisplaySystemPrompt{
 		SystemPrompt: types.SystemPrompt{},
 		DisplayType: "new",
@@ -105,11 +83,7 @@ func HandleSystemPromptsNew(c echo.Context) error {
 func HandleSystemPromptSave(c echo.Context) error {
 	var err error
 	var prompt types.SystemPrompt
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleSystemPromptSave called")
+	GetLogger().Flogger("HandleSystemPromptSave called")
 	if id := c.Param("id"); id != "" {
 		prompt = types.NewSystemPrompt(&id)
 		if err := prompt.Get(c); err != nil {
@@ -119,7 +93,7 @@ func HandleSystemPromptSave(c echo.Context) error {
 		prompt = types.NewSystemPrompt(nil)
 	}
 	if err = c.Bind(&prompt); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleSystemPromptSave"}.Wrap(err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleSystemPromptSave"}.Wrap(nil, err))
 	}
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
@@ -141,11 +115,7 @@ func HandleSystemPromptSave(c echo.Context) error {
 
 func HandleSystemPromptsList(c echo.Context) error {
 	var err error
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleSystemPromptsList called")
+	GetLogger().Flogger("HandleSystemPromptsList called")
 	prompt := types.NewSystemPrompt(nil)
 	prompts, err := prompt.List(c)
 	if err != nil {
@@ -165,11 +135,7 @@ func HandleSystemPromptsList(c echo.Context) error {
 }
 
 func HandleSystemPromptsGet(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleSystemPromptsGet called")
+	GetLogger().Flogger("HandleSystemPromptsGet called")
 	if id := c.Param("id"); id != "" {
 		prompt := types.NewSystemPrompt(&id)
 		if err := prompt.Get(c); err != nil {
@@ -189,11 +155,7 @@ func HandleSystemPromptsGet(c echo.Context) error {
 }
 
 func HandleSystemPromptDelete(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleSystemPromptDelete called")
+	GetLogger().Flogger("HandleSystemPromptDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewSystemPrompt(&id)
 		if err := entity.Delete(c); err != nil {

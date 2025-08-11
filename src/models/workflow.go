@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,7 +39,7 @@ func (c ShallowWorkflow) Set(e echo.Context) error {
 	content.Model.UpdatedAt = c.ShallowModel.UpdatedAt
 	b, err := json.Marshal(c)
 	if err != nil {
-		return merrors.JSONMarshallingError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowWorkflow", Function: "Set"}.Wrap(err)
+		return merrors.JSONMarshallingError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowWorkflow", Function: "Set"}.Wrap(nil, err)
 	}
 	content.Content = string(b)
 	if err := content.Set(e); err != nil {
@@ -52,11 +51,11 @@ func (c ShallowWorkflow) Set(e echo.Context) error {
 func (c ShallowWorkflow) Get(e echo.Context, mode string) (*Workflow, *ShallowWorkflow, error) {
 	content := Content{ID: c.ShallowModel.ID}
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
 	}
 	if mode == "shallow" {
 		if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-			return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+			return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
 		}
 		return nil, &c, nil
 	}
@@ -79,7 +78,7 @@ func (c ShallowWorkflow) Get(e echo.Context, mode string) (*Workflow, *ShallowWo
 		}
 		return &full, nil, nil
 	}
-	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.New(nil, "unknown mode: %s", mode)
 } 
 
 func (c ShallowWorkflow) SetName(e echo.Context, id string) error {
@@ -204,42 +203,42 @@ func NewShallowWorkflow(id *string) ShallowWorkflow {
 func (c *Workflow) Validate() {
 	valid := true
 	if !c.Model.Validate() {
-		fmt.Printf("workflow model is not valid\n")
+		GetLogger().Flogger("workflow model is not valid")
 		valid = false
 	}
 	if c.ID != c.Model.ID {
-		fmt.Printf("id does not match model\n")
+		GetLogger().Flogger("id does not match model")
 	}
 	if c.Model.ContentType != "workflow" {
-		fmt.Printf("content type is wrong\n")
+		GetLogger().Flogger("content type is wrong")
 		valid = false
 	}
 	if c.ID == "" {
-		fmt.Printf("id is nil")
+		GetLogger().Flogger("id is nil")
 		valid = false
 	}
 	if c.Name == "" {
-		fmt.Printf("name is nil")
+		GetLogger().Flogger("name is nil")
 		valid = false
 	}
 	for _, node := range c.ComfyNodes {
 		node.Validate()
 		if !node.Model.Validated {
-			fmt.Printf("node: %s is not valid\n", node.Model.ID)
+			GetLogger().Flogger("node: %s is not valid", node.Model.ID)
 			valid = false
 		}
 	}
 	for _, node := range c.OllamaNodes {
 		node.Validate()
 		if !node.Model.Validated {
-			fmt.Printf("node: %s is not valid\n", node.Model.ID)
+			GetLogger().Flogger("node: %s is not valid\n", node.Model.ID)
 			valid = false
 		}
 	}
 	for _, node := range c.SSHNodes {
 		node.Validate()
 		if !node.Model.Validated {
-			fmt.Printf("node: %s is not valid\n", node.Model.ID)
+			GetLogger().Flogger("node: %s is not valid\n", node.Model.ID)
 			valid = false
 		}
 	}

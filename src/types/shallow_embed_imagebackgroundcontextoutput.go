@@ -20,7 +20,7 @@ func (c ShallowImageBackgroundContextOutput) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -31,10 +31,10 @@ func (c ShallowImageBackgroundContextOutput) Expand(e echo.Context) (*ImageBackg
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(nil, err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
 		}
 		return &r, nil
 	}
@@ -43,7 +43,7 @@ func (c ShallowImageBackgroundContextOutput) Expand(e echo.Context) (*ImageBackg
 	ss.ShallowModel.ID = c.StatsModel
 	stats, err := ss.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.StatsModel = *stats
 	r.FilesArrayModel = make([]File, 0)
@@ -52,7 +52,7 @@ func (c ShallowImageBackgroundContextOutput) Expand(e echo.Context) (*ImageBackg
 		sf.ShallowModel.ID = id
 		f, err := sf.Expand(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(nil, err)
 		}
 		r.FilesArrayModel = append(r.FilesArrayModel, *f)
 	}

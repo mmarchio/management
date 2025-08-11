@@ -23,7 +23,7 @@ func (c ShallowEntitlements) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -36,31 +36,31 @@ func (c ShallowEntitlements) Expand(e echo.Context) (*Entitlements, error) {
 	t.ShallowModel.ID = c.YouTubeModel
 	youTubeModel, err := t.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.YouTubeModel = *youTubeModel
 	t.ShallowModel.ID = c.TikTokModel
 	tikTokModel, err := t.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.TikTokModel = *tikTokModel
 	t.ShallowModel.ID = c.RumbleModel
 	rumbleModel, err := t.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.RumbleModel = *rumbleModel
 	t.ShallowModel.ID = c.PatreonModel
 	patreonModel, err := t.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.PatreonModel = *patreonModel
 	t.ShallowModel.ID = c.FacebookModel
 	facebookModel, err := t.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(nil, err)
 	}
 	r.FacebookModel = *facebookModel
 	return &r, nil
@@ -81,7 +81,7 @@ func (c *ShallowEntitlements) New(parent ITable) (string, error) {
 	c.ShallowModel.ID = parent.GetID()
 	embedBytes, err := json.Marshal(c)
 	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(err)
+		return "", merrors.JSONMarshallingError{}.Wrap(nil, err)
 	}
 	return string(embedBytes), nil
 }

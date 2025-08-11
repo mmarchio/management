@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 	"github.com/mmarchio/management/types"
 )
 
@@ -20,11 +18,7 @@ func RegisterJobRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetJob(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIGetJob called")
+	GetLogger().Flogger("HandleAPIGetJob called")
 	if id := c.Param("id"); id != "" {
 		job := types.NewJob(&id)
 		if err := job.Get(c); err != nil {
@@ -36,11 +30,7 @@ func HandleAPIGetJob(c echo.Context) error {
 }
 
 func HandleAPIListJob(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPIListJob called")
+	GetLogger().Flogger("HandleAPIListJob called")
 	job := types.NewJob(nil)
 	jobs, err := job.List(c)
 	if err != nil {
@@ -50,14 +40,10 @@ func HandleAPIListJob(c echo.Context) error {
 }
 
 func HandleAPISaveJob(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleAPISaveJob called")
+	GetLogger().Flogger("HandleAPISaveJob called")
 	job := types.NewJob(nil)
 	if err := c.Bind(&job); err != nil {
-		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJob"}.Wrap(err))
+		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJob"}.Wrap(nil, err))
 	}
 	if err := job.Set(c); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -66,11 +52,7 @@ func HandleAPISaveJob(c echo.Context) error {
 }
 
 func HandleJobs(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleJobs called")
+	GetLogger().Flogger("HandleJobs called")
 	dt := DisplayJob{
 		Job: types.Job{},
 		DisplayType: "none",
@@ -83,11 +65,7 @@ func HandleJobs(c echo.Context) error {
 }
 
 func HandleJobsList(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleJobsList called")
+	GetLogger().Flogger("HandleJobsList called")
 	job := types.NewJob(nil)
 	list, err := job.List(c)
 	if err != nil {
@@ -106,11 +84,7 @@ func HandleJobsList(c echo.Context) error {
 }
 
 func HandleJobsDelete(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleJobsDelete called")
+	GetLogger().Flogger("HandleJobsDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJob(&id)
 		if err := entity.Delete(c); err != nil {
@@ -122,11 +96,7 @@ func HandleJobsDelete(c echo.Context) error {
 }
 
 func HandlerJobWorkflowAdd(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandlerJobWorkflowAdd called")
+	GetLogger().Flogger("HandlerJobWorkflowAdd called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJob(&id)
 		if err := entity.Get(c); err != nil {
@@ -151,11 +121,7 @@ func HandlerJobWorkflowAdd(c echo.Context) error {
 }
 
 func HandleJobSave(c echo.Context) error {
-	log, ok := c.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return fmt.Errorf("logger is nil")
-	}
-	log.Flogger("HandleJobSave called")
+	GetLogger().Flogger("HandleJobSave called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJob(&id)
 		if err := entity.Get(c); err != nil {

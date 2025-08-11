@@ -3,14 +3,12 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/logger"
 )
 
 type ContextKeyT int64
@@ -393,10 +391,10 @@ func (c ShallowContext) SetPublishSocialYoutubeModel(e echo.Context, id string) 
 func (c ShallowContext) Get(e echo.Context, mode string) (*Context, *ShallowContext, error) {
 	content := Content{ID: c.ShallowModel.ID}
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
 	}
 	if mode == "shallow" {
 		return nil, &c, nil
@@ -424,7 +422,7 @@ func (c ShallowContext) Get(e echo.Context, mode string) (*Context, *ShallowCont
 		}
 
 	}
-	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.New(nil, "unknown mode: %s", mode)
 }
 
 type Stats struct {
@@ -807,66 +805,52 @@ func (c Context) Marshal(e echo.Context) (string, error) {
 }
 
 func (c *Context) Get(e echo.Context) (*Context, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("ctx is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Get called")
+	ctx := GetLogger().Flogger("Get called").Ctx
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
 	tx := database.GetPQTx(ctx)
 	var j string
 	err := tx.QueryRow("SELECT status_context FROM job_status WHERE id = $1", c.JobRunID).Scan(&j)
 	if err != nil {
-		e := merrors.ContextGetError{}.Wrap(err)
+		e := merrors.ContextGetError{}.Wrap(db, err)
 		return nil, &e
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, merrors.TransactionCommitError{}.Wrap(db, err)
 	}
 	ctx = c.SetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextSetError{}.Wrap(err)
+		return nil, merrors.ContextSetError{}.Wrap(db, err)
 	}
 	return c, nil
 }
 
 func (c Context) Set(e echo.Context) (*Context, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("ctx is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("Set called")
+	ctx := GetLogger().Flogger("Set called").Ctx
+	db := database.GetPQDatabase(ctx)
+	defer db.Close()
 	tx := database.GetPQTx(ctx)
 	j, err := c.Marshal(e)
 	if err != nil {
 		tx.Rollback()
-		e := merrors.ContextSetError{}.Wrap(err)
+		e := merrors.ContextSetError{}.Wrap(db, err)
 		return nil, &e
 	}
 	_, err = tx.Exec("UPDATE job_status SET status_context = $1 WHERE id = $2", j, c.JobRunID)
 	if err != nil {
 		tx.Rollback()
-		e := merrors.ContextSetError{}.Wrap(err)
+		e := merrors.ContextSetError{}.Wrap(db, err)
 		return nil, &e
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, merrors.TransactionCommitError{}.Wrap(db, err)
 	}
 	ctx = c.SetCtx(e)
 	return &c, nil
 }
 
 func (c Context) GetCtx(e echo.Context) (*Context, error) {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil, fmt.Errorf("ctx is nil")
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil, fmt.Errorf("logger is nil")
-	}
-	log.Flogger("GetCtx called")
+	ctx := GetLogger().Flogger("GetCtx called").Ctx
 	eInterface := ctx.Value(contextKey)
 	if innerContext, ok := eInterface.(Context); ok {
 		return &innerContext, nil
@@ -877,15 +861,7 @@ func (c Context) GetCtx(e echo.Context) (*Context, error) {
 }
 
 func (c Context) SetCtx(e echo.Context) context.Context {
-	ctx, ok := e.Get("context").(context.Context)
-	if !ok {
-		return nil
-	}
-	log, ok := e.Get("logger").(logger.LoggingContext)
-	if !ok {
-		return nil
-	}
-	log.Flogger("SetCtx called")
+	ctx := GetLogger().Flogger("SetCtx called").Ctx
 	ctx = context.WithValue(ctx, contextKey, c)
 	return ctx
 }
