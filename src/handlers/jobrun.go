@@ -255,7 +255,7 @@ func HandleJobRunRun(c echo.Context) error {
 				case "ollamanode":
 					for _, v := range wf.OllamaNodesArrayModel {
 						if v.ID == node.NodeID {
-							if err := v.Exec(c); err != nil {
+							if err := v.Exec(c, &entity); err != nil {
 								return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 							}
 						}

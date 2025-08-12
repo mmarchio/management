@@ -156,6 +156,11 @@ func HandleComfyList(c echo.Context) error {
 func HandleOllamaNew(c echo.Context) error {
 	GetLogger().Flogger("HandleOllamaNew called")
 	if workflowid := c.Param("workflowid"); workflowid != "" {
+		wf := types.NewWorkflow(&workflowid)
+		if err := wf.Get(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		
 		dt := DisplayOllamaNode{
 			OllamaNode: types.NewOllamaNode(nil),
 			DisplayType: "new",

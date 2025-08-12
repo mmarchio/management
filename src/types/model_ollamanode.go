@@ -29,6 +29,7 @@ type OllamaNode struct {
 	Enabled 		bool   `json:"enabled"`
 	Bypass 			bool   `json:"bypass"`
 	Output 			string `form:"output" json:"output"`
+	ContextObject	*Stats
 	Context			Context
 }
 
@@ -228,7 +229,7 @@ func (c *OllamaNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *OllamaNode) Call(e echo.Context, respchan chan OllamaResponse, errchan chan error) error {
+func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, respchan chan OllamaResponse, errchan chan error) error {
 	GetLogger().Flogger("Call called")
 	start := time.Now()
 	if c.OllamaModel == "" {
@@ -239,7 +240,7 @@ func (c *OllamaNode) Call(e echo.Context, respchan chan OllamaResponse, errchan 
 		GetLogger().Flogger("err: %s", err.Error())
 		return merrors.ContentGetError{}.Wrap(nil, err)
 	}
-	prompt, err := onode.preparePrompt(e)
+	prompt, err := onode.preparePrompt(e, jobrun)
 	if err != nil {
 		GetLogger().Flogger("error preparing prompt: %s", err.Error())
 		return err
@@ -274,6 +275,12 @@ func (c *OllamaNode) Call(e echo.Context, respchan chan OllamaResponse, errchan 
 		workerResp := <- respchan
 		c.ResponseModel.Done = workerResp.Done
 		c.ResponseModel.Response = workerResp.Response
+		jobrun.ContextModel.GetResearchPromptModel.Input = string(data)
+		jobrun.ContextModel.GetResearchPromptModel.Output = c.ResponseModel.Response
+		jobrun.ContextModel.GetResearchPromptModel.Start = start
+		jobrun.ContextModel.GetResearchPromptModel.End = time.Now()
+		jobrun.ContextModel.GetResearchPromptModel.Duration = time.Duration(time.Since(start).Seconds())
+		jobrun.ContextModel.GetResearchPromptModel.Status = "done"
 		GetLogger().Flogger("response: %s", c.ResponseModel.GetResponse())
 		time.Sleep(5*time.Second)
 		ctr++
@@ -287,7 +294,7 @@ func (c *OllamaNode) Call(e echo.Context, respchan chan OllamaResponse, errchan 
 	return nil
 }
 
-func (c OllamaNode) preparePrompt(e echo.Context) (string, error) {
+func (c OllamaNode) preparePrompt(e echo.Context, jobrun *JobRun) (string, error) {
 	prompt := c.Prompt
 	if c.PromptTemplate != "" {
 		pt := PromptTemplate{}
@@ -297,7 +304,7 @@ func (c OllamaNode) preparePrompt(e echo.Context) (string, error) {
 			GetLogger().Flogger("error retrieving prompt template %s %s", c.PromptTemplate, err.Error())
 			return "", merrors.ContentGetError{}.Wrap(nil, err)
 		}
-		if err := pt.Prepare(e); err != nil {
+		if err := pt.Prepare(e, jobrun); err != nil {
 			GetLogger().Flogger("error preparing prompt template err: %s", err.Error())
 			return "", merrors.ContentGetError{}.Wrap(nil, err)
 		}
@@ -421,7 +428,7 @@ func (c *OllamaNode) GetNodeFromWorkflow(id string, wf Workflow) {
 	}
 }
 
-func (c OllamaNode) Exec(e echo.Context) error {
+func (c OllamaNode) Exec(e echo.Context, jobrun *JobRun) error {
 	GetLogger().Flogger("Exec called")
 	start := time.Now()
 	if c.SystemPrompt != "" && len(c.SystemPrompt) == 36 {
@@ -434,7 +441,7 @@ func (c OllamaNode) Exec(e echo.Context) error {
 	}
 	Response := make(chan OllamaResponse, 1000)
 	Error := make(chan error, 1)
-	go c.Call(e, Response, Error)
+	go c.Call(e, jobrun, Response, Error)
 	go func(){
 		if len(Error) > 0 {
 			err := <- Error

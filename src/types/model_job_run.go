@@ -31,16 +31,17 @@ func NewJobRunTypeContent() Content {
 
 type JobRun struct {
 	Model
-	ID 						RunID			 `json:"id"`
-	JobID 					JobID			 `json:"job_id"`
-	WorkflowID				WorkflowID  	 `json:"workflow_id"`
-	ContextModel 			Context			 `json:"context_model"`
-	TruncatedContextModel  	TruncatedContext `json:"truncated_context_model"`
-	SettingsModel 			Settings		 `json:"settings_model"`
-	DispositionModel        Disposition 	 `json:"disposition_model"`
-	Tokens 					int64			 `json:"tokens"`
-	LatestStatusType 		string 			 `json:"latest_status_type"`
-	LatestStatusValue 		string 			 `json:"latest_status_value"`
+	ID 						RunID			 	`json:"id"`
+	JobID 					JobID			 	`json:"job_id"`
+	WorkflowID				WorkflowID  	 	`json:"workflow_id"`
+	ContextModel 			Context			 	`json:"context_model"`
+	TruncatedContextModel  	TruncatedContext 	`json:"truncated_context_model"`
+	SettingsModel 			Settings		 	`json:"settings_model"`
+	DispositionModel        Disposition 	 	`json:"disposition_model"`
+	NodeStepMap				map[string]string 	`json:"node_step_map"`
+	Tokens 					int64			 	`json:"tokens"`
+	LatestStatusType 		string 			 	`json:"latest_status_type"`
+	LatestStatusValue 		string 			 	`json:"latest_status_value"`
 }
 
 func (c JobRun) Pack() []shallowmodel {

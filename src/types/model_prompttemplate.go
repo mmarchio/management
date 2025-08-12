@@ -166,23 +166,13 @@ func (c PromptTemplate) SetID() (PromptTemplate, error) {
 	return c, nil
 }
 
-func (c *PromptTemplate) Prepare(e echo.Context) error {
-	var ctx Context
-	ctxPtr, err := c.Model.GetCtx(e)
-	if err != nil {
-		GetLogger().Flogger("error retrieving context err: %s", err.Error())
-		return merrors.ContextGetError{}.Wrap(nil, err)
-	}
-	if ctxPtr == nil {
-		return merrors.ContextGetError{}.New(nil, "context is nil")
-	}
-	ctx = *ctxPtr
+func (c *PromptTemplate) Prepare(e echo.Context, jobrun *JobRun) error {
 	vars := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(c.Vars), &vars); err != nil {
 		GetLogger().Flogger("error unmarshalling vars: %s", err.Error())
-		return merrors.JSONUnmarshallingError{}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: c.Vars}.Wrap(nil, err)
 	}
-	ctxb, err := json.Marshal(ctx)
+	ctxb, err := json.Marshal(jobrun.ContextModel)
 	if err != nil {
 		GetLogger().Flogger("error marshalling context: %s", err.Error())
 		return merrors.JSONMarshallingError{}.Wrap(nil, err)
@@ -221,24 +211,27 @@ func jpath(j, p string) (interface{}, error) {
 func jpathRecurse(parts []string, msi map[string]interface{}) (interface{}, error) {
 	GetLogger().Flogger("parts: %#v", parts)
 	if len(parts) == 1 {
-		if sub, ok := msi[parts[0]].(map[string]interface{}); !ok {
+		if sub, ok := msi[parts[0]].(string); ok {
+			GetLogger().Flogger("jpath result: %T:%v", sub, sub)
 			return sub, nil
 		}
 	}
-	for _, p := range parts {
-		if p == "$" {
+	if len(parts) > 0 {
+		if parts[0] == "$" {
 			return jpathRecurse(parts[1:], msi)
 		}
-		if sub, ok := msi[p].(map[string]interface{}); ok {
+		if sub, ok := msi[parts[0]].(map[string]interface{}); ok {
 			return jpathRecurse(parts[1:], sub)
-		}
-		if sub, ok := msi[p].([]interface{}); ok {
-			for _, sl := range sub {
-				if s, ok := sl.(map[string]interface{}); ok {
-					return jpathRecurse(parts[1:], s)
+		} else if sub, ok := msi[parts[0]].([]interface{}); ok {
+			if len(sub) > 0 {
+				for _, sl := range sub {
+					if s, ok := sl.(map[string]interface{}); ok {
+						return jpathRecurse(parts[1:], s)
+					}
 				}
 			}
-			//TODO: supprt slice lookups
+		} else {
+			GetLogger().Flogger("unknown index %s type: %T", parts[0], msi[parts[0]])
 		}
 	}
 	return nil, merrors.JPATHError{}.New(nil, "resource not found")

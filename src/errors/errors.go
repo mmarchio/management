@@ -27,7 +27,8 @@ type ErrorCode int16
 type EchoBindError Merror
 
 func (c EchoBindError) New(db *sql.DB, s string, vars ...any) EchoBindError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -52,7 +53,8 @@ func (c EchoBindError) ErrorCode(code int16) {
 type DBConnectionError Merror
 
 func (c DBConnectionError) New(db *sql.DB, s string, vars ...any) DBConnectionError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -76,7 +78,8 @@ func (c DBConnectionError) ErrorCode(code int16) {
 type DBQueryError Merror
 
 func (c DBQueryError) New(db *sql.DB, s string, vars ...any) DBQueryError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -100,7 +103,8 @@ func (c DBQueryError) ErrorCode(code int16) {
 type DBContentScanError Merror
 
 func (c DBContentScanError) New(db *sql.DB, s string, vars ...any) DBContentScanError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -124,7 +128,8 @@ func (c DBContentScanError) ErrorCode(code int16) {
 type DBTransactionCommitError Merror
 
 func (c DBTransactionCommitError) New(db *sql.DB, s string, vars ...any) DBTransactionCommitError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -148,7 +153,8 @@ func (c DBTransactionCommitError) ErrorCode(code int16) {
 type SQLDeleteErorr Merror
 
 func (c SQLDeleteErorr) New(db *sql.DB, s string, vars ...any) SQLDeleteErorr {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -172,7 +178,8 @@ func (c SQLDeleteErorr) ErrorCode(code int16) {
 type SQLQueryError Merror
 
 func (c SQLQueryError) New(db *sql.DB, s string, vars ...any) SQLQueryError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -196,7 +203,8 @@ func (c SQLQueryError) ErrorCode(code int16) {
 type TransactionCommitError Merror
 
 func (c TransactionCommitError) New(db *sql.DB, s string, vars ...any) TransactionCommitError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -220,7 +228,8 @@ func (c TransactionCommitError) ErrorCode(code int16) {
 type DBPrepareStatementError Merror
 
 func (c DBPrepareStatementError) New(db *sql.DB, s string, vars ...any) DBPrepareStatementError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -244,7 +253,8 @@ func (c DBPrepareStatementError) ErrorCode(code int16) {
 type DBStatementQueryQueryError Merror
 
 func (c DBStatementQueryQueryError) New(db *sql.DB, s string, vars ...any) DBStatementQueryQueryError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -269,7 +279,8 @@ func (c DBStatementQueryQueryError) ErrorCode(code int16) {
 type JSONUnmarshallingError Merror
 
 func (c JSONUnmarshallingError) New(db *sql.DB, s string, vars ...any) JSONUnmarshallingError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -293,7 +304,8 @@ func (c JSONUnmarshallingError) ErrorCode(code int16) {
 type JSONMarshallingError Merror
 
 func (c JSONMarshallingError) New(db *sql.DB, s string, vars ...any) JSONMarshallingError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -318,7 +330,8 @@ func (c JSONMarshallingError) ErrorCode(code int16) {
 type IDSetError Merror
 
 func (c IDSetError) New(db *sql.DB, s string, vars ...any) IDSetError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -343,7 +356,8 @@ func (c IDSetError) ErrorCode(code int16) {
 type ContextSetError Merror
 
 func (c ContextSetError) New(db *sql.DB, s string, vars ...any) ContextSetError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -367,7 +381,8 @@ func (c ContextSetError) ErrorCode(code int16) {
 type ContextGetError Merror
 
 func (c ContextGetError) New(db *sql.DB, s string, vars ...any) ContextGetError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -393,7 +408,8 @@ func (c ContextGetError) ErrorCode(code int16) {
 type ContentGetError Merror
 
 func (c ContentGetError) New(db *sql.DB, s string, vars ...any) ContentGetError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -417,7 +433,8 @@ func (c ContentGetError) ErrorCode(code int16) {
 type ContentSetError Merror
 
 func (c ContentSetError) New(db *sql.DB, s string, vars ...any) ContentSetError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -441,7 +458,8 @@ func (c ContentSetError) ErrorCode(code int16) {
 type ContentListError Merror
 
 func (c ContentListError) New(db *sql.DB, s string, vars ...any) ContentListError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -465,7 +483,8 @@ func (c ContentListError) ErrorCode(code int16) {
 type ContentListByError Merror
 
 func (c ContentListByError) New(db *sql.DB, s string, vars ...any) ContentListByError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -489,7 +508,8 @@ func (c ContentListByError) ErrorCode(code int16) {
 type ContentModelDeleteError Merror
 
 func (c ContentModelDeleteError) New(db *sql.DB, s string, vars ...any) ContentModelDeleteError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -513,7 +533,8 @@ func (c ContentModelDeleteError) ErrorCode(code int16) {
 type ContentFindByError Merror
 
 func (c ContentFindByError) New(db *sql.DB, s string, vars ...any) ContentFindByError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -537,7 +558,8 @@ func (c ContentFindByError) ErrorCode(code int16) {
 type ContentValidationError Merror 
 
 func (c ContentValidationError) New(db *sql.DB, s string, vars ...any) ContentValidationError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -561,7 +583,8 @@ func (c ContentValidationError) ErrorCode(code int16) {
 type NilContentError Merror
 
 func (c NilContentError) New(db *sql.DB, s string, vars ...any) NilContentError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -601,7 +624,8 @@ func (c NilContentError) BubbleCode() NilContentError {
 type ContentCustomQueryError Merror
 
 func (c ContentCustomQueryError) New(db *sql.DB, s string, vars ...any) ContentCustomQueryError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -641,7 +665,8 @@ func (c ContentCustomQueryError) BubbleCode() ContentCustomQueryError {
 type ContentDeleteError Merror
 
 func (c ContentDeleteError) New(db *sql.DB, s string, vars ...any) ContentDeleteError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -681,7 +706,8 @@ func (c ContentDeleteError) BubbleCode() ContentDeleteError {
 type MSIConversionError Merror
 
 func (c MSIConversionError) New(db *sql.DB, s string, vars ...any) MSIConversionError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -721,7 +747,8 @@ func (c MSIConversionError) BubbleCode() MSIConversionError {
 type HTTPRequestError Merror
 
 func (c HTTPRequestError) New(db *sql.DB, s string, vars ...any) HTTPRequestError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -761,7 +788,8 @@ func (c HTTPRequestError) BubbleCode() HTTPRequestError {
 type SetContextError Merror
 
 func (c SetContextError) New(db *sql.DB, s string, vars ...any) SetContextError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -801,7 +829,8 @@ func (c SetContextError) BubbleCode() SetContextError {
 type ContentToTypeError Merror 
 
 func (c ContentToTypeError) New(db *sql.DB, s string, vars ...any) ContentToTypeError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -841,7 +870,8 @@ func (c ContentToTypeError) BubbleCode() ContentToTypeError {
 type ContentToTypeGetError Merror
 
 func (c ContentToTypeGetError) New(db *sql.DB, s string, vars ...any) ContentToTypeGetError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -881,7 +911,8 @@ func (c ContentToTypeGetError) BubbleCode() ContentToTypeGetError {
 type ContentToTypeSetError Merror 
 
 func (c ContentToTypeSetError) New(db *sql.DB, s string, vars ...any) ContentToTypeSetError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -921,7 +952,8 @@ func (c ContentToTypeSetError) BubbleCode() ContentToTypeSetError {
 type ContentToTypeListError Merror
 
 func (c ContentToTypeListError) New(db *sql.DB, s string, vars ...any) ContentToTypeListError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -961,7 +993,8 @@ func (c ContentToTypeListError) BubbleCode() ContentToTypeListError {
 type ContentToTypeListByError Merror
 
 func (c ContentToTypeListByError) New(db *sql.DB, s string, vars ...any) ContentToTypeListByError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -1001,7 +1034,8 @@ func (c ContentToTypeListByError) BubbleCode() ContentToTypeListByError {
 type ContentToTypeFindByError Merror
 
 func (c ContentToTypeFindByError) New(db *sql.DB, s string, vars ...any) ContentToTypeFindByError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
@@ -1041,7 +1075,8 @@ func (c ContentToTypeFindByError) BubbleCode() ContentToTypeFindByError {
 type JPATHError Merror
 
 func (c JPATHError) New(db *sql.DB, s string, vars ...any) JPATHError {
-	c.Wrap(db, fmt.Errorf(s, vars...))
+	c = c.Wrap(db, fmt.Errorf(s, vars...))
+
 	return c
 }
 
