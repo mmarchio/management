@@ -177,11 +177,11 @@ func (c *OllamaNode) ParsePromptTemplate(e echo.Context) error {
 			id := c.PromptTemplate
 			pt := NewPromptTemplate(&id)
 			if err := pt.Get(e); err != nil {
-				return merrors.ContentGetError{Package: "types", Struct:"OllamaNode", Function: "ParsePromptTemplate"}.Wrap(nil, err)
+				return merrors.ContentGetError{Package: "types", Struct:"OllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
 			}
 			msi := make(map[string]interface{})
 			if err := json.Unmarshal([]byte(pt.Vars), &msi); err != nil {
-				return merrors.JSONUnmarshallingError{Info: pt.Vars, Package: "types", Struct:"OllamaNode", Function: "ParsePromptTemplate"}.Wrap(nil, err)
+				return merrors.JSONUnmarshallingError{Info: pt.Vars, Package: "types", Struct:"OllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
 			}
 			c.Prompt = strrep.Strrep(pt.Template, msi)
 		}
@@ -198,13 +198,13 @@ func (c *OllamaNode) FromMSI(msi map[string]interface{}) error {
 		if createdAt, ok := p["CreatedAt"].(string); ok {
 			c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 			if err != nil {
-				return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"OllamaNode", Function: "FromMSI"}.Wrap(nil, err)
+				return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"OllamaNode", Function: "FromMSI"}.Wrap(err)
 			}
 		}
 		if updatedAt, ok := p["UpdatedAt"].(string); ok {
 			c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 			if err != nil {
-				return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"OllamaNode", Function: "FromMSI"}.Wrap(nil, err)
+				return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"OllamaNode", Function: "FromMSI"}.Wrap(err)
 			}
 		}
 		if ct, ok := p["ContentType"].(string); ok {
@@ -238,7 +238,7 @@ func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, respchan chan OllamaRe
 	onode := c
 	if err := onode.Get(e); err != nil {
 		GetLogger().Flogger("err: %s", err.Error())
-		return merrors.ContentGetError{}.Wrap(nil, err)
+		return merrors.ContentGetError{}.Wrap(err)
 	}
 	prompt, err := onode.preparePrompt(e, jobrun)
 	if err != nil {
@@ -256,7 +256,7 @@ func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, respchan chan OllamaRe
 	}
 	data, err := json.Marshal(oreq)
 	if err != nil {
-		return merrors.JSONMarshallingError{Package: "types", Struct:"OllamaNode", Function: "Call"}.Wrap(nil, err)
+		return merrors.JSONMarshallingError{Package: "types", Struct:"OllamaNode", Function: "Call"}.Wrap(err)
 	}
 	GetLogger().Flogger("ollamanode.model: %s ollamanode.prompt: %s ollamanode.system: %s", onode.OllamaModel, onode.Prompt, onode.SystemPrompt)
 	GetLogger().Flogger("req data %#v", oreq)
@@ -268,7 +268,7 @@ func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, respchan chan OllamaRe
 		req, err := http.NewRequest("POST", "http://172.17.0.1:7869/api/generate", reader)
 		if err != nil {
 			GetLogger().Flogger("ollama request err: %s", err.Error())
-			return merrors.HTTPRequestError{Package: "types", Struct:"OllamaNode", Function: "Call"}.Wrap(nil, err)
+			return merrors.HTTPRequestError{Package: "types", Struct:"OllamaNode", Function: "Call"}.Wrap(err)
 		}
 		wg.Add(1)
 		go worker(c, req, respchan, errchan, semaphore)
@@ -302,16 +302,16 @@ func (c OllamaNode) preparePrompt(e echo.Context, jobrun *JobRun) (string, error
 		pt.ID = PromptTemplateID(c.PromptTemplate)
 		if err := pt.Get(e); err != nil {
 			GetLogger().Flogger("error retrieving prompt template %s %s", c.PromptTemplate, err.Error())
-			return "", merrors.ContentGetError{}.Wrap(nil, err)
+			return "", merrors.ContentGetError{}.Wrap(err)
 		}
 		if err := pt.Prepare(e, jobrun); err != nil {
 			GetLogger().Flogger("error preparing prompt template err: %s", err.Error())
-			return "", merrors.ContentGetError{}.Wrap(nil, err)
+			return "", merrors.ContentGetError{}.Wrap(err)
 		}
 		varsMSI := make(map[string]interface{})
 		if err := json.Unmarshal([]byte(pt.Vars), &varsMSI); err != nil {
 			GetLogger().Flogger("json err: %s", err.Error())
-			return "", merrors.JSONUnmarshallingError{}.Wrap(nil, err)
+			return "", merrors.JSONUnmarshallingError{}.Wrap(err)
 		}
 		prompt = strrep.Strrep(pt.Template, varsMSI)
 	}
@@ -353,11 +353,11 @@ func (c *OllamaNode) Get(e echo.Context) error {
 	content.Model.ID = c.Model.ID
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	t := *c
 	if err = json.Unmarshal([]byte(content.Content), &t); err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Model.ID, Package: "types", Struct: "ollamanode", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Model.ID, Package: "types", Struct: "ollamanode", Function: "Get"}.Wrap(err)
 	}
 	c = &t
 	return nil
@@ -376,21 +376,21 @@ func (c OllamaNode) Delete(e echo.Context) error {
 	content.ID = c.ID
 	onode := c
 	if err := onode.Get(e); err != nil {
-		return merrors.ContentGetError{}.Wrap(nil, err)
+		return merrors.ContentGetError{}.Wrap(err)
 	}
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err)
 	}
 	wf := NewWorkflow(nil)
 	wf.Model.ID = onode.WorkflowID.String()
 	wf.ID = onode.WorkflowID
 	if err := wf.Get(e); err != nil {
-		return merrors.ContentGetError{}.Wrap(nil, err)
+		return merrors.ContentGetError{}.Wrap(err)
 	}
 	wf.CutNode(c.Model.ID)
 	wf.CutNodeOrder(c.Model.ID)
 	if err := wf.Set(e); err != nil {
-		return merrors.ContentSetError{}.Wrap(nil, err)
+		return merrors.ContentSetError{}.Wrap(err)
 	}
 	return nil
 }
@@ -406,7 +406,7 @@ func (c OllamaNode) GetID() string {
 func (c OllamaNode) Set(e echo.Context) error {
 	if !c.ValidateV2() {
 		GetLogger().Flogger("validated: %t\nid: %s\ncreated_at: %s\nupdated_at: %s\ncontent_type: %s\nname: %s\nollama_model: %s\nsystem_prompt: %s\nprompt: %s\nprompt_template: %s", c.Model.Validated, c.Model.ID, c.Model.CreatedAt, c.Model.UpdatedAt, c.Model.ContentType, c.Name, c.OllamaModel, c.SystemPrompt, c.Prompt, c.PromptTemplate)
-		return merrors.ContentValidationError{Info: fmt.Sprintf("ollamanode: %#v", c), Package: "types", Struct: "OllamaNode", Function: "Set"}.New(nil, "validation failed")
+		return merrors.ContentValidationError{Info: fmt.Sprintf("ollamanode: %#v", c), Package: "types", Struct: "OllamaNode", Function: "Set"}.New("validation failed")
 	}
 	content := NewOllamaNodeTypeContent()
 	content.FromType(c)
@@ -414,7 +414,7 @@ func (c OllamaNode) Set(e echo.Context) error {
 	content.ID = c.Model.ID
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -471,14 +471,14 @@ func (c OllamaNode) List(e echo.Context) ([]OllamaNode, error) {
 	content.Model.ContentType = "ollamanode"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]OllamaNode, 0)
 	for _, model := range contents {
 		cut := OllamaNode{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "OllamaNode", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "OllamaNode", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -490,14 +490,14 @@ func (c OllamaNode) ListBy(e echo.Context, key string, value interface{}) ([]Oll
 	content.Model.ContentType = "ollamanode"
 	list, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: fmt.Sprintf("{\"%s\":\"%s\"}", key, value), Package: "types", Struct: "OllamaNode", Function: "ListBy"}.Wrap(nil, err)
+		return nil, merrors.ContentListByError{Info: fmt.Sprintf("{\"%s\":\"%s\"}", key, value), Package: "types", Struct: "OllamaNode", Function: "ListBy"}.Wrap(err)
 	}
 	cuts := make([]OllamaNode, 0)
 	for _, model := range list {
 		cut := OllamaNode{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "OllamaNode", Function: "ListBy"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "OllamaNode", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}

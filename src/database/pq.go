@@ -36,7 +36,7 @@ func GetPQContext(ctx context.Context) context.Context {
 	dburl := generateConnectionString()
 	conn, err := sql.Open("postgres", dburl)
 	if err != nil {
-		panic(fmt.Errorf("database connection error: %w", merrors.DBConnectionError{}.Wrap(conn, err)))
+		panic(fmt.Errorf("database connection error: %w", merrors.DBConnectionError{DB: conn}.Wrap(err)))
 	}
 	ctx = SetContextPQ(ctx, conn)
 	ctx = SetContextPQTx(ctx, conn)

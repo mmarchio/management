@@ -45,7 +45,7 @@ func (c Workflow) ToContent() (*Content, error) {
 	m.Model = c.Model
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -124,13 +124,13 @@ func (c Workflow) List(e echo.Context) ([]Workflow, error) {
 	content.Model.ContentType = "workflow"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Workflow, 0)
 	for _, model := range contents {
 		cut := NewWorkflow(&model.Model.ID)
 		if err := json.Unmarshal([]byte(model.Content), &cut); err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Workflow", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Workflow", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -141,14 +141,14 @@ func (c Workflow) ListBy(e echo.Context, key string, value interface{}) ([]Workf
 	content := NewWorkflowModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Workflow, 0)
 	for _, model := range contents {
 		cut := Workflow{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Workflow", Function: "ListBy"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Workflow", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -162,10 +162,10 @@ func (c *Workflow) Get(e echo.Context) error {
 	content.Model.ContentType = "workflow"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Workflow", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Workflow", Function: "Get"}.Wrap(err)
 	}
 	c.NodeCleanup(e)
 	return nil
@@ -174,14 +174,14 @@ func (c *Workflow) Get(e echo.Context) error {
 func (c Workflow) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "workflow", Function: "set"}.New(nil, "validation failed")
+		return merrors.ContentValidationError{Package: "types", Struct: "workflow", Function: "set"}.New("validation failed")
 	}
 	content := NewWorkflowTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.ID.String()
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ func (c Workflow) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -212,7 +212,7 @@ func (c Workflow) SetID() (Workflow, error) {
 	var err error
 	c.ID = WorkflowID(c.Model.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "workflow"}.Wrap(nil, err)
+		return c, merrors.IDSetError{Info: "workflow"}.Wrap(err)
 	}
 	return c, nil
 }
@@ -230,7 +230,7 @@ func (c Workflow) Bind(e echo.Context) (Workflow, error) {
 func (c Workflow) Next(e echo.Context) (*models.Context, error) {
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Workflow", Function: "Next"}.Wrap(nil, err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Workflow", Function: "Next"}.Wrap(err)
 	}
 	return systemContext, nil
 }

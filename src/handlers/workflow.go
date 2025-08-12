@@ -47,7 +47,7 @@ func HandleAPISaveWorkflow(c echo.Context) error {
 	GetLogger().Flogger("HandleAPISaveWorkflow called")
 	entity := types.NewWorkflow(nil)
 	if err := c.Bind(&entity); err != nil {
-		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveWorkflow"}.Wrap(nil, err))
+		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveWorkflow"}.Wrap(err))
 	}
 	if entity.Name == "" && c.FormValue("name") != "" {
 		entity.Name = c.FormValue("name")

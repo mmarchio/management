@@ -10,102 +10,105 @@ import (
 	"github.com/mmarchio/management/models"
 )
 
-func NewSystemPrompt(id *string) SystemPrompt {
-	c := SystemPrompt{}
+type Step struct {
+	Model
+	ID StepID 					`form:"id" json:"id"`
+	Name string 				`form:"name" json:"name"`
+	Order int 					`form:"order" json:"order"`
+	DispositionID DispositionID `form:"disposition_id" json:"disposition_id"`
+	Stats Stats					`form:"stats" json:"stats"`
+	Enabled Toggle 				`form:"enabled" json:"enabled"`
+	Bypass Toggle				`form:"bypass" json:"bypass"`
+}
+
+func NewStep(id *string) Step {
+	c := Step{}
 	c.Model.New(id)
-	c.ID = SystemPromptID(c.Model.ID)
-	c.Model.ContentType = "systemprompt"
+	c.ID = StepID(c.Model.ID)
+	c.Model.ContentType = "step"
 	return c
 } 
 
-func NewSystemPromptModelContent() models.Content {
+func NewStepModelContent() models.Content {
 	c := models.Content{}
 	c.Model.ContentType = "systemprompt"
 	return c
 }
 
-func NewSystemPromptTypeContent() Content {
+func NewStepTypeContent() Content {
 	c := Content{}
 	c.Model.ContentType = "systemprompt"
 	return c
 }
 
-type SystemPrompt struct {
-	Model
-	ID 		SystemPromptID `form:"id" json:"id"`
-	Name 	string `form:"name" json:"name"`
-	SelfModel string `form:"self_model" json:"self_model"`
-	TargetModel string `form:"target_model" json:"target_model"`
-	Domain 	string `form:"domain" json:"domain"`
-	Prompt 	string `form:"prompt" json:"prompt"`
-}
-
-func (c SystemPrompt) Pack() []shallowmodel {
+func (c Step) Pack() []shallowmodel {
 	sms := make([]shallowmodel, 0)
-	sm := ShallowSystemPrompt{}
+	sm := ShallowStep{}
 	sm.ShallowModel = sm.ShallowModel.FromTypeModel(c.Model)
 	sm.ID = c.ID
 	sm.Name = c.Name
-	sm.Domain = c.Domain
-	sm.SelfModel = c.SelfModel
-	sm.TargetModel = c.TargetModel
-	sm.Prompt = c.Prompt
+	sm.Order = c.Order
+	sm.DispositionID = c.DispositionID
+	sm.Stats = c.Stats.EmbedModel.ID
+	sm.Enabled = c.Enabled.Model.ID
+	sm.Bypass = c.Bypass.Model.ID
 	sms = append(sms, sm)
 	return sms
 }
 
-func (c *SystemPrompt) New(id *string) {
+func (c *Step) New(id *string) {
 	if id != nil {
 		c.Model.ID = *id
 	} else {
 		c.Model.ID = uuid.NewString()
 	}
-	c.ID = SystemPromptID(c.Model.ID)
+	c.ID = StepID(c.Model.ID)
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
 	c.Model.ContentType = "systemprompt"
 }
 
 
-func (c SystemPrompt) List(e echo.Context) ([]SystemPrompt, error) {
-	content := NewSystemPromptModelContent()
+func (c Step) List(e echo.Context) ([]Step, error) {
+	content := NewStepModelContent()
+	
 	content.Model.ContentType = "systemprompt"
 	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
-	cuts := make([]SystemPrompt, 0)
+	cuts := make([]Step, 0)
 	for _, model := range contents {
-		cut := NewSystemPrompt(nil)
+		cut := NewStep(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SystemPrompt", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Step", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
 }
 
-func (c SystemPrompt) ListBy(e echo.Context, key string, value interface{}) ([]SystemPrompt, error) {
-	content := NewSystemPromptModelContent()
+func (c Step) ListBy(e echo.Context, key string, value interface{}) ([]Step, error) {
+	content := NewStepModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
-	cuts := make([]SystemPrompt, 0)
+	cuts := make([]Step, 0)
 	for _, model := range contents {
-		cut := NewSystemPrompt(nil)
+		cut := NewStep(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SystemPrompt", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Step", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
 }
 
-func (c *SystemPrompt) Get(e echo.Context) error {
-	content := NewSystemPromptTypeContent()
+func (c *Step) Get(e echo.Context) error {
+	content := NewStepTypeContent()
 	content.Model.ID = c.Model.ID
 	content.Model.ContentType = "systemprompt"
 	content, err := content.Get(e)
@@ -114,13 +117,13 @@ func (c *SystemPrompt) Get(e echo.Context) error {
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "SystemPrompt", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Step", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
 
-func (c SystemPrompt) Set(e echo.Context) error {
-	content := NewSystemPromptTypeContent()
+func (c Step) Set(e echo.Context) error {
+	content := NewStepTypeContent()
 	content.FromType(c)
 	err := content.Set(e)
 	if err != nil {
@@ -129,8 +132,8 @@ func (c SystemPrompt) Set(e echo.Context) error {
 	return nil
 }
 
-func (c SystemPrompt) Delete(e echo.Context) error {
-	content := NewSystemPromptTypeContent()
+func (c Step) Delete(e echo.Context) error {
+	content := NewStepTypeContent()
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
@@ -139,21 +142,21 @@ func (c SystemPrompt) Delete(e echo.Context) error {
 	return nil
 }
 
-func (c SystemPrompt) GetID() string {
+func (c Step) GetID() string {
 	return c.Model.ID
 }
 
-func (c SystemPrompt) GetContentType() string {
+func (c Step) GetContentType() string {
 	return c.Model.ContentType
 }
 
-func (c SystemPrompt) GetTable() string {
+func (c Step) GetTable() string {
 	return c.Model.Table
 }
 
-func (c SystemPrompt) SetID() (SystemPrompt, error) {
+func (c Step) SetID() (Step, error) {
 	var err error
-	c.ID = SystemPromptID(c.Model.ID)
+	c.ID = StepID(c.Model.ID)
 	if err != nil {
 		return c, merrors.IDSetError{Info: "systemprompt"}.Wrap(err)
 	}

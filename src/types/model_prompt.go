@@ -74,14 +74,14 @@ func (c Prompt) List(e echo.Context) ([]Prompt, error) {
 	content.Model.ContentType = "prompt"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
 		cut := NewPrompt(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -92,14 +92,14 @@ func (c Prompt) ListBy(e echo.Context, key string, value interface{}) ([]Prompt,
 	content := NewPromptModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
 		cut := NewPrompt(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "ListBy"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -112,11 +112,11 @@ func (c *Prompt) Get(e echo.Context) error {
 	content.Model.ContentType = "prompt"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Prompt", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Prompt", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -127,7 +127,7 @@ func (c Prompt) Set(e echo.Context) error {
 	content.Model.ID = c.ID.String()
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -137,7 +137,7 @@ func (c Prompt) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -150,7 +150,7 @@ func (c Prompt) GetDispositions(e echo.Context) (Prompt, error) {
 	}
 	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(e)
 	if err != nil {
-		return c, merrors.ContentListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(nil, err)
+		return c, merrors.ContentListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
 	}
 	return c, nil
 }
@@ -171,7 +171,7 @@ func (c Prompt) SetID() (Prompt, error) {
 	var err error
 	c.ID = PromptID(c.Model.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "prompt"}.Wrap(nil, err)
+		return c, merrors.IDSetError{Info: "prompt"}.Wrap(err)
 	}
 	return c, nil
 }
@@ -195,7 +195,7 @@ func (c Prompt) Bind(e echo.Context) (Prompt, error) {
 func (c Prompt) Next(e echo.Context) (*models.Context, error) {
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Prompt", Function: "Next"}.Wrap(nil, err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Prompt", Function: "Next"}.Wrap(err)
 	}
 	return systemContext, nil
 }

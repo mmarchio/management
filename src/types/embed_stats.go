@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	merrors "github.com/mmarchio/management/errors"
 )
 
 
@@ -63,3 +65,18 @@ func (c Stats) New(id *string) Stats {
 	return c
 }
 
+func (c Stats) Get(e echo.Context) (*Stats, error) {
+	input := Content{}
+	input.Model.ContentType = "stats"
+	input.Model.ID = c.EmbedModel.ID
+	input.ID = c.ID.String()
+	output, err := input.Get(e)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	stats := c
+	if err := json.Unmarshal([]byte(output.Content), &stats); err != nil {
+		return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+	}
+	return &stats, nil
+}

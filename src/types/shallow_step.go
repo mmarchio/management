@@ -10,37 +10,38 @@ import (
 	"github.com/mmarchio/management/models"
 )
 
-func NewShallowSystemPrompt(id, ct *string) ShallowSystemPrompt {
-	c := ShallowSystemPrompt{}
+func NewShallowStep(id, ct *string) ShallowStep {
+	c := ShallowStep{}
 	c.ShallowModel.New(id, ct)
-	c.ID = SystemPromptID(c.ShallowModel.ID)
+	c.ID = StepID(c.ShallowModel.ID)
 	c.ShallowModel.ContentType = "systemprompt"
 	return c
 } 
 
-func NewShallowSystemPromptModelContent() models.ShallowContent {
+func NewShallowStepModelContent() models.ShallowContent {
 	c := models.ShallowContent{}
 	c.ShallowModel.ContentType = "systemprompt"
 	return c
 }
 
-func NewShallowSystemPromptTypeContent() ShallowContent {
+func NewShallowStepTypeContent() ShallowContent {
 	c := ShallowContent{}
 	c.ShallowModel.ContentType = "systemprompt"
 	return c
 }
 
-type ShallowSystemPrompt struct {
+type ShallowStep struct {
 	ShallowModel
-	ID 		SystemPromptID `form:"id" json:"id"`
-	Name 	string `form:"name" json:"name"`
-	Domain 	string `form:"domain" json:"domain"`
-	SelfModel string `form:"self_model" json:"self_model"`
-	TargetModel string `form:"target_model" json:"target_model"`
-	Prompt 	string `form:"prompt" json:"prompt"`
+	ID StepID 					`form:"id" json:"id"`
+	Name string 				`form:"name" json:"name"`
+	Order int 					`form:"order" json:"order"`
+	DispositionID DispositionID `form:"disposition_id" json:"disposition_id"`
+	Stats string				`form:"stats" json:"stats"`
+	Enabled string				`form:"enabled" json:"enabled"`
+	Bypass string				`form:"bypass" json:"bypass"`
 }
 
-func (c ShallowSystemPrompt) ToContent() (*Content, error) {
+func (c ShallowStep) ToContent() (*Content, error) {
 	m := Content{}
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
@@ -51,8 +52,8 @@ func (c ShallowSystemPrompt) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c ShallowSystemPrompt) Expand(e echo.Context) (*SystemPrompt, error) {
-	r := SystemPrompt{}
+func (c ShallowStep) Expand(e echo.Context) (*Step, error) {
+	r := Step{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
@@ -63,69 +64,92 @@ func (c ShallowSystemPrompt) Expand(e echo.Context) (*SystemPrompt, error) {
 		}
 		return &r, nil
 	}
+	statsInput := Stats{}
+	statsInput.ID = StatsID(c.Stats)
+	statsInput.EmbedModel.ID = c.Stats
+	statsOutput, err := statsInput.Get(e)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	enabledInput := Toggle{}
+	enabledInput.ID = c.Enabled
+	enabledInput.Model.ID = c.Enabled
+	enabledOutput, err := enabledInput.Get(e)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	bypassInput := Toggle{}
+	bypassInput.ID = c.Bypass
+	bypassInput.Model.ID = c.Bypass
+	bypassOutput, err := bypassInput.Get(e)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+
 	r.Model = r.Model.FromShallowModel(c.ShallowModel)
 	r.ID = c.ID
 	r.Name = c.Name
-	r.Domain = c.Domain
-	r.SelfModel = c.SelfModel
-	r.TargetModel = c.TargetModel
-	r.Prompt = c.Prompt
+	r.Order = c.Order
+	r.DispositionID = c.DispositionID
+	r.Stats = *statsOutput
+	r.Enabled = *enabledOutput
+	r.Bypass = *bypassOutput
 	return &r, nil
 }
 
-func (c *ShallowSystemPrompt) New(id *string) {
+func (c *ShallowStep) New(id *string) {
 	if id != nil {
 		c.ShallowModel.ID = *id
 	} else {
 		c.ShallowModel.ID = uuid.NewString()
 	}
-	c.ID = SystemPromptID(c.ShallowModel.ID)
+	c.ID = StepID(c.ShallowModel.ID)
 	c.ShallowModel.CreatedAt = time.Now()
 	c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 	c.ShallowModel.ContentType = "systemprompt"
 }
 
 
-func (c ShallowSystemPrompt) List(e echo.Context) ([]ShallowSystemPrompt, error) {
-	content := NewShallowSystemPromptModelContent()
+func (c ShallowStep) List(e echo.Context) ([]ShallowStep, error) {
+	content := NewShallowStepModelContent()
 	content.ShallowModel.ContentType = "systemprompt"
 	contents, err := content.List(e)
 	if err != nil {
 		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	ct := "shallowsystemprompt"
-	cuts := make([]ShallowSystemPrompt, 0)
+	cuts := make([]ShallowStep, 0)
 	for _, model := range contents {
-		cut := NewShallowSystemPrompt(nil, &ct)
+		cut := NewShallowStep(nil, &ct)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowStep", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
 }
 
-func (c ShallowSystemPrompt) ListBy(e echo.Context, key string, value interface{}) ([]ShallowSystemPrompt, error) {
-	content := NewShallowSystemPromptModelContent()
+func (c ShallowStep) ListBy(e echo.Context, key string, value interface{}) ([]ShallowStep, error) {
+	content := NewShallowStepModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
 		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	ct := "shallowsystemprompt"
-	cuts := make([]ShallowSystemPrompt, 0)
+	cuts := make([]ShallowStep, 0)
 	for _, model := range contents {
-		cut := NewShallowSystemPrompt(nil, &ct)
+		cut := NewShallowStep(nil, &ct)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowStep", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
 }
 
-func (c *ShallowSystemPrompt) FromContent(content *ShallowContent) error {
+func (c *ShallowStep) FromContent(content *ShallowContent) error {
 	if content == nil {
 		return merrors.ContentToTypeError{}.New("content is nil")
 	}
@@ -135,14 +159,14 @@ func (c *ShallowSystemPrompt) FromContent(content *ShallowContent) error {
 	return nil	
 }
 
-func (c *ShallowSystemPrompt) Get(e echo.Context) error {
+func (c *ShallowStep) Get(e echo.Context) error {
 	content, err := c.ShallowModel.Get(e)
 	if err != nil {
 		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowSystemPrompt", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowStep", Function: "Get"}.Wrap(err)
 	}
 	if err := c.FromContent(content); err != nil {
 		return merrors.ContentToTypeError{}.Wrap(err)
@@ -150,8 +174,8 @@ func (c *ShallowSystemPrompt) Get(e echo.Context) error {
 	return nil
 }
 
-func (c ShallowSystemPrompt) Set(e echo.Context) error {
-	content := NewShallowSystemPromptTypeContent()
+func (c ShallowStep) Set(e echo.Context) error {
+	content := NewShallowStepTypeContent()
 	content.FromType(c)
 	err := content.Set(e)
 	if err != nil {
@@ -160,8 +184,8 @@ func (c ShallowSystemPrompt) Set(e echo.Context) error {
 	return nil
 }
 
-func (c ShallowSystemPrompt) Delete(e echo.Context) error {
-	content := NewShallowSystemPromptTypeContent()
+func (c ShallowStep) Delete(e echo.Context) error {
+	content := NewShallowStepTypeContent()
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(e); err != nil {
@@ -170,27 +194,27 @@ func (c ShallowSystemPrompt) Delete(e echo.Context) error {
 	return nil
 }
 
-func (c ShallowSystemPrompt) GetID() string {
+func (c ShallowStep) GetID() string {
 	return c.ShallowModel.ID
 }
 
-func (c ShallowSystemPrompt) GetContentType() string {
+func (c ShallowStep) GetContentType() string {
 	return c.ShallowModel.ContentType
 }
 
-func (c ShallowSystemPrompt) GetTable() string {
+func (c ShallowStep) GetTable() string {
 	return c.ShallowModel.Table
 }
 
-func (c ShallowSystemPrompt) SetID() (ShallowSystemPrompt, error) {
+func (c ShallowStep) SetID() (ShallowStep, error) {
 	var err error
-	c.ID = SystemPromptID(c.ShallowModel.ID)
+	c.ID = StepID(c.ShallowModel.ID)
 	if err != nil {
 		return c, merrors.IDSetError{Info: "systemprompt"}.Wrap(err)
 	}
 	return c, nil
 }
 
-func (c ShallowSystemPrompt) IsShallowModel() bool {
+func (c ShallowStep) IsShallowModel() bool {
 	return true
 }

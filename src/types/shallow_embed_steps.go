@@ -35,7 +35,7 @@ func (c ShallowSteps) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -47,7 +47,7 @@ func (c ShallowSteps) Expand(e echo.Context) (*Steps, error) {
 		t.ShallowModel.ID = c
 		tog, err := t.Expand(e)
 		if err != nil {
-			return merrors.ContentGetError{}.Wrap(nil, err)
+			return merrors.ContentGetError{}.Wrap(err)
 		}
 		if tog != nil {
 			r = tog
@@ -122,7 +122,7 @@ func (c ShallowSteps) Marshal(e echo.Context) (string, error) {
 func (c *ShallowSteps) New(parent ITable, contentType string) (string, error) {
 	embedBytes, err := json.Marshal(c)
 	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return "", merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	return string(embedBytes), nil
 }
@@ -139,7 +139,7 @@ func (c *ShallowSteps) SetID() error {
 	var err error
 	c.ID = StepsID(c.ShallowModel.ID)
 	if err != nil {
-		return merrors.IDSetError{Info: "steps"}.Wrap(nil, err)
+		return merrors.IDSetError{Info: "steps"}.Wrap(err)
 	}
 	return nil
 }

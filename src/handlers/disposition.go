@@ -36,7 +36,7 @@ func HandleAPISetDisposition(c echo.Context) error {
 	GetLogger().Flogger("HandleAPISetDisposition called")
 	entity := types.NewDisposition(nil)
 	if err := c.Bind(&entity); err != nil {
-		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISetDisposition"}.Wrap(nil, err))
+		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISetDisposition"}.Wrap(err))
 	}
 	entity.Model.ID = c.FormValue("id")
 	entity, err = entity.SetID()
@@ -131,7 +131,7 @@ func HandleDispositionsSave(c echo.Context) error {
 	GetLogger().Flogger("HandleDispositionsSave called")
 	entity := types.NewDisposition(nil)
 	if err := c.Bind(&entity); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleDispositionsSave"}.Wrap(nil, err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleDispositionsSave"}.Wrap(err))
 	}
 	entity, err = entity.Bind(c)
 	if err != nil {

@@ -1,4 +1,17 @@
-
+{{define "form.prompt"}}
+            <ul>
+                <input type="hidden" name="id" id="id" value="{{if .Prompt.Model.ID}}{{.Prompt.Model.ID}}{{end}}">
+                <input type="hidden" name="createdAt" id="createdAt" value="{{if .Prompt.Model.CreatedAt}}{{.Prompt.Model.CreatedAt}}{{end}}">
+                <input type="hidden" name="updatedAt" id="updatedAt" value="{{if .Prompt.Model.UpdatedAt}}{{.Prompt.Model.UpdatedAt}}{{end}}">
+                <input type="hidden" name="contentType" id="contentType" value="{{if .Prompt.Model.ContentType}}{{.Prompt.Model.ContentType}}{{end}}">
+                <li><input type="text" name="name" id="name" placeholder="name" value="{{if .Prompt.Name}}{{.Prompt.Name}}{{end}}">
+                <li><input type="text" name="prompt" id="prompt" placeholder="prompt" value="{{if .Prompt.Prompt}}{{.Prompt.Prompt}}{{end}}">
+                <li><input type="text" name="domain" id="domain" placeholder="domain" value="{{if .Prompt.Domain}}{{.Prompt.Domain}}{{end}}">
+                <li><input type="text" name="category" id="category" placeholder="category" value="{{if .Prompt.Category}}{{.Prompt.Category}}{{end}}">
+                <li>{{if .SettingsModel}}{{template "form.settings" .}}{{end}}</li>
+                <li>{{template "element.submit" .}}</li>
+            </ul>
+{{end}}
 <!DOCTYPE html>
 <html>
     {{template "head" .}}
@@ -11,18 +24,12 @@
             {{if eq .DisplayType "new"}}
             {{if and .Prompt.ID .Prompt.Name}}<span>created: {{.Prompt.ID}}</span>{{end}}
         <form action="/prompts/save{{if .Prompt.ID}}/{{.Prompt.ID}}{{end}}" method="POST">
-            <ul>
-                <input type="hidden" name="id" id="id" value="{{if .Prompt.Model.ID}}{{.Prompt.Model.ID}}{{end}}">
-                <input type="hidden" name="createdAt" id="createdAt" value="{{if .Prompt.Model.CreatedAt}}{{.Prompt.Model.CreatedAt}}{{end}}">
-                <input type="hidden" name="updatedAt" id="updatedAt" value="{{if .Prompt.Model.UpdatedAt}}{{.Prompt.Model.UpdatedAt}}{{end}}">
-                <input type="hidden" name="contentType" id="contentType" value="{{if .Prompt.Model.ContentType}}{{.Prompt.Model.ContentType}}{{end}}">
-                <li><input type="text" name="name" id="name" placeholder="name" value="{{if .Prompt.Name}}{{.Prompt.Name}}{{end}}">
-                <li><input type="text" name="prompt" id="prompt" placeholder="prompt" value="{{if .Prompt.Prompt}}{{.Prompt.Prompt}}{{end}}">
-                <li><input type="text" name="domain" id="domain" placeholder="domain" value="{{if .Prompt.Domain}}{{.Prompt.Domain}}{{end}}">
-                <li><input type="text" name="category" id="category" placeholder="category" value="{{if .Prompt.Category}}{{.Prompt.Category}}{{end}}">
-                <li>{{if .SettingsModel}}{{template "form.settings" .}}{{end}}</li>
-                <li><input type="submit" value="submit">
-            </ul>
+            {{template "form.prompt" .}}
+        </form>
+            {{end}}
+            {{if eq .DisplayType "edit"}}
+        <form action="/prompts/save{{if .Prompt.ID}}/{{.Prompt.ID}}{{end}}" method="POST">
+            {{template "form.prompt" .}}
         </form>
             {{end}}
             {{if eq .DisplayType "list"}}

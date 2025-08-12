@@ -15,7 +15,9 @@ func RegisterPromptTemplateRoutes(e *echo.Echo) {
 	g.GET("/:id", HandlePromptTemplatesGet)
 	g.GET("/list", HandlePromptTemplateList)
 	g.GET("/new", HandlePromptTemplatesNew)
+	g.GET("/edit/:id", HandlePromptTemplatesEdit)
 	g.POST("/save", HandlePromptTemplateSave)
+	g.POST("/save/:id", HandlePromptTemplateSave)
 	g.GET("/delete/:id", HandlePromptTemplatesDelete)
 }
 
@@ -90,12 +92,39 @@ func HandlePromptTemplatesNew(c echo.Context) error {
 	return c.Render(http.StatusOK, "prompttemplates.tpl", dt)
 }
 
+func HandlePromptTemplatesEdit(c echo.Context) error {
+	GetLogger().Flogger("HandlePromptTemplatesNew called")
+	ctx := types.Context{}
+	entity := types.NewPromptTemplate(nil)
+	if id := c.Param("id"); id != "" {
+		entity = types.NewPromptTemplate(&id)
+	}
+	b, err := json.MarshalIndent(ctx, "", "  ")
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	dt := DisplayPromptTemplate{
+		PromptTemplate: entity,
+		DisplayType: "edit",
+		Menu: Menu{
+			Href: "prompttemplates",
+			Title: "Prompt Template",
+		},
+		Context: string(b),
+	}
+	return c.Render(http.StatusOK, "prompttemplates.tpl", dt)
+}
+
 func HandlePromptTemplateSave(c echo.Context) error {
 	var err error
+	var entity types.PromptTemplate
 	GetLogger().Flogger("HandlePromptTemplateSave called")
-	entity := types.NewPromptTemplate(nil)
+	entity = types.NewPromptTemplate(nil)
+	if id := c.Param("id"); id != "" {
+		entity = types.NewPromptTemplate(&id)
+	}
 	if err = c.Bind(&entity); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptTemplateSave"}.Wrap(nil, err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptTemplateSave"}.Wrap(err))
 	}
 	entity, err = entity.SetID()
 	if err != nil {
@@ -107,16 +136,7 @@ func HandlePromptTemplateSave(c echo.Context) error {
 	if err = entity.Set(c); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
-
-	dt := DisplayPromptTemplate{
-		PromptTemplate: entity,
-		DisplayType: "new",
-		Menu: Menu{
-			Href: "prompttemplates",
-			Title: "Prompt Template",
-		},
-	}
-	return c.Render(http.StatusCreated, "prompttemplates.tpl", dt)
+	return HandlePromptTemplateList(c)
 }
 
 func HandlePromptTemplateList(c echo.Context) error {

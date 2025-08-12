@@ -120,7 +120,7 @@ func HandlePromptSave(c echo.Context) error {
 		}
 	}
 	if err = c.Bind(&prompt); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(nil, err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(err))
 	}
 	prompt, err = prompt.GetDispositions(c)
 	if err != nil {

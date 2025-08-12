@@ -1,8 +1,8 @@
 package handlers
 
 import (
-
 	"github.com/labstack/echo/v4"
+	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/types"
 )
 
@@ -77,6 +77,7 @@ type DisplayJobRun struct {
 	Menu
 	DisplayType string
 	List []types.JobRun
+	Workflow types.Workflow
 }
 
 type DisplaySystemPrompt struct {
@@ -136,4 +137,54 @@ type DisplaySSHNode struct {
 	List []types.SSHNode
 	Enabled types.Toggle
 	Bypass types.Toggle
+}
+
+type DisplayStep struct {
+	types.Step
+	Menu
+	DisplayType string
+	List []types.Step
+	Enabled types.Toggle
+	Bypass types.Toggle
+	Dispositions []types.Disposition
+}
+
+func (c *DisplayStep) Init(e echo.Context, mode string) error {
+	var err error
+	c.Menu = Menu{
+		Href: "step",
+		Title: "Step",
+	}
+	c.DisplayType = mode
+	c.Enabled = types.Toggle{
+		NamePrefix: "step_",
+		IdPrefix: "step_",
+		Suffix: "enabled",
+		Title: "Enabled",
+	}
+	c.Bypass = types.Toggle{
+		NamePrefix: "step_",
+		IdPrefix: "step_",
+		Suffix: "bypass",
+		Title: "bypass",
+	}
+	switch mode {
+	case "list":
+		t := types.NewStep(nil)
+		c.List, err = t.List(e)
+		if err != nil {
+			return merrors.ContentListError{}.Wrap(err)
+		}
+	case "new":
+		t := types.NewStep(nil)
+		c.Step = t
+	case "edit":
+		if id := e.Param("id"); id != "" {
+			t := types.NewStep(&id)
+			if err := t.Get(e); err != nil {
+				return merrors.ContentGetError{}.Wrap(err)
+			}
+		}
+	}
+	return nil
 }

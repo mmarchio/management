@@ -17,6 +17,7 @@ func RegisterJobRunRoutes(e *echo.Echo) {
 	g := e.Group("/jobruns")
 	g.GET("", HandleJobRuns)
 	g.GET("/new", HandleJobRuns)
+	g.GET("/edit/:id", HandleJobRunEdit)
 	g.GET("/list", HandleJobRunsList)
 	g.GET("/delete/:id", HandleJobRunsDelete)
 	g.GET("/context/:id", HandleJobRunsContextGet)
@@ -64,7 +65,7 @@ func HandleAPISaveJobRun(c echo.Context) error {
 	GetLogger().Flogger("HandleAPISaveJobRun called")
 	job := types.NewJobRun(nil)
 	if err := c.Bind(&job); err != nil {
-		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJobRun"}.Wrap(nil, err))
+		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJobRun"}.Wrap(err))
 	}
 	if err := job.Set(c); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -83,6 +84,31 @@ func HandleJobRuns(c echo.Context) error {
 		},
 	}
 	return c.Render(http.StatusOK, "jobruns.tpl", dt)
+}
+
+func HandleJobRunEdit(c echo.Context) error {
+	if id := c.Param("id"); id != "" {
+		entity := types.NewJobRun(&id)
+		if err := entity.Get(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		wfid := entity.WorkflowID.String()
+		wf := types.NewWorkflow(&wfid)
+		if err := wf.Get(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
+		dt := DisplayJobRun{
+			JobRun: entity,
+			Menu: Menu{
+				Href: "jobrun",
+				Title: "Job Run",
+			},
+			Workflow: wf,
+			DisplayType: "edit",
+		}
+		return c.Render(http.StatusOK, "jobrun.tpl", dt)
+	}
+	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 }
 
 func HandleJobRunsList(c echo.Context) error {
@@ -125,7 +151,7 @@ func HandleJobRunsContextGet(c echo.Context) error {
 		}
 		b, err := json.MarshalIndent(entity.TruncatedContextModel, "", "  ")
 		if err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.JSONMarshallingError{}.Wrap(nil, err))
+			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.JSONMarshallingError{}.Wrap(err))
 		}
 		return c.Render(http.StatusOK, "jobrun.context.tpl", string(b))
 	}

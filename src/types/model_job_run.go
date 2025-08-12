@@ -79,14 +79,14 @@ func (c JobRun) List(e echo.Context) ([]JobRun, error) {
 	content.Model.ContentType = "jobrun"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 	}
 	cuts := make([]JobRun, 0)
 	for _, model := range contents {
 		cut := JobRun{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobRun", Function: "List"}.Wrap(err)
 		}
 		cut.ContextModel.SetCtx(e)
 		cuts = append(cuts, cut)
@@ -98,14 +98,14 @@ func (c JobRun) ListBy(e echo.Context, key string, value interface{}) ([]JobRun,
 	content := NewJobRunModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(err)
 	}
 	cuts := make([]JobRun, 0)
 	for _, model := range contents {
 		cut := NewJobRun(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobRun", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -118,11 +118,11 @@ func (c *JobRun) Get(e echo.Context) error {
 	content.Model.ContentType = "jobrun"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "JobRun", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "JobRun", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -140,11 +140,11 @@ func (c *JobRun) FindBy(e echo.Context) error {
 		content, err = content.FindBy(e, "workflow_id", c.WorkflowID.String())
 	}
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "JobRun", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "JobRun", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -158,21 +158,21 @@ func (c *JobRun) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 		content.FromType(c)
 		_, err := content.CustomQuery(e, write, q, vars)
 		if err != nil {
-			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(nil, err)
+			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(err)
 		}
 		return nil, nil
 	}
 	res, err := content.CustomQuery(e, write, q, vars)
 	if err != nil {
 		if err != nil {
-			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(nil, err).BubbleCode()
+			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID}.Wrap(err).BubbleCode()
 		}
 	}
 	r := make([]JobRun, 0)
 	for _, t := range res {
 		jr := NewJobRun(nil)
 		if err = json.Unmarshal([]byte(t.Content), &jr); err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "JobRun", Function: "CustomQuery"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "JobRun", Function: "CustomQuery"}.Wrap(err)
 		}
 		r = append(r, jr)
 	}
@@ -186,7 +186,7 @@ func (c JobRun) Set(e echo.Context) error {
 	content.ID = c.Model.ID
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -196,7 +196,7 @@ func (c JobRun) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }

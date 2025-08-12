@@ -78,14 +78,14 @@ func (c Disposition) List(e echo.Context) ([]Disposition, error) {
 	content := NewDispositionModelContent()
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Disposition, 0)
 	for _, model := range contents {
 		cut := NewDisposition(nil)
 		cut, err = cut.Unmarshal(model.Content)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -96,14 +96,14 @@ func (c Disposition) ListBy(e echo.Context, key string, value interface{}) ([]Di
 	content := NewDispositionModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Disposition, 0)
 	for _, model := range contents {
 		cut := Disposition{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -116,11 +116,11 @@ func (c *Disposition) Get(e echo.Context) error {
 	content.Model.ID = c.Model.ID
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Disposition", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Disposition", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ func (c Disposition) Set(e echo.Context) error {
 	content.Model.ID = c.Model.ID
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -141,7 +141,7 @@ func (c Disposition) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -158,7 +158,7 @@ func (c Disposition) SetID() (Disposition, error) {
 	var err error
 	c.ID = DispositionID(c.Model.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "disposition"}.Wrap(nil, err)
+		return c, merrors.IDSetError{Info: "disposition"}.Wrap(err)
 	}
 	return c, nil
 }
@@ -167,13 +167,13 @@ func (c Disposition) Unmarshal(j string) (Disposition, error) {
 	model := models.Disposition{}
 	model.Model.ContentType = "disposition"
 	if err := json.Unmarshal([]byte(j), &model); err != nil {
-		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "Disposition", Function: "Unmarshal"}.Wrap(nil, err)
+		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "Disposition", Function: "Unmarshal"}.Wrap(err)
 	}
 	c.Model.FromModel(model.Model)
 
 	d, err := c.SetID()
 	if err != nil {
-		return c, merrors.IDSetError{Info: "disposition"}.Wrap(nil, err)
+		return c, merrors.IDSetError{Info: "disposition"}.Wrap(err)
 	}
 	c = d
 	c.Name = model.Name

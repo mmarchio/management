@@ -88,7 +88,7 @@ func HandleComfyUITemplateSave(c echo.Context) error {
 	GetLogger().Flogger("HandleComfyUITemplateSave called")
 	entity := types.NewComfyUITemplate(nil)
 	if err = c.Bind(&entity); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfyUITemplateSave"}.Wrap(nil, err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfyUITemplateSave"}.Wrap(err))
 	}
 	entity, err = entity.SetID()
 	if err != nil {

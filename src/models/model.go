@@ -105,10 +105,10 @@ func (c Model) Set(e echo.Context, table ITable) error {
 	_, err = tx.Exec(q, values...)
 	if err != nil {
 		tx.Rollback()
-		return merrors.DBQueryError{}.New(db, "err: %w\nq: %s", err, q)
+		return merrors.DBQueryError{DB: db}.New("err: %w\nq: %s", err, q)
 	}
 	if err := tx.Commit(); err != nil {
-		return merrors.TransactionCommitError{}.Wrap(db, err)
+		return merrors.TransactionCommitError{DB: db}.Wrap(err)
 	}
 	GetLogger().Flogger("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
 	return nil
@@ -123,13 +123,13 @@ func (c Model) List(e echo.Context, table Content) ([]Content, error) {
 	rows, err := db.Query(q, table.Model.ContentType)
 	if err != nil {
 		GetLogger().Flogger(err.Error())
-		return nil, merrors.SQLQueryError{Info: "model list"}.Wrap(db, err)
+		return nil, merrors.SQLQueryError{Info: "model list", DB: db}.Wrap(err)
 	}
 	for rows.Next() {
 		itable, err := table.Scan(e, rows)
 		if err != nil {
 			GetLogger().Flogger(err.Error())
-			return nil, merrors.DBContentScanError{Info: "model list"}.Wrap(db, err)
+			return nil, merrors.DBContentScanError{Info: "model list", DB: db}.Wrap(err)
 		}
 		r = append(r, itable)
 	}

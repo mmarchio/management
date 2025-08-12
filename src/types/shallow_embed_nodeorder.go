@@ -21,7 +21,7 @@ func (c ShallowNodeOrder) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -32,10 +32,10 @@ func (c ShallowNodeOrder) Expand(e echo.Context) (*NodeOrder, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(nil, err)
+			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
 		}
 		return &r, nil
 	}

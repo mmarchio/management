@@ -130,7 +130,7 @@ func (c *Steps) New(parent ITable, contentType string) (string, error) {
 	c.PublishMetadataModel.New(*c)
 	embedBytes, err := json.Marshal(c)
 	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return "", merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	return string(embedBytes), nil
 }
@@ -147,7 +147,7 @@ func (c *Steps) SetID() error {
 	var err error
 	c.ID = StepsID(c.EmbedModel.ID)
 	if err != nil {
-		return merrors.IDSetError{Info: "steps"}.Wrap(nil, err)
+		return merrors.IDSetError{Info: "steps"}.Wrap(err)
 	}
 	return nil
 }

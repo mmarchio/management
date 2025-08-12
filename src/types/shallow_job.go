@@ -53,7 +53,7 @@ func (c ShallowJob) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -64,10 +64,10 @@ func (c ShallowJob) Expand(e echo.Context) (*Job, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(nil, err)
+			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
 		}
 		return &r, nil
 	}	
@@ -97,14 +97,14 @@ func (c ShallowJob) List(e echo.Context) ([]ShallowJob, error) {
 	content.Model.ContentType = "job"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowJob, 0)
 	for _, model := range contents {
 		cut := ShallowJob{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Job", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Job", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -115,14 +115,14 @@ func (c ShallowJob) ListBy(e echo.Context, key string, value interface{}) ([]Sha
 	content := NewShallowJobModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowJob, 0)
 	for _, model := range contents {
 		cut := NewShallowJob(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Job", Function: "ListBy"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Job", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -137,10 +137,10 @@ func (c *ShallowJob) Get(e echo.Context) error {
 	content.ShallowModel.ContentType = "job"
 	content, err = content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Job", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Job", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -152,13 +152,13 @@ func (c *ShallowJob) FindBy(e echo.Context, key, value string) (ShallowJob, erro
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content, err = content.FindBy(e, key, value) 
 	if err != nil {
-		return job, merrors.ContentFindByError{Info: fmt.Sprintf("key: %s, value: %s", key, value)}.Wrap(nil, err)
+		return job, merrors.ContentFindByError{Info: fmt.Sprintf("key: %s, value: %s", key, value)}.Wrap(err)
 	}
 	if err = json.Unmarshal([]byte(content.Content), &job); err != nil {
 		if _, ok := err.(merrors.WrappedError); ok {
-			return job, merrors.NilContentError{Info: content.Content, Package: "types", Struct: "ShallowJob", Function: "FindBy"}.Wrap(nil, err).BubbleCode()
+			return job, merrors.NilContentError{Info: content.Content, Package: "types", Struct: "ShallowJob", Function: "FindBy"}.Wrap(err).BubbleCode()
 		}
-		return job, merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowJob", Function: "FindBy"}.Wrap(nil, err)
+		return job, merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowJob", Function: "FindBy"}.Wrap(err)
 	}
 	c = &job
 	return job, nil
@@ -171,7 +171,7 @@ func (c ShallowJob) Set(e echo.Context) error {
 	content.ID = c.ShallowModel.ID
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -181,7 +181,7 @@ func (c ShallowJob) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.Model.ID = c.ShallowModel.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }

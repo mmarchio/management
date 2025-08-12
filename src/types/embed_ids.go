@@ -678,3 +678,29 @@ func (c NodeOrderID) Scan(s interface{}) (NodeOrderID, error) {
 	return NodeOrderID(n.String()), nil
 }
 
+type StepID string
+
+func (c StepID) New(id *string) StepID {
+	if id != nil {
+		return StepID(*id)
+	}
+	return StepID(uuid.NewString())
+}
+
+func (c StepID) IsNil() bool {
+	return string(c) == ""
+}
+
+func (c StepID) String() string {
+	return string(c)
+}
+
+func (c StepID) Scan(s interface{}) (StepID, error) {
+	n := uuid.New()
+	err := n.Scan(s)
+	if err != nil {
+		return c, err
+	}
+	return StepID(n.String()), nil
+}
+

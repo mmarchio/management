@@ -30,7 +30,7 @@ func (c ShallowComfyNode) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -41,10 +41,10 @@ func (c ShallowComfyNode) Expand(e echo.Context) (*ComfyNode, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(nil, err)
+			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(nil, err)
+			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
 		return &r, nil
 	}
@@ -136,13 +136,13 @@ func (c *ShallowComfyNode) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.ShallowModel.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(nil, err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.ShallowModel.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(nil, err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
 		}
 	}
 	if ct, ok := msi["ContentType"].(string); ok {
@@ -166,11 +166,11 @@ func (c *ShallowComfyNode) Get(e echo.Context) error {
 	content.Model.ContentType = "shallowcomfynode"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyNode", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyNode", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -181,11 +181,11 @@ func (c *ShallowComfyNode) GetShallow(e echo.Context) error {
 	content.Model.ContentType = "shallowcomfynode"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyNode", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyNode", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -208,7 +208,7 @@ func (c ShallowComfyNode) Delete(e echo.Context) error {
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ID = c.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ShallowComfyNode", Function: "delete"}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ShallowComfyNode", Function: "delete"}.Wrap(err)
 	}
 	return nil
 }
@@ -242,7 +242,7 @@ func NewShallowComfyNode(id *string) ShallowComfyNode {
 func (c ShallowComfyNode) Set(e echo.Context) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New(nil, "validation failed")
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
 	}
 	content := NewComfyNodeTypeContent()
 	content.FromType(c)
@@ -250,7 +250,7 @@ func (c ShallowComfyNode) Set(e echo.Context) error {
 	content.ID = c.ShallowModel.ID
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }

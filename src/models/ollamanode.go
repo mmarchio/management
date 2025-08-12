@@ -58,10 +58,10 @@ func NewShallowOllamaNode(id *string) ShallowOllamaNode {
 func (c ShallowOllamaNode) Get(e echo.Context, mode string) (*OllamaNode, *ShallowOllamaNode, error) {
 	content := Content{ID: c.Model.ID}
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
+		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if mode == "shallow" {
 		return nil, &c, nil
@@ -98,5 +98,5 @@ func (c ShallowOllamaNode) Get(e echo.Context, mode string) (*OllamaNode, *Shall
 		}
 		return &m, nil, nil
 	}
-	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.New(nil, "unknown mode: %s", mode)
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.New("unknown mode: %s", mode)
 }

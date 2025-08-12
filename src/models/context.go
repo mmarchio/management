@@ -391,10 +391,10 @@ func (c ShallowContext) SetPublishSocialYoutubeModel(e echo.Context, id string) 
 func (c ShallowContext) Get(e echo.Context, mode string) (*Context, *ShallowContext, error) {
 	content := Content{ID: c.ShallowModel.ID}
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
+		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(nil, err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
 	}
 	if mode == "shallow" {
 		return nil, &c, nil
@@ -422,7 +422,7 @@ func (c ShallowContext) Get(e echo.Context, mode string) (*Context, *ShallowCont
 		}
 
 	}
-	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.New(nil, "unknown mode: %s", mode)
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.New("unknown mode: %s", mode)
 }
 
 type Stats struct {
@@ -812,15 +812,15 @@ func (c *Context) Get(e echo.Context) (*Context, error) {
 	var j string
 	err := tx.QueryRow("SELECT status_context FROM job_status WHERE id = $1", c.JobRunID).Scan(&j)
 	if err != nil {
-		e := merrors.ContextGetError{}.Wrap(db, err)
+		e := merrors.ContextGetError{DB: db}.Wrap(err)
 		return nil, &e
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, merrors.TransactionCommitError{}.Wrap(db, err)
+		return nil, merrors.TransactionCommitError{DB: db}.Wrap(err)
 	}
 	ctx = c.SetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextSetError{}.Wrap(db, err)
+		return nil, merrors.ContextSetError{DB: db}.Wrap(err)
 	}
 	return c, nil
 }
@@ -833,17 +833,17 @@ func (c Context) Set(e echo.Context) (*Context, error) {
 	j, err := c.Marshal(e)
 	if err != nil {
 		tx.Rollback()
-		e := merrors.ContextSetError{}.Wrap(db, err)
+		e := merrors.ContextSetError{DB: db}.Wrap(err)
 		return nil, &e
 	}
 	_, err = tx.Exec("UPDATE job_status SET status_context = $1 WHERE id = $2", j, c.JobRunID)
 	if err != nil {
 		tx.Rollback()
-		e := merrors.ContextSetError{}.Wrap(db, err)
+		e := merrors.ContextSetError{DB: db}.Wrap(err)
 		return nil, &e
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, merrors.TransactionCommitError{}.Wrap(db, err)
+		return nil, merrors.TransactionCommitError{DB: db}.Wrap(err)
 	}
 	ctx = c.SetCtx(e)
 	return &c, nil

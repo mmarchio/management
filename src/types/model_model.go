@@ -67,7 +67,7 @@ func (c Model) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(nil, err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
 	}
 	typesContext.FromModel(systemContext)
 	return &typesContext, nil
@@ -78,7 +78,7 @@ func (c Model) SetCtx(e echo.Context) (context.Context, error) {
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(nil, err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
 	}
 	ctx = s.SetCtx(e)
 	return ctx, nil
@@ -112,7 +112,7 @@ func (c EmbedModel) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(nil, err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
 	}
 	typesContext.FromModel(systemContext)
 	return &typesContext, nil
@@ -123,7 +123,7 @@ func (c EmbedModel) SetCtx(e echo.Context) (context.Context, error) {
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(nil, err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
 	}
 	ctx = s.SetCtx(e)
 	return ctx, nil

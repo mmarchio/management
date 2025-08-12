@@ -72,7 +72,7 @@ func (c *Content) Get(e echo.Context) (Content, error) {
 	contentModel.Model.ID = c.Model.ID
 	contentModel.ID = c.ID
 	if err := contentModel.Get(e); err != nil {
-		return *c, merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
+		return *c, merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	d := c.FromModel(contentModel)
 	return d, nil
@@ -86,7 +86,7 @@ func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 		contentModel.ContentType = c.ContentType
 		_, err := contentModel.CustomQuery(e, write, q, vars...)
 		if err != nil {
-			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(nil, err)
+			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
 		}
 		return nil, nil
 	}
@@ -96,7 +96,7 @@ func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 	contentModel.ContentType = c.ContentType
 	res, err := contentModel.CustomQuery(e, write, q, vars...)
 	if err != nil {
-		return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(nil, err).BubbleCode()
+		return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).BubbleCode()
 	}
 	r := make([]Content, 0)
 	for _, t := range res {
@@ -112,7 +112,7 @@ func (c Content) Set(e echo.Context) error {
 	contentModel.ID = c.Model.ID
 	err := contentModel.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -121,10 +121,10 @@ func (c *Content) FindBy(e echo.Context, key, value string) (Content, error) {
 	contentModel := models.Content{}
 	contentModel.Model.ID = c.Model.ID
 	if err := contentModel.FindBy(e, key, value); err != nil {
-		return *c, merrors.ContentFindByError{Info: c.Model.ID}.Wrap(nil, err)
+		return *c, merrors.ContentFindByError{Info: c.Model.ID}.Wrap(err)
 	}
 	if contentModel.Content == "" {
-		return *c, merrors.NilContentError{Package: "types", Struct: "Content", Function: "FindBy"}.New(nil, "nil content error").BubbleCode()
+		return *c, merrors.NilContentError{Package: "types", Struct: "Content", Function: "FindBy"}.New("nil content error").BubbleCode()
 	}
 	d := c.FromModel(contentModel)
 	return d, nil
@@ -134,7 +134,7 @@ func (c Content) List(e echo.Context) ([]Content, error) {
 	contentModel := models.Content{}
 	contentModels, err := contentModel.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	contents := make([]Content, 0)
 	for _, model := range contentModels {
@@ -149,7 +149,7 @@ func (c Content) ListBy(e echo.Context, key string, value interface{}) ([]Conten
 	contentModel := models.Content{}
 	contentModels, err := contentModel.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: fmt.Sprintf("content type: %s, filter: %s:%v", c.Model.ContentType, key, value)}.Wrap(nil, err)
+		return nil, merrors.ContentListByError{Info: fmt.Sprintf("content type: %s, filter: %s:%v", c.Model.ContentType, key, value)}.Wrap(err)
 	}
 	contents := make([]Content, 0)
 	for _, model := range contentModels {
@@ -165,7 +165,7 @@ func (c Content) Delete(e echo.Context) error {
 	contentModel.Model.ID = c.Model.ID
 	contentModel.ID = c.ID
 	if err := contentModel.Delete(e); err != nil {
-		return merrors.ContentModelDeleteError{}.Wrap(nil, err)
+		return merrors.ContentModelDeleteError{}.Wrap(err)
 	}
 	return nil
 }
@@ -187,7 +187,7 @@ func (c Content) ToModel() models.Content {
 func (c *Content) FromType(m ITable) error {
 	b, err := json.Marshal(m)
 	if err != nil {
-		return merrors.JSONMarshallingError{Info: m.GetContentType()}.Wrap(nil, err)
+		return merrors.JSONMarshallingError{Info: m.GetContentType()}.Wrap(err)
 	}
 	c.Content = string(b)
 	return nil

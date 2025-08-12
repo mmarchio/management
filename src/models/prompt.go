@@ -51,7 +51,7 @@ func (c Prompt) Scan(e echo.Context, rows Scannable) (ITable, error) {
 	for rows.Next() {
 		err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Name, &c.Domain, &c.Category, &c.Settings)
 		if err != nil {
-			return nil, merrors.DBContentScanError{}.Wrap(nil, err)
+			return nil, merrors.DBContentScanError{}.Wrap(err)
 		}
 	}
 	return c, nil
@@ -79,7 +79,7 @@ func (c *Prompt) New() {
 func (c *Prompt) Get(e echo.Context) error {
 	var err error
 	if err != nil {
-		return merrors.ContentGetError{}.Wrap(nil, err)
+		return merrors.ContentGetError{}.Wrap(err)
 	}
 	return nil
 }
@@ -87,7 +87,7 @@ func (c *Prompt) Get(e echo.Context) error {
 func (c Prompt) Set(e echo.Context) error {
 	err := c.Model.Set(e, c)
 	if err != nil {
-		return merrors.ContentSetError{}.Wrap(nil, err)
+		return merrors.ContentSetError{}.Wrap(err)
 	}
 	return nil
 }

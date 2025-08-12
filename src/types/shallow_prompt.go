@@ -46,7 +46,7 @@ func (c ShallowPrompt) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -57,10 +57,10 @@ func (c ShallowPrompt) Expand(e echo.Context) (*Prompt, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(nil, err)
+			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
 		}
 		return &r, nil
 	}
@@ -74,7 +74,7 @@ func (c ShallowPrompt) Expand(e echo.Context) (*Prompt, error) {
 	ss.ShallowModel.ID = c.SettingsModel
 	settings, err := ss.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(nil, err)
+		return nil, merrors.ContentGetError{}.Wrap(err)
 	}
 	r.SettingsModel = *settings
 	return &r, nil
@@ -98,14 +98,14 @@ func (c ShallowPrompt) List(e echo.Context) ([]ShallowPrompt, error) {
 	content.Model.ContentType = "shallowprompt"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]ShallowPrompt, 0)
 	for _, model := range contents {
 		cut := NewShallowPrompt(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowPrompt", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowPrompt", Function: "List"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -116,14 +116,14 @@ func (c ShallowPrompt) ListBy(e echo.Context, key string, value interface{}) ([]
 	content := NewPromptModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
 		cut := NewPrompt(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "ListBy"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "ListBy"}.Wrap(err)
 		}
 		cuts = append(cuts, cut)
 	}
@@ -136,11 +136,11 @@ func (c *ShallowPrompt) Get(e echo.Context) error {
 	content.ShallowModel.ContentType = "shallowprompt"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Prompt", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Prompt", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -151,7 +151,7 @@ func (c ShallowPrompt) Set(e echo.Context) error {
 	content.ShallowModel.ID = c.ID.String()
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -161,7 +161,7 @@ func (c ShallowPrompt) Delete(e echo.Context) error {
 	content.FromType(c)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -171,7 +171,7 @@ func (c ShallowPrompt) GetDispositions(e echo.Context) (ShallowPrompt, error) {
 	//disposition := NewShallowDisposition(nil)
 //	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(ctx)
 	if err != nil {
-		return c, merrors.ContentListError{Package: "types", Struct: "ShallowPrompt", Function: "GetDispositions"}.Wrap(nil, err)
+		return c, merrors.ContentListError{Package: "types", Struct: "ShallowPrompt", Function: "GetDispositions"}.Wrap(err)
 	}
 	return c, nil
 }
@@ -192,7 +192,7 @@ func (c ShallowPrompt) SetID() (ShallowPrompt, error) {
 	var err error
 	c.ID = PromptID(c.ShallowModel.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "prompt"}.Wrap(nil, err)
+		return c, merrors.IDSetError{Info: "prompt"}.Wrap(err)
 	}
 	return c, nil
 }

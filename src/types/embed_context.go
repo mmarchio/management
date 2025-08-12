@@ -77,7 +77,7 @@ func NewContext(prompt Prompt, jobRunID RunID, disposition Disposition) Context 
 func (c *Context) GetCtx(e echo.Context) error {
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(nil, err)
+		return merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
 	}
 	c.FromModel(systemContext)
 	return nil
@@ -87,7 +87,7 @@ func (c Context) SetCtx(e echo.Context) (context.Context, error) {
 	ctx := GetLogger().Flogger("Get called").Ctx
 	s, err := c.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(nil, err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
 	}
 	ctx = s.SetCtx(e)
 	return ctx, nil
@@ -96,11 +96,11 @@ func (c Context) SetCtx(e echo.Context) (context.Context, error) {
 func (c Context) ToModel() (*models.Context, error) {
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{Package:"types", Struct:"Context", Function: "ToModel"}.Wrap(nil, err)
+		return nil, merrors.JSONMarshallingError{Package:"types", Struct:"Context", Function: "ToModel"}.Wrap(err)
 	}
 	r := models.Context{}
 	if err := json.Unmarshal(b, &r); err != nil {
-		return nil, merrors.JSONUnmarshallingError{Package:"types", Struct:"Context", Function: "FromModel"}.Wrap(nil, err) 
+		return nil, merrors.JSONUnmarshallingError{Package:"types", Struct:"Context", Function: "FromModel"}.Wrap(err) 
 	}
 	return &r, nil
 }
@@ -110,11 +110,11 @@ func (c *Context) FromModel(ptr *models.Context) error {
 		ctx := *ptr
 		b, err := json.Marshal(ctx)
 		if err != nil {
-			return merrors.JSONMarshallingError{Package:"types", Struct:"Context", Function: "FromModel"}.Wrap(nil, err)
+			return merrors.JSONMarshallingError{Package:"types", Struct:"Context", Function: "FromModel"}.Wrap(err)
 		}
 		d := Context{}
 		if err := json.Unmarshal(b, &d); err != nil {
-			return merrors.JSONUnmarshallingError{Package:"types", Struct:"Context", Function: "FromModel"}.Wrap(nil, err)
+			return merrors.JSONUnmarshallingError{Package:"types", Struct:"Context", Function: "FromModel"}.Wrap(err)
 		}
 		c = &d
 	}
@@ -134,7 +134,7 @@ func GetSystemPrompts(e echo.Context) ([]SystemPrompt, error) {
 	systemPrompt := NewSystemPrompt(nil)
 	systemPrompts, err := systemPrompt.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
 	}
 	return systemPrompts, nil
 }

@@ -51,7 +51,7 @@ func (c Content) ShallowGetIn(e echo.Context) ([]ShallowContent, error) {
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id IN ('%s'::uuid)", c.Columns, strings.Join(c.Model.Manifest, "'::uuid, '"))
 	rows, err := db.Query(q)
 	if err != nil {
-		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "ShallowGetIn"}.Wrap(db, err)
+		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "ShallowGetIn", DB:db}.Wrap(err)
 	}
 	ta := make([]ShallowContent, 0)
 	for rows.Next() {
@@ -73,7 +73,7 @@ func (c Content) GetIn(e echo.Context) ([]Content, error) {
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id IN ('%s'::uuid)", c.Columns, strings.Join(c.Model.Manifest, "'::uuid, '"))
 	rows, err := db.Query(q)
 	if err != nil {
-		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "GetIn"}.Wrap(db, err)
+		return nil, merrors.ContentGetError{Info: q, Package: "models", Struct: "Content", Function: "GetIn", DB:db}.Wrap(err)
 	}
 	ta := make([]Content, 0)
 	for rows.Next() {
@@ -101,13 +101,13 @@ func (c *Content) Get(e echo.Context) error {
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = '%s'::uuid OR content @> '{\"id\":\"%s\"}'", c.Columns, id, id)
 	rows, err := db.Query(q)
 	if err != nil {
-		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(db, err)
+		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q), DB:db}.Wrap(err)
 	}
 	var t Content
 	for rows.Next() {
 		t, err = c.Scan(e, rows)
 		if err != nil {
-			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(db, err)
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q), DB:db}.Wrap(err)
 		}
 		*c = t
 	}
@@ -129,13 +129,13 @@ func (c *ShallowContent) Get(e echo.Context) error {
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = '%s'::uuid OR content @> '{\"id\":\"%s\"}'", c.Columns, id, id)
 	rows, err := db.Query(q)
 	if err != nil {
-		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(db, err)
+		return merrors.ContentGetError{Info: fmt.Sprintf("id: %s, q: %s", id, q), DB:db}.Wrap(err)
 	}
 	var t ShallowContent
 	for rows.Next() {
 		t, err = c.Scan(e, rows)
 		if err != nil {
-			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q)}.Wrap(db, err)
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", id, q), DB:db}.Wrap(err)
 		}
 		*c = t
 	}
@@ -150,7 +150,7 @@ func (c *Content) FindBy(e echo.Context, key, value string) error {
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content @> '{\"%s\":\"%s\"}'", c.Columns, key, value)
 	rows, err := db.Query(q)
 	if err != nil {
-		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q)}.Wrap(db, err)
+		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q), DB: db}.Wrap(err)
 	}
 	var t Content
 	ctr := 0
@@ -158,14 +158,14 @@ func (c *Content) FindBy(e echo.Context, key, value string) error {
 		ctr++
 		t, err = c.Scan(e, rows)
 		if err != nil {
-			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q)}.Wrap(db, err)
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.Model.ID, q), DB: db}.Wrap(err)
 		}
 	}
 	if ctr == 0 {
 		return merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}
 	}
 	if t.Content == "" {
-		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(db, err).BubbleCode()
+		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404, DB:db}.Wrap(err).BubbleCode()
 	}
 	*c = t
 	return nil
@@ -179,7 +179,7 @@ func (c *ShallowContent) FindBy(e echo.Context, key, value string) error {
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content @> '{\"%s\":\"%s\"}'", c.Columns, key, value)
 	rows, err := db.Query(q)
 	if err != nil {
-		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(db, err)
+		return merrors.ContentFindByError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q), DB: db}.Wrap(err)
 	}
 	var t ShallowContent
 	ctr := 0
@@ -187,14 +187,14 @@ func (c *ShallowContent) FindBy(e echo.Context, key, value string) error {
 		ctr++
 		t, err = c.Scan(e, rows)
 		if err != nil {
-			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q)}.Wrap(db, err)
+			return merrors.DBContentScanError{Info: fmt.Sprintf("id: %s, q: %s", c.ShallowModel.ID, q), DB: db}.Wrap(err)
 		}
 	}
 	if ctr == 0 {
 		return merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}
 	}
 	if t.Content == "" {
-		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(db, err).BubbleCode()
+		return merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 404, DB:db}.Wrap(err).BubbleCode()
 	}
 	*c = t
 	return nil
@@ -210,12 +210,12 @@ func (c Content) Set(e echo.Context) error {
 	_, err := tx.Exec(q, c.Values()...)
 	if err != nil {
 		tx.Rollback()
-		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0])}.Wrap(db, err)
+		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0]), DB: db}.Wrap(err)
 	}
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return merrors.TransactionCommitError{Info: "content set"}.Wrap(db, err)
+		return merrors.TransactionCommitError{Info: "content set", DB: db}.Wrap(err)
 	}
 	return nil
 }
@@ -230,12 +230,12 @@ func (c ShallowContent) Set(e echo.Context) error {
 	_, err := tx.Exec(q, c.Values()...)
 	if err != nil {
 		tx.Rollback()
-		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0])}.Wrap(db, err)
+		return merrors.SQLQueryError{Info: fmt.Sprintf("q: %s, values: %#v", q, c.Values()[0]), DB: db}.Wrap(err)
 	}
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return merrors.TransactionCommitError{Info: "content set"}.Wrap(db, err)
+		return merrors.TransactionCommitError{Info: "content set", DB: db}.Wrap(err)
 	}
 	return nil
 }
@@ -246,32 +246,32 @@ func (c Content) List(e echo.Context) ([]Content, error) {
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	if db == nil {
-		return nil, merrors.DBConnectionError{}.New(db, "db is nil")
+		return nil, merrors.DBConnectionError{}.New("db is nil")
 	}
 
 	textOut := strings.Replace(c.Model.Columns, "e, content", "e, content::text", 1)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1", textOut)
 	stmt, err := db.Prepare(q)
 	if err != nil {
-		return nil, merrors.DBPrepareStatementError{Info: q}.Wrap(db, err)
+		return nil, merrors.DBPrepareStatementError{Info: q, DB:db}.Wrap(err)
 	}
 	rows, err := stmt.Query(c.Model.ContentType)
 	if err != nil {
-		return nil, merrors.DBStatementQueryQueryError{Info: q}.Wrap(db, err)
+		return nil, merrors.DBStatementQueryQueryError{Info: q, DB:db}.Wrap(err)
 	}
 	r := make([]Content, 0)
 	for rows.Next() {
 		content, err := c.Scan(e, rows)
 		r = append(r, content)
 		if err != nil {
-			return nil, merrors.DBContentScanError{}.Wrap(db, err)
+			return nil, merrors.DBContentScanError{DB:db}.Wrap(err)
 		}
 		if rows.Err() != nil {
-			return nil, merrors.DBConnectionError{}.Wrap(db, err)
+			return nil, merrors.DBConnectionError{DB:db}.Wrap(err)
 		}
 	}
 	if rows.Err() != nil {
-		return nil, merrors.DBContentScanError{}.Wrap(db, err)
+		return nil, merrors.DBContentScanError{DB:db}.Wrap(err)
 	}
 	rows.Close()
 	return r, nil
@@ -283,32 +283,32 @@ func (c ShallowContent) List(e echo.Context) ([]ShallowContent, error) {
 	db := database.GetPQDatabase(ctx)
 	defer db.Close()
 	if db == nil {
-		return nil, merrors.DBConnectionError{}.New(db, "db is nil")
+		return nil, merrors.DBConnectionError{}.New("db is nil")
 	}
 
 	textOut := strings.Replace(c.ShallowModel.Columns, "e, content", "e, content::text", 1)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1", textOut)
 	stmt, err := db.Prepare(q)
 	if err != nil {
-		return nil, merrors.DBPrepareStatementError{Info: q}.Wrap(db, err)
+		return nil, merrors.DBPrepareStatementError{Info: q, DB:db}.Wrap(err)
 	}
 	rows, err := stmt.Query(c.ShallowModel.ContentType)
 	if err != nil {
-		return nil, merrors.DBStatementQueryQueryError{Info: q}.Wrap(db, err)
+		return nil, merrors.DBStatementQueryQueryError{Info: q, DB:db}.Wrap(err)
 	}
 	r := make([]ShallowContent, 0)
 	for rows.Next() {
 		content, err := c.Scan(e, rows)
 		r = append(r, content)
 		if err != nil {
-			return nil, merrors.DBContentScanError{}.Wrap(db, err)
+			return nil, merrors.DBContentScanError{DB:db}.Wrap(err)
 		}
 		if rows.Err() != nil {
-			return nil, merrors.DBConnectionError{}.Wrap(db, err)
+			return nil, merrors.DBConnectionError{DB:db}.Wrap(err)
 		}
 	}
 	if rows.Err() != nil {
-		return nil, merrors.DBContentScanError{}.Wrap(db, err)
+		return nil, merrors.DBContentScanError{DB:db}.Wrap(err)
 	}
 	rows.Close()
 	return r, nil
@@ -322,13 +322,13 @@ func (c Content) ListBy(e echo.Context, key, value interface{}) ([]Content, erro
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1 AND content @> '{\"%s\":\"%v\"}'", c.Model.Columns, key, value)
 	rows, err := db.Query(q, c.Model.ContentType)
 	if err != nil {
-		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(db, err)
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy", DB: db}.Wrap(err)
 	}
 	r := make([]Content, 0)
 	for rows.Next() {
 		content, err := c.Scan(e, rows)
 		if err != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(db, err)
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy", DB: db}.Wrap(err)
 		}
 		r = append(r, content)
 	}
@@ -343,13 +343,13 @@ func (c ShallowContent) ListBy(e echo.Context, key, value interface{}) ([]Shallo
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1 AND content @> '{\"%s\":\"%v\"}'", c.ShallowModel.Columns, key, value)
 	rows, err := db.Query(q, c.ShallowModel.ContentType)
 	if err != nil {
-		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(db, err)
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "ListBy", DB: db}.Wrap(err)
 	}
 	r := make([]ShallowContent, 0)
 	for rows.Next() {
 		content, err := c.Scan(e, rows)
 		if err != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy"}.Wrap(db, err)
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "ListBy", DB: db}.Wrap(err)
 		}
 		r = append(r, content)
 	}
@@ -366,12 +366,12 @@ func (c Content) Delete(e echo.Context) error {
 	if err != nil {
 		tx.Rollback()
 		GetLogger().Flogger("")
-		return merrors.SQLDeleteErorr{Info: q, Package: "models", Struct: "Content", Function: "Delete"}.Wrap(db, err)
+		return merrors.SQLDeleteErorr{Info: q, Package: "models", Struct: "Content", Function: "Delete", DB: db}.Wrap(err)
 	}
 	if err = tx.Commit(); err != nil {
 		GetLogger().Flogger("rollback: models:content:delete\n")
 		tx.Rollback()
-		return merrors.TransactionCommitError{Package: "models", Struct: "Content", Function: "Delete"}.Wrap(db, err)
+		return merrors.TransactionCommitError{Package: "models", Struct: "Content", Function: "Delete", DB: db}.Wrap(err)
 	}
 	
 	return nil
@@ -397,7 +397,7 @@ func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 			if err = tx.Commit(); err != nil {
 				panic(fmt.Errorf("commit error: %w", err))
 			}
-			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)
+			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery", DB: db}.Wrap(err)
 		}
 		if err = tx.Commit(); err != nil {
 			panic(fmt.Errorf("commit error: %w", err))
@@ -406,7 +406,7 @@ func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 	}
 	rows, err := db.Query(q)
 	if err != nil {
-		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)			
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery", DB: db}.Wrap(err)			
 	}
 	ctr := 0
 	r := make([]Content, 0)
@@ -414,19 +414,19 @@ func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 		ctr++
 		content, err := c.Scan(e, rows)
 		if err != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery", DB: db}.Wrap(err)
 		}
 		r = append(r, content)
 	}
 	if rows.Err() != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, rows.Err())
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery", DB: db}.Wrap(rows.Err())
 	}
 	if ctr == 0 {
-		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(db, err).BubbleCode()
+		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404, DB:db}.Wrap(err).BubbleCode()
 	}
 	for _, t := range r {
 		if t.Content == "" {
-			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500}.Wrap(db, err)
+			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500, DB:db}.Wrap(err)
 		}
 	}
 	return r, nil
@@ -452,7 +452,7 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 			if err = tx.Commit(); err != nil {
 				panic(fmt.Errorf("commit error: %w", err))
 			}
-			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)
+			return nil, merrors.SQLQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery", DB: db}.Wrap(err)
 		}
 		if err = tx.Commit(); err != nil {
 			panic(fmt.Errorf("commit error: %w", err))
@@ -465,7 +465,7 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 	// rows, err := db.Query(q, vals...)
 	rows, err := db.Query(q)
 	if err != nil {
-		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)			
+		return nil, merrors.DBQueryError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery", DB: db}.Wrap(err)			
 	}
 	ctr := 0
 	r := make([]ShallowContent, 0)
@@ -473,19 +473,19 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 		ctr++
 		content, err := c.Scan(e, rows)
 		if err != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, err)
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery", DB: db}.Wrap(err)
 		}
 		r = append(r, content)
 	}
 	if rows.Err() != nil {
-			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery"}.Wrap(db, rows.Err())
+			return nil, merrors.DBContentScanError{Info: q, Package: "models", Struct: "Content", Function: "CustomQuery", DB: db}.Wrap(rows.Err())
 	}
 	if ctr == 0 {
-		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404}.Wrap(db, err).BubbleCode()
+		return nil, merrors.NilContentError{Info: q, Package: "models", Struct: "Content", Function: "FindBy", Code: 404, DB:db}.Wrap(err).BubbleCode()
 	}
 	for _, t := range r {
 		if t.Content == "" {
-			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500}.Wrap(db, err)
+			return nil, merrors.NilContentError{Package: "models", Struct: "Content", Function: "FindBy", Code: 500, DB:db}.Wrap(err)
 		}
 	}
 	return r, nil

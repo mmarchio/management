@@ -138,7 +138,7 @@ func (c Node) List(e echo.Context) ([]Node, error) {
 	content.Model.ContentType = "node"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Node, 0)
 	for _, model := range contents {
@@ -146,7 +146,7 @@ func (c Node) List(e echo.Context) ([]Node, error) {
 		msi := make(map[string]interface{})
 		err = json.Unmarshal([]byte(model.Content), &msi)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "List"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "List"}.Wrap(err)
 		}
 		cut.FromMSI(msi)
 		cuts = append(cuts, cut)
@@ -158,7 +158,7 @@ func (c Node) ListBy(e echo.Context, key string, value interface{}) ([]Node, err
 	content := NewNodeModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(nil, err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
 	}
 	cuts := make([]Node, 0)
 	for _, model := range contents {
@@ -166,7 +166,7 @@ func (c Node) ListBy(e echo.Context, key string, value interface{}) ([]Node, err
 		msi := make(map[string]interface{})
 		err = json.Unmarshal([]byte(model.Content), &msi)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "ListBy"}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "ListBy"}.Wrap(err)
 		}
 		cut.FromMSI(msi)
 		cuts = append(cuts, cut)
@@ -180,15 +180,15 @@ func (c *Node) Get(e echo.Context) error {
 	content.Model.ContentType = "node"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
 	}
 	msi := make(map[string]interface{})
 	err = json.Unmarshal([]byte(content.Content), &msi)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
 	}
 	if err := c.FromMSI(msi); err != nil {
-		return merrors.JSONUnmarshallingError{Info: "from msi", Package: "types", Struct: "node", Function: "Get"}.Wrap(nil, err)
+		return merrors.JSONUnmarshallingError{Info: "from msi", Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
 	}
 	return nil
 }
@@ -196,7 +196,7 @@ func (c *Node) Get(e echo.Context) error {
 func (c Node) Set(e echo.Context) error {
 	c.Validate()
 	if !c.Model.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New(nil, "validation failed")
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
 	}
 	content := NewNodeTypeContent()
 	content.FromType(c)
@@ -204,7 +204,7 @@ func (c Node) Set(e echo.Context) error {
 	content.ID = c.ID.String()
 	err := content.Set(e)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -215,7 +215,7 @@ func (c Node) Delete(e echo.Context) error {
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID.String()
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(nil, err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
 	}
 	return nil
 }
@@ -236,7 +236,7 @@ func (c Node) SetID() (Node, error) {
 	var err error
 	c.ID = NodeID(c.Model.ID)
 	if err != nil {
-		return c, merrors.IDSetError{Info: "node"}.Wrap(nil, err)
+		return c, merrors.IDSetError{Info: "node"}.Wrap(err)
 	}
 	return c, nil
 }
@@ -254,7 +254,7 @@ func (c Node) Bind(e echo.Context) (Node, error) {
 func (c Node) Next(e echo.Context) (*models.Context, error) {
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Node", Function: "Next"}.Wrap(nil, err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Node", Function: "Next"}.Wrap(err)
 	}
 	return systemContext, nil
 }
@@ -267,13 +267,13 @@ func (c *Node) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(nil, err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(nil, err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
 		}
 	}
 	if contentType, ok := msi["ContentType"].(string); ok {
@@ -303,13 +303,13 @@ func (c *Node) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(nil, err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(nil, err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
 		}
 	}
 	if contentType, ok := msi["ContentType"].(string); ok {

@@ -93,7 +93,7 @@ func HandleSystemPromptSave(c echo.Context) error {
 		prompt = types.NewSystemPrompt(nil)
 	}
 	if err = c.Bind(&prompt); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleSystemPromptSave"}.Wrap(nil, err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleSystemPromptSave"}.Wrap(err))
 	}
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())

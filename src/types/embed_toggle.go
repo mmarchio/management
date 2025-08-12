@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
 
@@ -110,4 +112,19 @@ func ValidateToggle(p Toggle, id, prefix, suffix, title string) Toggle {
 		p.ID = id
 	}
 	return p
+}
+
+func (c Toggle) Get(e echo.Context) (*Toggle, error) {
+	input := Content{}
+	input.Model.ID = c.Model.ID
+	input.ID = c.Model.ID
+	output, err := input.Get(e)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err)
+	}
+	toggle := c
+	if err := json.Unmarshal([]byte(output.Content), &toggle); err != nil {
+		return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+	}
+	return &toggle, nil
 }

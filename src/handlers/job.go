@@ -43,7 +43,7 @@ func HandleAPISaveJob(c echo.Context) error {
 	GetLogger().Flogger("HandleAPISaveJob called")
 	job := types.NewJob(nil)
 	if err := c.Bind(&job); err != nil {
-		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJob"}.Wrap(nil, err))
+		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJob"}.Wrap(err))
 	}
 	if err := job.Set(c); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

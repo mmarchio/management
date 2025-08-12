@@ -38,5 +38,13 @@
         </table>
             {{end}}
         {{end}}
+        {{if eq .DisplayType "edit"}}
+        <form action="/jobrun/save{{if .ID}}/{{.ID}}{{end}}" method="post">
+            <ul>
+            </ul>
+        </form>
+        <ul>
+        </ul>
+        {{end}}
     </body>
 </html>

@@ -21,7 +21,7 @@ func (c ShallowTemplate) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(nil, err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err)
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -32,10 +32,10 @@ func (c ShallowTemplate) Expand(e echo.Context) (*Template, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(nil, err)
+			return nil, merrors.ContentGetError{}.Wrap(err)
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
 		}
 		return &r, nil
 	}
@@ -49,10 +49,10 @@ func (c ShallowTemplate) Expand(e echo.Context) (*Template, error) {
 		sd.ShallowModel.ID = id
 		sc, err := sd.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(nil, err)
+			return nil, merrors.ContentGetError{}.Wrap(err)
 		}		
 		if err := json.Unmarshal([]byte(sc.Content), &d); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
 		}
 		r.DispositionsArrayModel = append(r.DispositionsArrayModel, d)
 	}
@@ -62,10 +62,10 @@ func (c ShallowTemplate) Expand(e echo.Context) (*Template, error) {
 		sd.ShallowModel.ID = id
 		sc, err := sd.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(nil, err)
+			return nil, merrors.ContentGetError{}.Wrap(err)
 		}		
 		if err := json.Unmarshal([]byte(sc.Content), &d); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(nil, err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
 		}
 		r.AvailableDispositions = append(r.AvailableDispositions, d)
 	}

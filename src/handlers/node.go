@@ -97,7 +97,7 @@ func HandleComfySave(c echo.Context) error {
 		cn = types.NewComfyNode(nil)
 	}
 	if err := c.Bind(&cn); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(nil, err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
 	}
 	if err := cn.Set(c); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
@@ -261,7 +261,7 @@ func HandleOllamaSave(c echo.Context) error {
 		cn = types.NewOllamaNode(nil)
 	}
 	if err := c.Bind(&cn); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleOllamaSave"}.Wrap(nil, err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleOllamaSave"}.Wrap(err))
 	}
 	if err := cn.Set(c); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
@@ -377,7 +377,7 @@ func HandleSSHSave(c echo.Context) error {
 		cn = types.NewSSHNode(nil)
 	}
 	if err := c.Bind(&cn); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(nil, err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
 	}
 	if err := cn.Set(c); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
