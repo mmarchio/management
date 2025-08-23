@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/labstack/echo/v4"
+	"github.com/mmarchio/management/logger"
 )
 
 func GetEchoCtx(c echo.Context) context.Context {
@@ -17,4 +18,10 @@ func GetEchoCtx(c echo.Context) context.Context {
 func SetEchoCtx(c echo.Context, ctx context.Context) echo.Context {
 	c.Set("context", ctx)
 	return c
+}
+
+func GetLogger(severity int) logger.LoggingContext {
+	r := logger.LoggingContext{Severity: severity}
+	r.Init()
+	return r
 }

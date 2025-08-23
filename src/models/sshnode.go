@@ -8,7 +8,6 @@ import (
 
 type SSHNode struct {
 	Model
-	ID 			string `json:"id"`
 	Name 		string `form:"name" json:"name"`
 	Command 	string `form:"command" json:"command"`
 	User 		string `form:"user" json:"user"`
@@ -22,7 +21,6 @@ type SSHNode struct {
 
 type ShallowSSHNode struct {
 	Model
-	ID 			string `json:"id"`
 	Name 		string `form:"name" json:"name"`
 	Command 	string `form:"command" json:"command"`
 	User 		string `form:"user" json:"user"`

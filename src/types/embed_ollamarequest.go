@@ -7,5 +7,6 @@ type OllamaRequest struct {
 	Stream 		bool `json:"stream"`
 	Format 		string `json:"format"`
 	KeepAlive 	string `json:"keep_alive"`
+	Think       bool `json:"think"`
 }
 

@@ -1,10 +1,11 @@
 package models
 
 import (
-	"context"
 	"time"
+
 	// "encoding/json"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
@@ -31,7 +32,7 @@ func NewShallowPrompt(id *string) ShallowPrompt {
 	return c
 }
 
-func (c ShallowPrompt) Get(ctx context.Context, mode string) (*Prompt, *ShallowPrompt, error) {
+func (c ShallowPrompt) Get(e echo.Context, mode string) (*Prompt, *ShallowPrompt, error) {
 	return nil, nil, nil
 }
 
@@ -46,17 +47,17 @@ type Prompt struct {
 	Base64Value string
 }
 
-func (c Prompt) Scan(ctx context.Context, rows Scannable) (ITable, error) {
+func (c Prompt) Scan(e echo.Context, rows Scannable) (ITable, error) {
 	for rows.Next() {
 		err := rows.Scan(&c.Model.ID, &c.Model.CreatedAt, &c.Model.UpdatedAt, &c.Name, &c.Domain, &c.Category, &c.Settings)
 		if err != nil {
-			return nil, merrors.DBContentScanError{}.Wrap(err)
+			return nil, merrors.DBContentScanError{}.Wrap(err).Log()
 		}
 	}
 	return c, nil
 }
 
-func (c Prompt) Values(ctx context.Context) ([]any, error) {
+func (c Prompt) Values(e echo.Context) ([]any, error) {
 	r := make([]any, 0)
 	r = append(r, c.ID)
 	r = append(r, c.CreatedAt)
@@ -75,41 +76,41 @@ func (c *Prompt) New() {
 }
 
 
-func (c *Prompt) Get(ctx context.Context) error {
+func (c *Prompt) Get(e echo.Context) error {
 	var err error
 	if err != nil {
-		return merrors.ContentGetError{}.Wrap(err)
+		return merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c Prompt) Set(ctx context.Context) error {
-	err := c.Model.Set(ctx, c)
+func (c Prompt) Set(e echo.Context) error {
+	err := c.Model.Set(e, c)
 	if err != nil {
-		return merrors.ContentSetError{}.Wrap(err)
+		return merrors.ContentSetError{}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c Prompt) GetSlice(ctx context.Context) []Prompt {
+func (c Prompt) GetSlice(e echo.Context) []Prompt {
 	return make([]Prompt, 0)
 }
 
-// func (c Prompt) List(ctx context.Context) ([]Prompt, error) {
-// 	contents, err := c.Model.List(ctx, c)
+// func (c Prompt) List(e echo.Context) ([]Prompt, error) {
+// 	contents, err := c.Model.List(e, c)
 // 	if err != nil {
-// 		return nil, merrors.PromptListError{}.Wrap(err)
+// 		return nil, merrors.PromptListError{}.Wrap(db, err)
 // 	}
 // 	r := make([]Prompt, 0)
 // 	var prompt Prompt
 // 	for _, i := range contents {
 // 		err = json.Unmarshal([]byte(i.Content), &prompt)
 // 		if err != nil {
-// 			return nil, merrors.JSONUnmarshallingError{Info: i.Content}.Wrap(err)
+// 			return nil, merrors.JSONUnmarshallingError{Info: i.Content}.Wrap(db, err)
 // 		}
 // 		err = prompt.Unpack()
 // 		if err != nil {
-// 			return nil, merrors.PromptUnpackError{Info: c.Settings}.Wrap(err)
+// 			return nil, merrors.PromptUnpackError{Info: c.Settings}.Wrap(db, err)
 // 		}
 // 		r = append(r, prompt)
 // 	}

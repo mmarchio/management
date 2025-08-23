@@ -8,9 +8,15 @@ import (
 
 type AudioOutput struct {
 	EmbedModel
-	ID AudioOutputID `json:"id"`
 	StatsModel Stats `json:"stats_model"`
 	FilesArrayModel []File `json:"files_array_model"`
+}
+
+func (c AudioOutput) IsNil() bool {
+	if c.EmbedModel.IsNil() && c.StatsModel.IsNil() && len(c.FilesArrayModel) == 0 {
+		return true
+	}
+	return false
 }
 
 func (c AudioOutput) Pack() []shallowmodel {

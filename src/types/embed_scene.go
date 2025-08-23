@@ -9,7 +9,6 @@ import (
 
 type Scene struct {
 	EmbedModel
-	ID 					SceneID `json:"id"`
 	Start 				time.Time `json:"start"`
 	End 				time.Time `json:"end"`
 	SceneNumber 		int64 `json:"scene_number"`

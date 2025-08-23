@@ -1,18 +1,17 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
 
 type ShallowStats struct {
 	ShallowModel
-	ID 				StatsID `json:"stats_id"`
 	Start 			time.Time `json:"start"`
 	End 			time.Time `json:"end"`
 	Input 			string `json:"input"`
@@ -27,13 +26,13 @@ func (c ShallowStats) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
 }
 
-func (c ShallowStats) Expand(ctx context.Context) (*Stats, error) {
+func (c ShallowStats) Expand(e echo.Context) (*Stats, error) {
 	r := Stats{}
 	r.EmbedModel.ID = c.ShallowModel.ID
 	r.EmbedModel.CreatedAt = c.ShallowModel.CreatedAt
@@ -43,19 +42,18 @@ func (c ShallowStats) Expand(ctx context.Context) (*Stats, error) {
 	r.Start = c.Start
 	r.End = c.End
 	r.Input = c.Input
-	r.Output = c.Output
 	r.Duration = c.Duration
 	f := File{}
 	fs := make([]File, 0)
 	for _, id := range c.FilesArrayModel {
 		sf := ShallowFile{}
 		sf.ShallowModel.ID = id
-		sc, err := sf.ShallowModel.Get(ctx)
+		sc, err := sf.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &f); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		fs = append(fs, f)
 	}
@@ -64,20 +62,20 @@ func (c ShallowStats) Expand(ctx context.Context) (*Stats, error) {
 	return &r, nil
 }
 
-func (c *ShallowStats) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowStats) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowStats) Marshal(ctx context.Context) (string, error) {
+func (c ShallowStats) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
 
 func (c ShallowStats) New(id *string) ShallowStats {
 	if id != nil {
-		c.ID = StatsID(*id)
+		c.ShallowModel.ID = *id
 	} else {
-		c.ID = StatsID(uuid.NewString())
+		c.ShallowModel.ID = uuid.NewString()
 	}
 	c.Status = "queued"
 	c.CreatedAt = time.Now()

@@ -1,30 +1,28 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/strrep"
 )
 
 type ShallowOllamaNode struct {
 	ShallowModel
-	ID 				string `json:"id"`
-	Name 			string `form:"name" json:"name"`
-	OllamaModel 	string `form:"model" json:"model"`
-	SystemPrompt 	string `form:"system_prompt" json:"system_prompt"`
-	Prompt 			string `form:"prompt" json:"prompt"`
-	PromptTemplate  string `form:"prompt_template" json:"prompt_template"`
-	ResponseModel   string `json:"response_model"`
-	WorkflowID  	WorkflowID `form:"workflow_id" json:"workflow_id"`
-	Enabled 		bool   `json:"enabled"`
-	Bypass 			bool   `json:"bypass"`
-	Output 			string `form:"output" json:"output"`
-	Context			Context
+	Name           string     `form:"name" json:"name"`
+	OllamaModel    string     `form:"model" json:"model"`
+	SystemPrompt   string     `form:"system_prompt" json:"system_prompt"`
+	Prompt         string     `form:"prompt" json:"prompt"`
+	PromptTemplate string     `form:"prompt_template" json:"prompt_template"`
+	ResponseModel  string     `json:"response_model"`
+	WorkflowID     WorkflowID `form:"workflow_id" json:"workflow_id"`
+	Enabled        bool       `json:"enabled"`
+	Bypass         bool       `json:"bypass"`
+	Output         string     `form:"output" json:"output"`
+	Context        Context
 }
 
 func (c ShallowOllamaNode) ToContent() (*Content, error) {
@@ -32,21 +30,21 @@ func (c ShallowOllamaNode) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
 }
 
-func (c ShallowOllamaNode) Expand(ctx context.Context) (*OllamaNode, error) {
+func (c ShallowOllamaNode) Expand(e echo.Context) (*OllamaNode, error) {
 	r := OllamaNode{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -59,7 +57,7 @@ func (c ShallowOllamaNode) Expand(ctx context.Context) (*OllamaNode, error) {
 	r.PromptTemplate = c.PromptTemplate
 	srm := ShallowOllamaResponse{}
 	srm.ShallowModel.ID = c.ResponseModel
-	rm, err := srm.Expand(ctx)
+	rm, err := srm.Expand(e)
 	if err != nil {
 		return nil, err
 	}
@@ -67,11 +65,10 @@ func (c ShallowOllamaNode) Expand(ctx context.Context) (*OllamaNode, error) {
 	r.WorkflowID = c.WorkflowID
 	r.Enabled = c.Enabled
 	r.Bypass = c.Bypass
-	r.Output = c.Output
 	return &r, nil
 }
 
-func (c ShallowOllamaNode) Validate() params {
+func (c ShallowOllamaNode) Validate() ShallowOllamaNode {
 	valid := true
 	if !c.ShallowModel.Validate() {
 		valid = false
@@ -157,19 +154,23 @@ func (c ShallowOllamaNode) GetType() string {
 	return "ollama_node"
 }
 
-func (c *ShallowOllamaNode) ParsePromptTemplate(ctx context.Context) error {
+func (c *ShallowOllamaNode) ParsePromptTemplate(e echo.Context) error {
+	var err error
 	if c.PromptTemplate != "" {
 		if len(c.PromptTemplate) == 36 {
 			id := c.PromptTemplate
 			pt := NewPromptTemplate(&id)
-			if err := pt.Get(ctx); err != nil {
-				return merrors.ContentGetError{Package: "types", Struct:"ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
+			if err := pt.Get(e); err != nil {
+				return merrors.ContentGetError{Package: "types", Struct: "ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(err).Log()
 			}
 			msi := make(map[string]interface{})
 			if err := json.Unmarshal([]byte(pt.Vars), &msi); err != nil {
-				return merrors.JSONUnmarshallingError{Info: pt.Vars, Package: "types", Struct:"ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(err)
+				return merrors.JSONUnmarshallingError{Info: pt.Vars, Package: "types", Struct: "ShallowOllamaNode", Function: "ParsePromptTemplate"}.Wrap(err).Log()
 			}
-			c.Prompt = strrep.Strrep(pt.Template, msi)
+			c.Prompt, err = strrep.Strrep(pt.Template, msi)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -184,13 +185,13 @@ func (c *ShallowOllamaNode) FromMSI(msi map[string]interface{}) error {
 		if createdAt, ok := p["CreatedAt"].(string); ok {
 			c.ShallowModel.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 			if err != nil {
-				return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"ShallowOllamaNode", Function: "FromMSI"}.Wrap(err)
+				return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct: "ShallowOllamaNode", Function: "FromMSI"}.Wrap(err).Log()
 			}
 		}
 		if updatedAt, ok := p["UpdatedAt"].(string); ok {
 			c.ShallowModel.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 			if err != nil {
-				return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ShallowOllamaNode", Function: "FromMSI"}.Wrap(err)
+				return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct: "ShallowOllamaNode", Function: "FromMSI"}.Wrap(err).Log()
 			}
 		}
 		if ct, ok := p["ContentType"].(string); ok {
@@ -215,16 +216,16 @@ func (c *ShallowOllamaNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *ShallowOllamaNode) Get(ctx context.Context) error {
+func (c *ShallowOllamaNode) Get(e echo.Context) error {
 	content := NewComfyNodeTypeContent()
 	content.Model.ID = c.ShallowModel.ID
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -235,13 +236,12 @@ func NewShallowOllamaNodeTypeContent() ShallowContent {
 	return c
 }
 
-func (c ShallowOllamaNode) Delete(ctx context.Context) error {
+func (c ShallowOllamaNode) Delete(e echo.Context) error {
 	content := NewShallowSSHNodeTypeContent()
-	content.FromType(c)
-	content.Model.ID = c.ShallowModel.ID
-	content.ID = c.ID
-	if err := content.Delete(ctx); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err)
+	content.FromType(c, c.ShallowModel)
+	content.ShallowModel.ID = c.ShallowModel.ID
+	if err := content.Delete(e); err != nil {
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ollamanode", Function: "delete"}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -254,18 +254,17 @@ func (c ShallowOllamaNode) GetID() string {
 	return c.ShallowModel.ID
 }
 
-func (c ShallowOllamaNode) Set(ctx context.Context) error {
+func (c ShallowOllamaNode) Set(e echo.Context, update bool) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
 	}
 	content := NewShallowOllamaNodeTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.ShallowModel)
 	content.ShallowModel.ID = c.ShallowModel.ID
-	content.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -273,6 +272,7 @@ func (c ShallowOllamaNode) Set(ctx context.Context) error {
 func (c ShallowOllamaNode) IsShallowModel() bool {
 	return true
 }
+
 // func (c *ShallowOllamaNode) GetNodeFromWorkflow(id string, wf Workflow) {
 // 	for _, v := range wf.OllamaNodesArrayModel {
 // 		if id == v {
@@ -281,4 +281,3 @@ func (c ShallowOllamaNode) IsShallowModel() bool {
 // 		}
 // 	}
 // }
-

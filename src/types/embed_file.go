@@ -9,7 +9,6 @@ import (
 
 type File struct {
 	EmbedModel
-	ID 			FileID `json:"file_id"`
 	Type 		string `json:"type"`
 	Path 		string `json:"path"`
 	Duration 	time.Duration `json:"duration"`

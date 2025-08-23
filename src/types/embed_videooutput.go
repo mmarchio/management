@@ -8,7 +8,6 @@ import (
 
 type VideoOutput struct {
 	EmbedModel
-	ID 				VideoOutputID `json:"id"`
 	StatsModel 		Stats `json:"stats_model"`
 	FilesArrayModel []File `json:"files_model"`
 }

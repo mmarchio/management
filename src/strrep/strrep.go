@@ -1,12 +1,32 @@
 package strrep
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
+
+	merrors "github.com/mmarchio/management/errors"
 )
 
-func Strrep(str string, vars map[string]interface{}) string {
+func Strrep(str string, vars map[string]interface{}) (string, error) {
 	for k, v := range vars {
+		if sm, ok := v.(map[string]interface{}); ok {
+			b, err := json.Marshal(sm)
+			if err != nil {
+				return "", merrors.JSONMarshallingError{}.Wrap(err).Log()
+			}
+			str = strings.ReplaceAll(str, fmt.Sprintf("{{%s(s)}}", k), string(b))
+		}
+		if si, ok := v.([]interface{}); ok {
+			var collector []string
+			for _, siv := range si {
+				if s, ok := siv.(string); ok {
+					collector = append(collector, s)
+				}
+			}
+			j := strings.Join(collector, ", ")
+			str = strings.ReplaceAll(str, fmt.Sprintf("{{%s(s)}}", k), j)
+		}
 		if s, ok := v.(string); ok {
 			str = strings.ReplaceAll(str, fmt.Sprintf("{{%s(s)}}", k), s)
 		}
@@ -50,5 +70,5 @@ func Strrep(str string, vars map[string]interface{}) string {
 			str = strings.ReplaceAll(str, fmt.Sprintf("{{%s(b)}}", k), fmt.Sprintf("%t", b))
 		}
 	}
-	return str
+	return str, nil
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -19,11 +20,23 @@ type Model struct {
 	CreatedAt 	time.Time
 	UpdatedAt 	time.Time
 	ContentType string
+	Slug		string
 	Table 		string
 	Columns 	string
 	Values 		string
 	Conflict 	string
 	Validated   bool
+}
+
+func (c Model) GetEntityModel() Model {
+	return c
+}
+
+func (c Model) IsNil() bool {
+	if c.ID == "" && c.CreatedAt.IsZero() && c.UpdatedAt.IsZero() && c.ContentType == "" {
+		return true
+	}
+	return false
 }
 
 func (c Model) FromShallowModel(m ShallowModel) Model {
@@ -34,14 +47,17 @@ func (c Model) FromShallowModel(m ShallowModel) Model {
 	return c
 }
 
-func (c Model) Validate() bool {
+func (c *Model) Validate() bool {
 	valid := true
 	if c.ID == "" {
+		GetLogger(2).Flogger("model id is nil")
 		valid = false
 	}
 	if c.CreatedAt.IsZero() || c.UpdatedAt.IsZero() {
+		GetLogger(2).Flogger("created_at or updated_at is zero")
 		valid = false
 	}
+	c.Validated = valid
 	return valid
 }
 
@@ -53,25 +69,27 @@ func (c *Model) New(id *string) {
 	}
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = c.CreatedAt
+	c.Columns = "id, created_at, updated_at, content_type, content"
 }
 
-func (c Model) GetCtx(ctx context.Context) (*Context, error) {
+func (c Model) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
-	systemContext, err := models.Context{}.GetCtx(ctx)
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err).Log()
 	}
 	typesContext.FromModel(systemContext)
 	return &typesContext, nil
 }
 
-func (c Model) SetCtx(ctx context.Context) (context.Context, error) {
+func (c Model) SetCtx(e echo.Context) (context.Context, error) {
+	ctx := GetLogger(4).Flogger("Get called").Ctx
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err).Log()
 	}
-	ctx = s.SetCtx(ctx)
+	ctx = s.SetCtx(e)
 	return ctx, nil
 }
 
@@ -83,6 +101,13 @@ type EmbedModel struct {
 	ContentType string
 }
 
+func (c EmbedModel) IsNil() bool {
+	if c.ContentType == "" {
+		return true
+	}
+	return false
+}
+
 func (c EmbedModel) FromShallowModel(m ShallowModel) EmbedModel {
 	c.ID = m.ID
 	c.CreatedAt = m.CreatedAt
@@ -92,23 +117,24 @@ func (c EmbedModel) FromShallowModel(m ShallowModel) EmbedModel {
 	return c
 }
 
-func (c EmbedModel) GetCtx(ctx context.Context) (*Context, error) {
+func (c EmbedModel) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
-	systemContext, err := models.Context{}.GetCtx(ctx)
+	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err).Log()
 	}
 	typesContext.FromModel(systemContext)
 	return &typesContext, nil
 }
 
-func (c EmbedModel) SetCtx(ctx context.Context) (context.Context, error) {
+func (c EmbedModel) SetCtx(e echo.Context) (context.Context, error) {
+	ctx := GetLogger(4).Flogger("Get called").Ctx
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err).Log()
 	}
-	ctx = s.SetCtx(ctx)
+	ctx = s.SetCtx(e)
 	return ctx, nil
 }
 

@@ -1,3 +1,13 @@
+{{define "form.systemprompts"}}
+<ul>
+    <li><input type="text" name="name" id="name" value="{{if .Name}}{{.Name}}{{end}}" placeholder="name"></li>
+    <li><input type="text" name="self_model" id="self_model" value="{{if .SelfModel}}{{.SelfModel}}{{end}}" placeholder="self model"></li>
+    <li><input type="text" name="target_model" id="target_model" value="{{if .TargetModel}}{{.TargetModel}}{{end}}" placeholder="target model"></li>
+    <li><input type="text" name="domain" id="domain" value="{{if .Domain}}{{.Domain}}{{end}}" placeholder="domain"></li>
+    <li><textarea name="prompt" id="prompt" placeholder="prompt">{{if .Prompt}}{{.Prompt}}{{end}}</textarea>
+    <li><input type="submit" value="submit"></li>
+</ul>
+{{end}}
 <!DOCTYPE html>
 <html>
     {{template "head" .}}
@@ -8,7 +18,12 @@
             {{if eq .DisplayType "none"}}
             {{end}}
             {{if eq .DisplayType "new"}}
-        <form action="/systemprompts/save{{if .ID}}/{{.ID}}{{end}}" method="POST">
+        <form action="/systemprompts/save{{if .ID}}/{{.ID}}{{end}}" method="POST" name="systemprompt" id="systemprompt">
+        {{template "form.systemprompts" .}}
+        </form>
+            {{end}}
+            {{if eq .DisplayType "edit"}}
+        <form action="/systemprompts/save{{if .ID}}/{{.ID}}{{end}}" method="POST" name="systemprompt" id="systemprompt">
         {{template "form.systemprompts" .}}
         </form>
             {{end}}
@@ -23,7 +38,7 @@
             </tr>
             {{range $systemprompt := .List}}
             <tr>
-                <td><a href="/systemprompts/{{$systemprompt.ID}}">{{$systemprompt.ID}}</a></td>
+                <td><a href="/systemprompts/edit/{{$systemprompt.ID}}">{{$systemprompt.ID}}</a></td>
                 <td>{{$systemprompt.Name}}</td>
                 <td>{{$systemprompt.Domain}}</td>
                 <td>{{$systemprompt.Prompt}}</td>

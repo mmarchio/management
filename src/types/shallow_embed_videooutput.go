@@ -1,15 +1,14 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
 type ShallowVideoOutput struct {
 	ShallowModel
-	ID 				VideoOutputID `json:"id"`
 	StatsModel 		string `json:"stats_model"`
 	FilesArrayModel []string `json:"files_model"`
 }
@@ -19,50 +18,50 @@ func (c ShallowVideoOutput) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
 }
 
-func (c ShallowVideoOutput) Expand(ctx context.Context) (*VideoOutput, error) {
+func (c ShallowVideoOutput) Expand(e echo.Context) (*VideoOutput, error) {
 	r := VideoOutput{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
 	r.EmbedModel = r.EmbedModel.FromShallowModel(c.ShallowModel)
 	ss := ShallowStats{}
 	ss.ShallowModel.ID = c.StatsModel
-	stats, err := ss.Expand(ctx)
+	stats, err := ss.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	r.StatsModel = *stats
 	r.FilesArrayModel = make([]File, 0)
 	for _, id := range c.FilesArrayModel {
 		sf := ShallowFile{}
 		sf.ShallowModel.ID = id
-		f, err := sf.Expand(ctx)
+		f, err := sf.Expand(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		r.FilesArrayModel = append(r.FilesArrayModel, *f)
 	}
 	return &r, nil
 }
 
-func (c *ShallowVideoOutput) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowVideoOutput) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowVideoOutput) Marshal(ctx context.Context) (string, error) {
+func (c ShallowVideoOutput) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	c.StatsModel = ShallowStats{}.New(nil).ShallowModel.ID
 	return string(b), err

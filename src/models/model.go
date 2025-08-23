@@ -1,12 +1,12 @@
 package models
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
 )
@@ -72,14 +72,18 @@ func (c *ShallowModel) Init() {
 	c.Conflict = "DO UPDATE SET updated_at = $3, content = $5"
 }
 
-func (c Model) Get(ctx context.Context, table ITable) (ITable, error) {
-	ctx = database.GetPQContext(ctx)
-	db := database.GetPQDatabase(ctx)
+func (c Model) Get(e echo.Context, table ITable) (ITable, error) {
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = $1", c.Columns)
 	rows, err := db.Query(q, c.ID)
+	if err != nil {
+		return nil, merrors.DBQueryError{}.Wrap(err).Log()
+	}
+	defer rows.Close()
 	var t ITable
 	for rows.Next() {
-		t, err = table.Scan(ctx, rows)
+		t, err = table.Scan(e, rows)
 		if err != nil {
 			return nil, err
 		}
@@ -87,61 +91,69 @@ func (c Model) Get(ctx context.Context, table ITable) (ITable, error) {
 	return t, nil
 }
 
-func (c Model) Set(ctx context.Context, table ITable) error {
-	ctx, tx := database.GetDBTransaction(ctx)
+func (c Model) Set(e echo.Context, table ITable) error {
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
+	defer db.Close()
+	tx, err := db.Begin()
+	if err != nil {
+		return merrors.DBConnectionError{DB: db}.Wrap(err).Log()
+	}
 	q := fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s) ON CONFLICT(id) %s",
 		c.Columns,
 		c.Values,
 		c.Conflict,
 	)
-	values, err := table.Values(ctx)
+	values, err := table.Values(e)
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, q, values...)
+	_, err = tx.Exec(q, values...)
 	if err != nil {
-		tx.Rollback(ctx)
-		return fmt.Errorf("err: %w\nq: %s", err, q)
+		tx.Rollback()
+		return merrors.DBQueryError{DB: db}.New("err: %w\nq: %s", err, q)
 	}
-	fmt.Printf("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
+	if err := tx.Commit(); err != nil {
+		return merrors.TransactionCommitError{DB: db}.Wrap(err).Log()
+	}
+	GetLogger(4).Flogger("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
 	return nil
 }
 
-func (c Model) List(ctx context.Context, table Content) ([]Content, error) {
-	ctx = database.GetPQContext(ctx)
-	db := database.GetPQDatabase(ctx)
+func (c Model) List(e echo.Context, table Content) ([]Content, error) {
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
 	r := make([]Content, 0)
 	textOut := strings.Replace(c.Columns, "id", "id::text", 1)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1", textOut)
-	fmt.Printf("q: %s\n", q)
 	rows, err := db.Query(q, table.Model.ContentType)
 	if err != nil {
-		fmt.Println(err)
-		return nil, merrors.SQLQueryError{Info: "model list"}.Wrap(err)
+		return nil, merrors.SQLQueryError{Info: "model list", DB: db}.Wrap(err).Log()
 	}
+	defer rows.Close()
 	for rows.Next() {
-		itable, err := table.Scan(ctx, rows)
+		itable, err := table.Scan(e, rows)
 		if err != nil {
-			fmt.Println(err)
-			return nil, merrors.DBContentScanError{Info: "model list"}.Wrap(err)
+			return nil, merrors.DBContentScanError{Info: "model list", DB: db}.Wrap(err).Log()
 		}
 		r = append(r, itable)
 	}
 	return r, nil
 }
 
-func (c Model) ListBy(ctx context.Context, table ITable, column string, value string) ([]ITable, error) {
-	ctx = database.GetPQContext(ctx)
-	db := database.GetPQDatabase(ctx)
+func (c Model) ListBy(e echo.Context, table ITable, column string, value string) ([]ITable, error) {
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
 	r := make([]ITable, 0)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE %s = $1", c.Columns, column)
 	rows, err := db.Query(q, value)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	for rows.Next() {
-		itable, err := table.Scan(ctx, rows)
+		itable, err := table.Scan(e, rows)
 		if err != nil {
 			return nil, err
 		}

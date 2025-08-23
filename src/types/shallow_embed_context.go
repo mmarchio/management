@@ -1,10 +1,10 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -75,47 +75,46 @@ func NewShallowContext(prompt Prompt, jobRunID RunID, disposition Disposition) S
 func (c ShallowContext) ToModel() (*models.ShallowContext, error) {
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "ToModel"}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "ToModel"}.Wrap(err).Log()
 	}
 	r := models.ShallowContext{}
 	if err := json.Unmarshal(b, &r); err != nil {
-		return nil, merrors.JSONUnmarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err) 
+		return nil, merrors.JSONUnmarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err).Log() 
 	}
 	return &r, nil
 }
 
 func (c *ShallowContext) FromModel(ptr *models.ShallowContext) error {
 	if ptr != nil {
-		ctx := *ptr
-		b, err := json.Marshal(ctx)
+		e := *ptr
+		b, err := json.Marshal(e)
 		if err != nil {
-			return merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err)
+			return merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err).Log()
 		}
 		d := ShallowContext{}
 		if err := json.Unmarshal(b, &d); err != nil {
-			return merrors.JSONUnmarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err)
+			return merrors.JSONUnmarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err).Log()
 		}
 		c = &d
 	}
 	return nil
 }
 
-func (c *ShallowContext) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowContext) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowContext) Marshal(ctx context.Context) (string, error) {
+func (c ShallowContext) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
 
-func GetShallowSystemPrompts() ([]string, error) {
+func GetShallowSystemPrompts(e echo.Context) ([]string, error) {
 	ct := "shallowsystemprompt"
-	ctx := context.Background()
 	systemPrompt := NewShallowSystemPrompt(nil, &ct)
-	systemPrompts, err := systemPrompt.List(ctx)
+	systemPrompts, err := systemPrompt.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
+		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err).Log()
 	}
 	list := make([]string, 0)
 	for _, sp := range systemPrompts {

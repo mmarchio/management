@@ -8,17 +8,25 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
 
 type Toggle struct {
 	Model
-	ID 			string `json:"id"`
 	NamePrefix 	string `json:"name_prefix"`
 	IdPrefix 	string `json:"id_suffix"`
 	Suffix 		string `json:"suffix"`
 	Value 		bool `json:"value"`
 	Title 		string `json:"title"`
+}
+
+func (c Toggle) IsNil() bool {
+	if c.Model.IsNil() && c.ID == "" && c.NamePrefix == "" && c.IdPrefix == "" && c.Suffix == "" && c.Title == "" && !c.Value {
+		return true
+	}
+	return false
 }
 
 func (c Toggle) Pack() []shallowmodel {
@@ -103,4 +111,19 @@ func ValidateToggle(p Toggle, id, prefix, suffix, title string) Toggle {
 		p.ID = id
 	}
 	return p
+}
+
+func (c Toggle) Get(e echo.Context) (*Toggle, error) {
+	input := Content{}
+	input.Model.ID = c.Model.ID
+	input.ID = c.Model.ID
+	output, err := input.Get(e)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
+	}
+	toggle := c
+	if err := json.Unmarshal([]byte(output.Content), &toggle); err != nil {
+		return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
+	}
+	return &toggle, nil
 }

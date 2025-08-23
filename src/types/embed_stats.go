@@ -6,19 +6,20 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	merrors "github.com/mmarchio/management/errors"
 )
 
 
 type Stats struct {
 	EmbedModel
-	ID 				StatsID `json:"stats_id"`
-	Start 			time.Time `json:"start"`
-	End 			time.Time `json:"end"`
-	Input 			string `json:"input"`
-	Output 			string `json:"output"`
-	Duration 		time.Duration `json:"duration"`
-	FilesArrayModel []File `json:"files_array_model"`
-	Status 			string `json:"status"`
+	Start 			time.Time 					`json:"start"`
+	End 			time.Time 					`json:"end"`
+	Input 			string 						`json:"input"`
+	Output 			PromptGenerationResponse 	`json:"output"`
+	Duration 		time.Duration 				`json:"duration"`
+	FilesArrayModel []File 						`json:"files_array_model"`
+	Status 			string 						`json:"status"`
 }
 
 func (c Stats) Pack() []shallowmodel {
@@ -29,7 +30,6 @@ func (c Stats) Pack() []shallowmodel {
 	sm.Start = c.Start
 	sm.End = c.End
 	sm.Input = c.Input
-	sm.Output = c.Output
 	sm.Duration = c.Duration
 	sm.Status = c.Status
 	sm.FilesArrayModel = make([]string, 0)
@@ -52,9 +52,9 @@ func (c Stats) Marshal(ctx context.Context) (string, error) {
 
 func (c Stats) New(id *string) Stats {
 	if id != nil {
-		c.ID = StatsID(*id)
+		c.EmbedModel.ID = *id
 	} else {
-		c.ID = StatsID(uuid.NewString())
+		c.EmbedModel.ID = uuid.NewString()
 	}
 	c.Status = "queued"
 	c.CreatedAt = time.Now()
@@ -63,3 +63,17 @@ func (c Stats) New(id *string) Stats {
 	return c
 }
 
+func (c Stats) Get(e echo.Context) (*Stats, error) {
+	input := Content{}
+	input.Model.ContentType = "stats"
+	input.Model.ID = c.EmbedModel.ID
+	output, err := input.Get(e)
+	if err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
+	}
+	stats := c
+	if err := json.Unmarshal([]byte(output.Content), &stats); err != nil {
+		return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
+	}
+	return &stats, nil
+}

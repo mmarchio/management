@@ -10,13 +10,19 @@ import (
 
 type Settings struct {
 	EmbedModel
-	ID 					string 		`json:"id"`
 	Name 				string 		`json:"name"`
 	TemplateModel 		Template 	`json:"template_model"`
 	GlobalBypassModel 	Steps 		`json:"global_bypass_model"`
 	RecurringModel 		Toggle 		`json:"recurring_model"`
 	Interval 			int64 		`json:"interval"`
 	Workflow 			WorkflowID 	`json:"workflow_id"`
+}
+
+func (c Settings) IsNil() bool {
+	if c.EmbedModel.IsNil() && c.ID == "" && c.Name == "" && c.TemplateModel.IsNil() && c.GlobalBypassModel.IsNil() && c.RecurringModel.IsNil() && c.Interval == 0 && c.Workflow.IsNil() {
+		return true
+	}
+	return false
 }
 
 func (c Settings) Pack() []shallowmodel {

@@ -1,13 +1,12 @@
 package handlers
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/types"
 )
@@ -24,10 +23,10 @@ func RegisterPromptsRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetPrompt(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandleAPIGetPrompt called")
 	if id := c.Param("id"); id != "" {
 		prompt := types.NewPrompt(&id)
-		if err := prompt.Get(ctx); err != nil {
+		if err := prompt.Get(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}		
 		return c.JSON(http.StatusOK, prompt)
@@ -37,25 +36,25 @@ func HandleAPIGetPrompt(c echo.Context) error {
 
 func HandleAPISetPrompt(c echo.Context) error {
 	var err error
-	ctx := GetEchoCtx(c)
+	var update bool
+	GetLogger(4).Flogger("HandleAPISetPrompt called")
 	entity := types.NewPrompt(nil)
-	if err = c.Bind(&entity); err != nil {
+	if id := c.Param("id"); id != "" {
+		update = true
+	}
+	if err := c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	entity, err = entity.SetID()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	if err = entity.Set(ctx); err != nil {
+	if err = entity.Set(c, update); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, entity)
 }
 
 func HandleAPIListPrompt(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandleAPIListPrompt called")
 	prompt := types.NewPrompt(nil)
-	prompts, err := prompt.List(ctx)
+	prompts, err := prompt.List(c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -63,6 +62,7 @@ func HandleAPIListPrompt(c echo.Context) error {
 }
 
 func HandlePrompts(c echo.Context) error {
+	GetLogger(4).Flogger("HandlePrompts called")
 	dt := DisplayPrompt{
 		Prompt: types.Prompt{},
 		DisplayType: "none",
@@ -76,19 +76,21 @@ func HandlePrompts(c echo.Context) error {
 
 func HandlePromptsNew(c echo.Context) error {
 	var err error
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandlePromptsNew called")
 	prompt := types.NewPrompt(nil)
-	prompt.ID = types.PromptID("")
 	prompt.Model.ID = ""
-	if id := c.Param("id"); err != nil {
+	if id := c.Param("id"); id != "" {
 		prompt = types.NewPrompt(&id)
 	}
-	prompt, err = prompt.GetDispositions(ctx)
+	prompt, err = prompt.GetDispositions(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
 	wf := types.NewWorkflow(nil)
-	wfs, err := wf.List(ctx)
+	wfs, err := wf.List(c)
+	b, _ := json.Marshal(prompt)
+	msi := make(map[string]interface{})
+	_ = json.Unmarshal(b, &msi)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -100,25 +102,28 @@ func HandlePromptsNew(c echo.Context) error {
 			Href: "prompts",
 			Title: "Prompt",
 		},
+		Debug: msi,
 	}
 	return c.Render(http.StatusOK, "prompts.tpl", dt)
 }
 
 func HandlePromptSave(c echo.Context) error {
 	var err error
-	ctx := database.GetDatabaseCtx()
+	var update bool
+	GetLogger(4).Flogger("HandlePromptSave called")
 	prompt := types.NewPrompt(nil)
 	if id := c.Param("id"); id != "" {
 		//existing entity
+		update = true
 		prompt = types.NewPrompt(&id)
-		if err := prompt.Get(ctx); err != nil {
+		if err := prompt.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 	}
 	if err = c.Bind(&prompt); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptSave"}.Wrap(err))
 	}
-	prompt, err = prompt.GetDispositions(ctx)
+	prompt, err = prompt.GetDispositions(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -126,18 +131,18 @@ func HandlePromptSave(c echo.Context) error {
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
-	if err = prompt.Set(ctx); err != nil {
+	if err = prompt.Set(c, update); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
 	prompt.SettingsModel.TemplateModel.AvailableDispositions = reconcileDispositions(prompt)
 
 	existingJob := types.NewJob(nil)
-	existingJob.PromptID = prompt.ID
-	job, err := findExistingJob(ctx, existingJob.PromptID.String(), prompt)
+	existingJob.PromptID = types.PromptID(prompt.Model.ID)
+	job, err := findExistingJob(c, existingJob.PromptID.String(), prompt)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
-	if err = createPromptJobRuns(ctx, job, prompt); err != nil {
+	if err = createPromptJobRuns(c, job, prompt); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
 	return HandlePromptsList(c)
@@ -159,17 +164,17 @@ func reconcileDispositions(prompt types.Prompt) []types.Disposition {
 	return newAvailableDispositions
 }
 
-func findExistingJob(ctx context.Context, placeholderID string, prompt types.Prompt) (*types.Job, error){
+func findExistingJob(e echo.Context, placeholderID string, prompt types.Prompt) (*types.Job, error){
 	findbyJob := types.Job{}
-	findbyJob.PromptID = prompt.ID
-	foundJob, err := findbyJob.FindBy(ctx, "prompt_id", prompt.ID.String())
+	findbyJob.PromptID = types.PromptID(prompt.Model.ID)
+	foundJob, err := findbyJob.FindBy(e, "prompt_id", findbyJob.PromptID.String())
 	if err != nil {
-		if e, ok := err.(merrors.WrappedError); ok {
-			if e.GetCode() != merrors.ErrorCode(404) {
+		if er, ok := err.(merrors.WrappedError); ok {
+			if er.GetCode() != merrors.ErrorCode(404) {
 				return nil, err
 			}
-			if e.GetCode() == merrors.ErrorCode(404) {
-				newJob, err := createPromptJob(ctx, prompt)
+			if er.GetCode() == merrors.ErrorCode(404) {
+				newJob, err := createPromptJob(e, prompt)
 				if err != nil {
 					return nil, err
 				}
@@ -178,7 +183,7 @@ func findExistingJob(ctx context.Context, placeholderID string, prompt types.Pro
 		}
 	}
 	if foundJob.Model.ID == "" {
-		newJob, err := createPromptJob(ctx, prompt)
+		newJob, err := createPromptJob(e, prompt)
 		if err != nil {
 			return nil, err
 		}
@@ -189,7 +194,7 @@ func findExistingJob(ctx context.Context, placeholderID string, prompt types.Pro
 		job = types.NewJob(nil)
 		job.PromptID = types.PromptID(prompt.Model.ID)
 		job.WorkflowID = prompt.SettingsModel.Workflow
-		if err := job.Set(ctx); err != nil {
+		if err := job.Set(e, false); err != nil {
 			return nil, err
 		}
 	} else {
@@ -198,7 +203,7 @@ func findExistingJob(ctx context.Context, placeholderID string, prompt types.Pro
 	return &job, nil
 }
 
-func updateJobRuns(ctx context.Context, jobruns []types.JobRun, jobrun types.JobRun, prompt types.Prompt) error {
+func updateJobRuns(e echo.Context, jobruns []types.JobRun, jobrun types.JobRun, prompt types.Prompt) error {
 	for _, jobrun = range jobruns {
 		if prompt.SettingsModel.UpdatedAt != jobrun.SettingsModel.UpdatedAt {
 			jobrun.SettingsModel = prompt.SettingsModel
@@ -210,56 +215,55 @@ func updateJobRuns(ctx context.Context, jobruns []types.JobRun, jobrun types.Job
 				jobrun.Model.UpdatedAt = time.Now()
 			}
 		}
-		jobrun.Model.ID = jobrun.ID.String()
-		if err := jobrun.Set(ctx); err != nil {
+		if err := jobrun.Set(e, true); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func createJobRuns(ctx context.Context, prompt types.Prompt, job *types.Job) error {
+func createJobRuns(e echo.Context, prompt types.Prompt, job *types.Job) error {
 	for _, disposition := range prompt.SettingsModel.TemplateModel.DispositionsArrayModel {
 		jobrun := types.NewJobRun(nil)
 		jobrun.Model.ContentType = "jobrun"
 		jobrun.JobID = types.JobID(job.Model.ID)
-		jobrun.ContextModel = types.NewContext(prompt, jobrun.ID, disposition)
+		jobrun.ContextModel = types.NewContext(prompt, types.RunID(jobrun.Model.ID), disposition)
 		jobrun.LatestStatusType = "start"
 		jobrun.LatestStatusValue = "queued"
 		jobrun.DispositionModel = disposition
-		if err := jobrun.Set(ctx); err != nil {
+		if err := jobrun.Set(e, false); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func createPromptJob(ctx context.Context, prompt types.Prompt) (*types.Job, error) {
+func createPromptJob(e echo.Context, prompt types.Prompt) (*types.Job, error) {
 	newJob := types.NewJob(nil)
-	newJob.PromptID = prompt.ID
+	newJob.PromptID = types.PromptID(prompt.Model.ID)
 	newJob.Recurring = prompt.SettingsModel.RecurringModel.Value
 	newJob.Interval = prompt.SettingsModel.Interval
 	newJob.WorkflowID = prompt.SettingsModel.Workflow
-	if err := newJob.Set(ctx); err != nil {
+	if err := newJob.Set(e, true); err != nil {
 		return nil, err
 	}
 	return &newJob, nil
 }
 
-func createPromptJobRuns(ctx context.Context, job *types.Job, prompt types.Prompt) error {
+func createPromptJobRuns(e echo.Context, job *types.Job, prompt types.Prompt) error {
 	jobrun := types.NewJobRun(nil)
-	jobruns, err := jobrun.ListBy(ctx, "job_id", job.Model.ID)
+	jobruns, err := jobrun.ListBy(e, "job_id", job.Model.ID)
 	if err != nil {
 		return err
 	}
 	if len(jobruns) > 0 {
 		//update existing job runs
-		if err = updateJobRuns(ctx, jobruns, jobrun, prompt); err != nil {
+		if err = updateJobRuns(e, jobruns, jobrun, prompt); err != nil {
 			return err
 		}
 	} else {
 		//create new job runs
-		if err = createJobRuns(ctx, prompt, job); err != nil {
+		if err = createJobRuns(e, prompt, job); err != nil {
 			return err
 		}
 	}
@@ -268,9 +272,9 @@ func createPromptJobRuns(ctx context.Context, job *types.Job, prompt types.Promp
 
 func HandlePromptsList(c echo.Context) error {
 	var err error
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandlePromptsList called")
 	prompt := types.NewPrompt(nil)
-	prompts, err := prompt.List(ctx)
+	prompts, err := prompt.List(c)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -288,17 +292,17 @@ func HandlePromptsList(c echo.Context) error {
 
 func HandlePromptsGet(c echo.Context) error {
 	var err error
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandlePromptsGet called")
 	if id := c.Param("id"); id != "" {
 		prompt := types.NewPrompt(&id)
-		if err = prompt.Get(ctx); err != nil {
+		if err = prompt.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		content := types.NewPromptTypeContent()
-		if err = content.FromType(prompt); err != nil {
+		if err = content.FromType(prompt, prompt.Model); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		prompt, err = prompt.GetDispositions(ctx)
+		prompt, err = prompt.GetDispositions(c)
 		if err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
@@ -316,10 +320,10 @@ func HandlePromptsGet(c echo.Context) error {
 }
 
 func HandlePromptDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandlePromptDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewPrompt(&id)
-		if err := entity.Delete(ctx); err != nil {
+		if err := entity.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandlePromptsList(c)

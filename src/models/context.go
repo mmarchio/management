@@ -3,10 +3,10 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/mmarchio/management/database"
 	merrors "github.com/mmarchio/management/errors"
 )
@@ -77,324 +77,325 @@ type ShallowContext struct {
 	PublishSocialTruthModel 			string `json:"publish_social_truth_model"`
 }
 
-func (c ShallowContext) Set(ctx context.Context) error {
+func (c ShallowContext) Set(e echo.Context) error {
 	return nil
 }
 
-func (c ShallowContext) SetPromptModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPromptModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PromptModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c ShallowContext) SetDispositionModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetDispositionModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.DispositionModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetSettingsModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetSettingsModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.SettingsModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetGetResearchPromptModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetGetResearchPromptModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.GetResearchPromptModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetGetResearchOutputModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetGetResearchOutputModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.GetResearchOutputModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetJobRunID(ctx context.Context, id string) error {
+func (c ShallowContext) SetJobRunID(e echo.Context, id string) error {
 	c.JobRunID = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c ShallowContext) SetScreenwritingOutput(ctx context.Context, id string) error {
+func (c ShallowContext) SetScreenwritingOutput(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.ScreenWritingOutputModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetScreenwritingPromptModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetScreenwritingPromptModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.ScreenwritingPromptModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetVideoPromptModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoPromptModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.VideoPromptModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetAudioPromptModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetAudioPromptModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.AudioPromptModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetAudioOutputModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetAudioOutputModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.AudioOutputModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetVideoLipsyncOutputModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoLipsyncOutputModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.VideoLipsyncOutputModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetVideoTransparencyOutputModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoTransparencyOutputModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.VideoTransparencyOutputModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetVideoBackgroundOutputModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoBackgroundOutputModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.VideoBackgroundOutputModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetVideoLayerMergeModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetVideoLayerMergeModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.VideoLayerMergeModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetVideoJoinArrayModel(ctx context.Context, ids []string) error {
+func (c ShallowContext) SetVideoJoinArrayModel(e echo.Context, ids []string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, ids...)
 	c.VideoJoinArrayModel = ids
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) AppendVideoJoinArrayModel(ctx context.Context, id string) error {
+func (c ShallowContext) AppendVideoJoinArrayModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.VideoJoinArrayModel = append(c.VideoJoinArrayModel, id)
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetImageThumbnailPromptModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetImageThumbnailPromptModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.ImageThumbnailPromptModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetImageThumbnailOutputModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetImageThumbnailOutputModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.ImageThumbnailOutputModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetImageBackgroundContextOutputModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetImageBackgroundContextOutputModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.ImageBackgroundContextOutputModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetPublishVideoYoutubeModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishVideoYoutubeModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PublishVideoYoutubeModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetPublishVideoTiktokModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishVideoTiktokModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PublishVideoTiktokModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetPublishVideoRumbleModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishVideoRumbleModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PublishVideoRumbleModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetPublishVideoFacebookModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishVideoFacebookModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PublishVideoFacebookModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetPublishSocialFacebookModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishSocialFacebookModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PublishSocialFacebookModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetPublishSocialTruthModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishSocialTruthModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PublishSocialTruthModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetPublishSocialXModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishSocialXModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PublishSocialXModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) SetPublishSocialYoutubeModel(ctx context.Context, id string) error {
+func (c ShallowContext) SetPublishSocialYoutubeModel(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.PublishSocialYoutubeModel = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowContext) Get(ctx context.Context, mode string) (*Context, *ShallowContext, error) {
-	content := Content{ID: c.ShallowModel.ID}
-	if err := content.Get(ctx); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+func (c ShallowContext) Get(e echo.Context, mode string) (*Context, *ShallowContext, error) {
+	content := Content{}
+	content.Model.ID = c.ShallowModel.ID
+	if err := content.Get(e); err != nil {
+		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if mode == "shallow" {
 		return nil, &c, nil
@@ -406,14 +407,14 @@ func (c ShallowContext) Get(ctx context.Context, mode string) (*Context, *Shallo
 		m.Model.UpdatedAt = c.ShallowModel.UpdatedAt
 		m.Model.ContentType = c.ShallowModel.ContentType
 
-		promptptr, _, err := NewShallowPrompt(&c.PromptModel).Get(ctx, "full")
+		promptptr, _, err := NewShallowPrompt(&c.PromptModel).Get(e, "full")
 		if err != nil {
 			return nil, nil, err
 		}
 		if promptptr != nil {
 			m.PromptModel = *promptptr
 		}
-		dispositionptr, _, err := NewShallowDisposition(&c.DispositionModel).Get(ctx, "full")
+		dispositionptr, _, err := NewShallowDisposition(&c.DispositionModel).Get(e, "full")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -422,7 +423,7 @@ func (c ShallowContext) Get(ctx context.Context, mode string) (*Context, *Shallo
 		}
 
 	}
-	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.New("unknown mode: %s", mode)
 }
 
 type Stats struct {
@@ -449,86 +450,86 @@ type ShallowStats struct {
 	Status			string `json:"status"`
 }
 
-func (c ShallowStats) Set(ctx context.Context) error {
+func (c ShallowStats) Set(e echo.Context) error {
 	return nil
 }
 
-func (c ShallowStats) SetStart(ctx context.Context, id time.Time) error {
+func (c ShallowStats) SetStart(e echo.Context, id time.Time) error {
 	c.Start = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowStats) SetEnd(ctx context.Context, id time.Time) error {
+func (c ShallowStats) SetEnd(e echo.Context, id time.Time) error {
 	c.End = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowStats) SetInput(ctx context.Context, id string) error {
+func (c ShallowStats) SetInput(e echo.Context, id string) error {
 	c.Input = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowStats) SetOutput(ctx context.Context, id string) error {
+func (c ShallowStats) SetOutput(e echo.Context, id string) error {
 	c.Output = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowStats) SetDuration(ctx context.Context, id time.Duration) error {
+func (c ShallowStats) SetDuration(e echo.Context, id time.Duration) error {
 	c.Duration = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowStats) SetFiles(ctx context.Context, ids []string) error {
+func (c ShallowStats) SetFiles(e echo.Context, ids []string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, ids...)
 	c.FilesArrayModel = ids
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowStats) AppendFiles(ctx context.Context, id string) error {
+func (c ShallowStats) AppendFiles(e echo.Context, id string) error {
 	c.ShallowModel.Manifest = append(c.ShallowModel.Manifest, id)
 	c.FilesArrayModel = append(c.FilesArrayModel, id)
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
 	return nil	
 }
 
-func (c ShallowStats) SetStatus(ctx context.Context, id string) error {
+func (c ShallowStats) SetStatus(e echo.Context, id string) error {
 	c.Status = id
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(ctx); err != nil {
+		if err := c.Set(e); err != nil {
 			return err
 		}
 	}
@@ -795,56 +796,77 @@ func NewShallowImageBackgroundContextOutputModel(id *string) ShallowImageBackgro
 	return c
 }
 
-func (c *Context) Unmarshal(ctx context.Context, j string) error {
+func (c *Context) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c Context) Marshal(ctx context.Context) (string, error) {
+func (c Context) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
 
-func (c *Context) Get(ctx context.Context) (context.Context, error) {
-	ctx, tx := database.GetDBTransaction(ctx)
+func (c *Context) Get(e echo.Context) (*Context, error) {
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
+	defer db.Close()
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, merrors.DBConnectionError{DB: db}.Wrap(err).Log()
+	}
 	var j string
-	err := tx.QueryRow(ctx, "SELECT status_context FROM job_status WHERE id = $1", c.JobRunID).Scan(&j)
+	err = tx.QueryRow("SELECT status_context FROM job_status WHERE id = $1", c.JobRunID).Scan(&j)
 	if err != nil {
-		e := merrors.ContextGetError{}.Wrap(err)
-		return ctx, &e
+		e := merrors.ContextGetError{DB: db}.Wrap(err).Log()
+		return nil, &e
 	}
-	ctx = c.SetCtx(ctx)
-	return ctx, nil
+	if err := tx.Commit(); err != nil {
+		return nil, merrors.TransactionCommitError{DB: db}.Wrap(err).Log()
+	}
+	if err != nil {
+		return nil, merrors.ContextSetError{DB: db}.Wrap(err).Log()
+	}
+	return c, nil
 }
 
-func (c Context) Set(ctx context.Context) (context.Context, error) {
-	ctx, tx := database.GetDBTransaction(ctx)
-	j, err := c.Marshal(ctx)
+func (c Context) Set(e echo.Context) (*Context, error) {
+	GetLogger(4).Flogger("Set called")
+	db := database.GetPQDatabase()
+	defer db.Close()
+	tx, err := db.Begin()
 	if err != nil {
-		tx.Rollback(ctx)
-		e := merrors.ContextSetError{}.Wrap(err)
-		return ctx, &e
+		return nil, merrors.DBConnectionError{}.Wrap(err).Log()
 	}
-	_, err = tx.Exec(ctx, "UPDATE job_status SET status_context = $1 WHERE id = $2", j, c.JobRunID)
+	j, err := c.Marshal(e)
 	if err != nil {
-		tx.Rollback(ctx)
-		e := merrors.ContextSetError{}.Wrap(err)
-		return ctx, &e
+		tx.Rollback()
+		e := merrors.ContextSetError{DB: db}.Wrap(err).Log()
+		return nil, &e
 	}
-	ctx = c.SetCtx(ctx)
-	return ctx, nil
-}
-
-func (c Context) GetCtx(ctx context.Context) (*Context, error) {
-	ctxInterface := ctx.Value(contextKey)
-	if innerContext, ok := ctxInterface.(Context); ok {
-		return &innerContext, nil
-	} else {
-		ctx = c.SetCtx(ctx)
+	_, err = tx.Exec("UPDATE job_status SET status_context = $1 WHERE id = $2", j, c.JobRunID)
+	if err != nil {
+		tx.Rollback()
+		e := merrors.ContextSetError{DB: db}.Wrap(err).Log()
+		return nil, &e
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, merrors.TransactionCommitError{DB: db}.Wrap(err).Log()
 	}
 	return &c, nil
 }
 
-func (c Context) SetCtx(ctx context.Context) context.Context {
+func (c Context) GetCtx(e echo.Context) (*Context, error) {
+	ctx := GetLogger(4).Flogger("GetCtx called").Ctx
+	eInterface := ctx.Value(contextKey)
+	if innerContext, ok := eInterface.(Context); ok {
+		return &innerContext, nil
+	} else {
+		ctx = c.SetCtx(e)
+	}
+	return &c, nil
+}
+
+func (c Context) SetCtx(e echo.Context) context.Context {
+	ctx := GetLogger(4).Flogger("SetCtx called").Ctx
 	ctx = context.WithValue(ctx, contextKey, c)
 	return ctx
 }

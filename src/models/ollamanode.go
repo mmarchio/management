@@ -1,18 +1,16 @@
 package models
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 )
 
 type OllamaNode struct {
 	Model
-	ID 				string `json:"id"`
 	Name 			string `form:"name" json:"name"`
 	OllamaModel 	string `form:"model" json:"model"`
 	SystemPrompt 	string `form:"system_prompt" json:"system_prompt"`
@@ -28,7 +26,6 @@ type OllamaNode struct {
 
 type ShallowOllamaNode struct {
 	Model
-	ID 				string `json:"id"`
 	Name 			string `form:"name" json:"name"`
 	OllamaModel 	string `form:"model" json:"model"`
 	SystemPrompt 	string `form:"system_prompt" json:"system_prompt"`
@@ -56,13 +53,14 @@ func NewShallowOllamaNode(id *string) ShallowOllamaNode {
 	return c
 }
 
-func (c ShallowOllamaNode) Get(ctx context.Context, mode string) (*OllamaNode, *ShallowOllamaNode, error) {
-	content := Content{ID: c.Model.ID}
-	if err := content.Get(ctx); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+func (c ShallowOllamaNode) Get(e echo.Context, mode string) (*OllamaNode, *ShallowOllamaNode, error) {
+	content := Content{}
+	content.Model.ID = c.Model.ID
+	if err := content.Get(e); err != nil {
+		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if mode == "shallow" {
 		return nil, &c, nil
@@ -79,7 +77,7 @@ func (c ShallowOllamaNode) Get(ctx context.Context, mode string) (*OllamaNode, *
 		m.SystemPrompt = c.SystemPrompt
 		m.Prompt = c.Prompt
 		m.PromptTemplate = c.PromptTemplate
-		ollamaresponseptr, _, err := NewShallowOllamaResponse(&c.Response).Get(ctx, "full")
+		ollamaresponseptr, _, err := NewShallowOllamaResponse(&c.Response).Get(e, "full")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -90,7 +88,7 @@ func (c ShallowOllamaNode) Get(ctx context.Context, mode string) (*OllamaNode, *
 		m.Enabled = c.Enabled
 		m.Bypass = c.Bypass
 		m.Output = c.Output
-		contextptr, _, err := NewShallowContext(&c.Context).Get(ctx, "full")
+		contextptr, _, err := NewShallowContext(&c.Context).Get(e, "full")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -99,5 +97,5 @@ func (c ShallowOllamaNode) Get(ctx context.Context, mode string) (*OllamaNode, *
 		}
 		return &m, nil, nil
 	}
-	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.Wrap(fmt.Errorf("unknown mode: %s", mode))
+	return nil, nil, merrors.ContentGetError{Package: "models", Struct: "ShallowWorkflow", Function: "Get"}.New("unknown mode: %s", mode)
 }

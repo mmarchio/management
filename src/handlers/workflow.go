@@ -18,14 +18,13 @@ func RegisterWorkflowRoutes(e *echo.Echo) {
 	g.GET("/list", HandleWorkflowList)
 	g.GET("/edit/:id", HandleWorkflowEdit)
 	g.GET("/delete/:id", HandleWorkflowDelete)
-	
 }
 
 func HandleAPIGetWorkflow(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandleAPIGetWorkflow called")
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 		return c.JSON(http.StatusOK, entity)
@@ -34,9 +33,9 @@ func HandleAPIGetWorkflow(c echo.Context) error {
 }
 
 func HandleAPIListWorkflow(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandleAPIListWorkflow called")
 	entity := types.NewWorkflow(nil)
-	entities, err := entity.List(ctx)
+	entities, err := entity.List(c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -44,7 +43,11 @@ func HandleAPIListWorkflow(c echo.Context) error {
 }
 
 func HandleAPISaveWorkflow(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandleAPISaveWorkflow called")
+	var update bool
+	if id := c.Param("id"); id != "" {
+		update = true
+	}
 	entity := types.NewWorkflow(nil)
 	if err := c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveWorkflow"}.Wrap(err))
@@ -52,48 +55,31 @@ func HandleAPISaveWorkflow(c echo.Context) error {
 	if entity.Name == "" && c.FormValue("name") != "" {
 		entity.Name = c.FormValue("name")
 	}
-	if err := entity.Set(ctx); err != nil {
+	if err := entity.Set(c, update); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, entity)
 }
 
 func HandleWorkflow(c echo.Context) error {
-	dt := DisplayWorkflow{
-		Workflow: types.Workflow{},
-		DisplayType: "none",
-		Menu: Menu{
-			Href: "workflow",
-			Title: "Workflow",
-		},
-	}
+	GetLogger(4).Flogger("HandleWorkflow called")
+	dt := DisplayWorkflow{}
+	dt.Init(c, "none")
 	return c.Render(http.StatusOK, "workflow.tpl", dt)
 }
 
 func HandleWorkflowList(c echo.Context) error {
-	ctx := GetEchoCtx(c)
-	entity := types.NewWorkflow(nil)
-	list, err := entity.List(ctx)
-	if err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-	}
-	dt := DisplayWorkflow{
-		Workflow: types.Workflow{},
-		List: list,
-		DisplayType: "list",
-		Menu: Menu{
-			Href: "workflow",
-			Title: "Workflow",
-		},
-	}
+	GetLogger(4).Flogger("HandleWorkflowList called")
+	dt := DisplayWorkflow{}
+	dt.Init(c, "list")
 	return c.Render(http.StatusOK, "workflow.tpl", dt)
 }
 
 func HandleWorkflowDelete(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandleWorkflowDelete called")
 	if wfid := c.Param("id"); wfid != "" {
 		entity := types.NewWorkflow(&wfid)
-		if err := entity.Delete(ctx); err != nil {
+		if err := entity.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 		return HandleWorkflowList(c)
@@ -102,11 +88,13 @@ func HandleWorkflowDelete(c echo.Context) error {
 }
 
 func HandleWorkflowSave(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandleWorkflowSave called")
+	var update bool
 	entity := types.NewWorkflow(nil)
 	if wfid := c.Param("id"); wfid != "" {
+		update = true
 		entity := types.NewWorkflow(&wfid)
-		if err := entity.Get(ctx); err != nil {
+		if err := entity.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
 	}
@@ -119,7 +107,7 @@ func HandleWorkflowSave(c echo.Context) error {
 	if entity.Name == "" {
 		fmt.Printf(c.FormValue("name"))
 	}
-	if err := entity.Set(ctx); err != nil {
+	if err := entity.Set(c, update); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
 	dt := DisplayWorkflow{
@@ -134,48 +122,18 @@ func HandleWorkflowSave(c echo.Context) error {
 }
 
 func HandleWorkflowNew(c echo.Context) error {
-	entity := types.NewWorkflow(nil)
-	entity.Model.ID = ""
-	entity.ID = types.WorkflowID("")
-	dt := DisplayWorkflow{
-		Workflow: types.Workflow{},
-		DisplayType: "new",
-		Menu: Menu{
-			Href: "workflow",
-			Title: "Workflow",
-		},
-	}
+	GetLogger(4).Flogger("HandleWorkflowNew called")
+	dt := DisplayWorkflow{}
+	dt.Init(c, "new")
 	return c.Render(http.StatusOK, "workflow.tpl", dt)
 }
 
 func HandleWorkflowEdit(c echo.Context) error {
-	ctx := GetEchoCtx(c)
+	GetLogger(4).Flogger("HandleWorkflowEdit called")
 	if wfid := c.Param("id"); wfid != "" {
-		entity := types.NewWorkflow(&wfid)
-		if err := entity.Get(ctx); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		dt := DisplayWorkflow{
-			Workflow: entity,
-			DisplayType: "new",
-			Menu: Menu{
-				Href: "workflow",
-				Title: "Workflow",
-			},
-		}
+		dt := DisplayWorkflow{}
+		dt.Init(c, "edit")
 		return c.Render(http.StatusOK, "workflow.tpl", dt)
 	}
 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 }
-
-// func get(id string) (*types.Workflow, error) {
-// 	ctx := GetEchoCtx(c)
-
-// 	entity := types.NewWorkflow()
-// 	entity.Model.ID = id
-// 	entity.ID = types.WorkflowID(entity.Model.ID)
-// 	if err := entity.Get(ctx); err != nil {
-// 		return nil, err
-// 	}
-// 	return &entity, nil
-// }

@@ -1,16 +1,15 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
 
 type ShallowSteps struct {
 	ShallowModel
-	ID 									StepsID `json:"id"`
 	GetResearchOutputModel				string `json:"get_research_output_model"`
 	GetResearchPromptModel				string `json:"get_research_prompt_model"`
 	ScreenwritingStartModel 			string `json:"screenwriting_start_model"`
@@ -35,19 +34,19 @@ func (c ShallowSteps) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
 }
 
-func (c ShallowSteps) Expand(ctx context.Context) (*Steps, error) {
-	f := func(ctx context.Context, c string, r *Toggle) error {
+func (c ShallowSteps) Expand(e echo.Context) (*Steps, error) {
+	f := func(e echo.Context, c string, r *Toggle) error {
 		t := ShallowToggle{}
 		t.ShallowModel.ID = c
-		tog, err := t.Expand(ctx)
+		tog, err := t.Expand(e)
 		if err != nil {
-			return merrors.ContentGetError{}.Wrap(err)
+			return merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if tog != nil {
 			r = tog
@@ -56,65 +55,65 @@ func (c ShallowSteps) Expand(ctx context.Context) (*Steps, error) {
 	}
 	r := Steps{}
 	r.EmbedModel = r.EmbedModel.FromShallowModel(c.ShallowModel)
-	if err := f(ctx, c.GetResearchOutputModel, &r.GetResearchOutputModel); err != nil {
+	if err := f(e, c.GetResearchOutputModel, &r.GetResearchOutputModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.GetResearchPromptModel, &r.GetResearchPromptModel); err != nil {
+	if err := f(e, c.GetResearchPromptModel, &r.GetResearchPromptModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.ScreenwritingStartModel, &r.ScreenwritingStartModel); err != nil {
+	if err := f(e, c.ScreenwritingStartModel, &r.ScreenwritingStartModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.ScreenwritingGetPromptInputModel, &r.ScreenwritingGetPromptInputModel); err != nil {
+	if err := f(e, c.ScreenwritingGetPromptInputModel, &r.ScreenwritingGetPromptInputModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.ScreenwritingGetPromptOutputModel, &r.ScreenwritingGetPromptOutputModel); err != nil {
+	if err := f(e, c.ScreenwritingGetPromptOutputModel, &r.ScreenwritingGetPromptOutputModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.ScreenwritingOutputModel, &r.ScreenwritingOutputModel); err != nil {
+	if err := f(e, c.ScreenwritingOutputModel, &r.ScreenwritingOutputModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.ContainerSwapModel, &r.ContainerSwapModel); err != nil {
+	if err := f(e, c.ContainerSwapModel, &r.ContainerSwapModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.GenerateAudioModel, &r.GenerateAudioModel); err != nil {
+	if err := f(e, c.GenerateAudioModel, &r.GenerateAudioModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.GenerateLipsyncModel, &r.GenerateLipsyncModel); err != nil {
+	if err := f(e, c.GenerateLipsyncModel, &r.GenerateLipsyncModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.GenerateThumbnailsModel, &r.GenerateThumbnailsModel); err != nil {
+	if err := f(e, c.GenerateThumbnailsModel, &r.GenerateThumbnailsModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.GenerateBackgroundContextModel, &r.GenerateBackgroundContextModel); err != nil {
+	if err := f(e, c.GenerateBackgroundContextModel, &r.GenerateBackgroundContextModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.GenerateBackgroundModel, &r.GenerateBackgroundModel); err != nil {
+	if err := f(e, c.GenerateBackgroundModel, &r.GenerateBackgroundModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.FFMPEGLipsyncPostModel, &r.FFMPEGLipsyncPostModel); err != nil {
+	if err := f(e, c.FFMPEGLipsyncPostModel, &r.FFMPEGLipsyncPostModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.FFMPEGMergeModel, &r.FFMPEGMergeModel); err != nil {
+	if err := f(e, c.FFMPEGMergeModel, &r.FFMPEGMergeModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.PublishVideoModel, &r.PublishVideoModel); err != nil {
+	if err := f(e, c.PublishVideoModel, &r.PublishVideoModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.PublishThumbnailModel, &r.PublishThumbnailModel); err != nil {
+	if err := f(e, c.PublishThumbnailModel, &r.PublishThumbnailModel); err != nil {
 		return nil, err
 	}
-	if err := f(ctx, c.PublishMetadataModel, &r.PublishMetadataModel); err != nil {
+	if err := f(e, c.PublishMetadataModel, &r.PublishMetadataModel); err != nil {
 		return nil, err
 	}
 	return &r, nil
 }
 
-func (c *ShallowSteps) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowSteps) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowSteps) Marshal(ctx context.Context) (string, error) {
+func (c ShallowSteps) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }
@@ -122,7 +121,7 @@ func (c ShallowSteps) Marshal(ctx context.Context) (string, error) {
 func (c *ShallowSteps) New(parent ITable, contentType string) (string, error) {
 	embedBytes, err := json.Marshal(c)
 	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(err)
+		return "", merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	return string(embedBytes), nil
 }
@@ -135,18 +134,8 @@ func (c ShallowSteps) GetID() string {
 	return c.ShallowModel.ID
 }
 
-func (c *ShallowSteps) SetID() error {
-	var err error
-	c.ID = StepsID(c.ShallowModel.ID)
-	if err != nil {
-		return merrors.IDSetError{Info: "steps"}.Wrap(err)
-	}
-	return nil
-}
-
 func (c ShallowSteps) FromModel(model models.ShallowSteps) ShallowSteps {
 	c.ShallowModel.FromModel(model.ShallowModel)
-	c.SetID()
 	c.GetResearchOutputModel = model.GetResearchOutputModel
 	c.GetResearchPromptModel = model.GetResearchPromptModel
 	c.ScreenwritingStartModel = model.ScreenwritingStartModel

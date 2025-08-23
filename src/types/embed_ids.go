@@ -1,6 +1,9 @@
 package types
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+)
 
 type JobStatusID string
 
@@ -609,6 +612,11 @@ func (c WorkflowID) New(id *string) WorkflowID {
 	return WorkflowID(uuid.NewString())
 }
 
+func (c WorkflowID) CheckType(e echo.Context, id *string) (bool, error) {
+	ent := NewWorkflow(id)
+	return CheckType(e, &ent.Model.ID, &ent.Model.ContentType)
+}
+
 func (c WorkflowID) IsNil() bool {
 	return string(c) == ""
 }
@@ -652,4 +660,55 @@ func (c PromptTemplateID) Scan(s interface{}) (PromptTemplateID, error) {
 	return PromptTemplateID(n.String()), nil
 }
 
+type NodeOrderID string
+
+func (c NodeOrderID) New(id *string) NodeOrderID {
+	if id != nil {
+		return NodeOrderID(*id)
+	}
+	return NodeOrderID(uuid.NewString())
+}
+
+func (c NodeOrderID) IsNil() bool {
+	return string(c) == ""
+}
+
+func (c NodeOrderID) String() string {
+	return string(c)
+}
+
+func (c NodeOrderID) Scan(s interface{}) (NodeOrderID, error) {
+	n := uuid.New()
+	err := n.Scan(s)
+	if err != nil {
+		return c, err
+	}
+	return NodeOrderID(n.String()), nil
+}
+
+type StepID string
+
+func (c StepID) New(id *string) StepID {
+	if id != nil {
+		return StepID(*id)
+	}
+	return StepID(uuid.NewString())
+}
+
+func (c StepID) IsNil() bool {
+	return string(c) == ""
+}
+
+func (c StepID) String() string {
+	return string(c)
+}
+
+func (c StepID) Scan(s interface{}) (StepID, error) {
+	n := uuid.New()
+	err := n.Scan(s)
+	if err != nil {
+		return c, err
+	}
+	return StepID(n.String()), nil
+}
 

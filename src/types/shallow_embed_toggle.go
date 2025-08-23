@@ -1,18 +1,17 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
 
 type ShallowToggle struct {
 	ShallowModel
-	ID 			string `json:"id"`
 	NamePrefix 	string `json:"name_prefix"`
 	IdPrefix 	string `json:"id_suffix"`
 	Suffix 		string `json:"suffix"`
@@ -25,22 +24,22 @@ func (c ShallowToggle) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
 }
 
-func (c ShallowToggle) Expand(ctx context.Context) (*Toggle, error) {
+func (c ShallowToggle) Expand(e echo.Context) (*Toggle, error) {
 	r := Toggle{}
 	if c.CreatedAt.IsZero() {
-		m, err := c.ShallowModel.Get(ctx)
+		m, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		c.ShallowModel = m.ShallowModel
 		if err := json.Unmarshal([]byte(m.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -74,11 +73,11 @@ func (c *ShallowToggle) New(parent Embeddable) {
 
 }
 
-func (c *ShallowToggle) Unmarshal(ctx context.Context, j string) error {
+func (c *ShallowToggle) Unmarshal(e echo.Context, j string) error {
 	return json.Unmarshal([]byte(j), c)
 }
 
-func (c ShallowToggle) Marshal(ctx context.Context) (string, error) {
+func (c ShallowToggle) Marshal(e echo.Context) (string, error) {
 	b, err := json.Marshal(c)
 	return string(b), err
 }

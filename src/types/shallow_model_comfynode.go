@@ -1,29 +1,27 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
 
 type ShallowComfyNode struct {
 	ShallowModel
-	ID 				string 					`json:"id"`
-	Name 			string 					`form:"name" json:"name"`
-	Prompt          string                  `form:"prompt" json:"prompt"`
-	APIBase 		string 					`form:"api_base" json:"api_base"`
-	APITemplate 	string 					`form:"api_template" json:"api_template"`
-	TemplateValues  map[string]interface{} 	`json:"template_values"`
-	WorkflowID  	WorkflowID 				`form:"workflow_id" json:"workflow_id"`
-	Type 			string 					`form:"type" json:"type"`
-	Enabled 		bool   					`json:"enabled"`
-	Bypass 			bool   					`json:"bypass"`
-	Output 			string 					`form:"output" json:"output"`
+	Name           string       `form:"name" json:"name"`
+	Prompt         string       `form:"prompt" json:"prompt"`
+	APIBase        string       `form:"api_base" json:"api_base"`
+	APITemplate    string       `form:"api_template" json:"api_template"`
+	TemplateValues string		`json:"template_values"`
+	WorkflowID     WorkflowID	`form:"workflow_id" json:"workflow_id"`
+	Type           string       `form:"type" json:"type"`
+	Enabled        bool	        `json:"enabled"`
+	Bypass         bool         `json:"bypass"`
+	Output         string       `form:"output" json:"output"`
 }
 
 func (c ShallowComfyNode) ToContent() (*Content, error) {
@@ -31,21 +29,21 @@ func (c ShallowComfyNode) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
 }
 
-func (c ShallowComfyNode) Expand(ctx context.Context) (*ComfyNode, error) {
+func (c ShallowComfyNode) Expand(e echo.Context) (*ComfyNode, error) {
 	r := ComfyNode{}
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
-		sc, err := c.ShallowModel.Get(ctx)
+		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -58,13 +56,13 @@ func (c ShallowComfyNode) Expand(ctx context.Context) (*ComfyNode, error) {
 	r.TemplateValues = c.TemplateValues
 	r.WorkflowID = c.WorkflowID
 	r.Type = c.Type
-	r.Enabled = c.Enabled
-	r.Bypass = c.Bypass
+	r.Enabled.Value = c.Enabled
+	r.Bypass.Value = c.Bypass
 	r.Output = c.Output
 	return &r, nil
 }
 
-func (c ShallowComfyNode) Validate() params {
+func (c ShallowComfyNode) Validate() ShallowComfyNode {
 	valid := true
 	if !c.ShallowModel.Validate() {
 		valid = false
@@ -137,13 +135,13 @@ func (c *ShallowComfyNode) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.ShallowModel.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct: "ComfyNode", Function: "FromMSI"}.Wrap(err).Log()
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.ShallowModel.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct: "ComfyNode", Function: "FromMSI"}.Wrap(err).Log()
 		}
 	}
 	if ct, ok := msi["ContentType"].(string); ok {
@@ -161,32 +159,32 @@ func (c *ShallowComfyNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *ShallowComfyNode) Get(ctx context.Context) error {
+func (c *ShallowComfyNode) Get(e echo.Context) error {
 	content := NewComfyNodeTypeContent()
 	content.Model.ID = c.ShallowModel.ID
 	content.Model.ContentType = "shallowcomfynode"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyNode", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyNode", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c *ShallowComfyNode) GetShallow(ctx context.Context) error {
+func (c *ShallowComfyNode) GetShallow(e echo.Context) error {
 	content := NewComfyNodeTypeContent()
 	content.Model.ID = c.ShallowModel.ID
 	content.Model.ContentType = "shallowcomfynode"
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyNode", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyNode", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -203,13 +201,13 @@ func NewShallowComfyNodeModelContent() models.ShallowContent {
 	return c
 }
 
-func (c ShallowComfyNode) Delete(ctx context.Context) error {
+func (c ShallowComfyNode) Delete(e echo.Context) error {
 	content := NewShallowComfyNodeTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.ShallowModel)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	content.ID = c.ID
-	if err := content.Delete(ctx); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ShallowComfyNode", Function: "delete"}.Wrap(err)
+	if err := content.Delete(e); err != nil {
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "ShallowComfyNode", Function: "delete"}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -240,18 +238,20 @@ func NewShallowComfyNode(id *string) ShallowComfyNode {
 	return c
 }
 
-func (c ShallowComfyNode) Set(ctx context.Context) error {
+func (c ShallowComfyNode) Set(e echo.Context, update bool) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.Wrap(fmt.Errorf("validation failed"))
+		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
 	}
 	content := NewComfyNodeTypeContent()
-	content.FromType(c)
+	content.FromType(c, content.Model)
 	content.Model.ID = c.ShallowModel.ID
-	content.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	content.Model.CreatedAt = c.ShallowModel.CreatedAt
+	content.Model.UpdatedAt = c.ShallowModel.UpdatedAt
+	content.Model.ContentType = c.ShallowModel.ContentType
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
 )
@@ -34,6 +35,31 @@ func (c Content) Pack() []shallowmodel {
 	sm.Content = c.Content
 	sms = append(sms, sm)
 	return sms
+}
+
+func (c Content) CheckType(e echo.Context) (bool, error) {
+	m := models.Content{}
+	m.Model.ID = c.Model.ID
+	m.Model.CreatedAt = c.Model.CreatedAt
+	m.Model.UpdatedAt = c.Model.UpdatedAt
+	m.Model.ContentType = c.Model.ContentType
+	count, err := m.Check(e, m.Model.ID)
+	if err != nil {
+		return false, merrors.ContentCheckError{CalledBy: "models.Content.Check"}.Wrap(err).Log()
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count > int64(0) {
+		if err := m.Get(e); err != nil {
+			return false, merrors.ContentGetError{CalledBy: "models.Content.Check"}.Wrap(err).Log()
+		}
+		if m.Model.ContentType == c.Model.ContentType {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (c Content) Scan(ctx context.Context, rows Scannable) (Content, error) {
@@ -66,27 +92,24 @@ func (c Content) New(ct string) Content {
 	return c
 } 
 
-func (c *Content) Get(ctx context.Context) (Content, error) {
+func (c *Content) Get(e echo.Context) (Content, error) {
 	contentModel :=  models.Content{}
 	contentModel.Model.ID = c.Model.ID
-	contentModel.ID = c.ID
-	err := contentModel.Get(ctx)
-	if err != nil {
-		return *c, merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+	if err := contentModel.Get(e); err != nil {
+		return *c, merrors.ContentGetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	d := c.FromModel(contentModel)
 	return d, nil
 }
 
-func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...any) ([]Content, error) {
+func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) ([]Content, error) {
 	if write {
 		contentModel := c.ToModel()
 		contentModel.Model.ID = c.Model.ID
-		contentModel.ID = contentModel.Model.ID
 		contentModel.ContentType = c.ContentType
-		_, err := contentModel.CustomQuery(ctx, write, q, vars...)
+		_, err := contentModel.CustomQuery(e, write, q, vars...)
 		if err != nil {
-			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+			return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).Log()
 		}
 		return nil, nil
 	}
@@ -94,9 +117,9 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	contentModel.Model.ID = c.Model.ID
 	contentModel.ID = contentModel.Model.ID
 	contentModel.ContentType = c.ContentType
-	res, err := contentModel.CustomQuery(ctx, write, q, vars...)
+	res, err := contentModel.CustomQuery(e, write, q, vars...)
 	if err != nil {
-		return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).BubbleCode()
+		return nil, merrors.ContentCustomQueryError{Info: c.Model.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).Log().BubbleCode()
 	}
 	r := make([]Content, 0)
 	for _, t := range res {
@@ -106,35 +129,36 @@ func (c Content) CustomQuery(ctx context.Context, write bool, q string, vars ...
 	return r, nil
 }
 
-func (c Content) Set(ctx context.Context) error {
+func (c Content) Set(e echo.Context, update bool) error {
+	GetLogger(4).Flogger("#######Content Set called#######")
 	contentModel := c.ToModel()
-	contentModel.Model.ID = c.Model.ID
-	contentModel.ID = c.Model.ID
-	err := contentModel.Set(ctx)
+	err := contentModel.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c *Content) FindBy(ctx context.Context, key, value string) (Content, error) {
+func (c *Content) FindBy(e echo.Context, key, value string) (Content, error) {
 	contentModel := models.Content{}
 	contentModel.Model.ID = c.Model.ID
-	if err := contentModel.FindBy(ctx, key, value); err != nil {
-		return *c, merrors.ContentFindByError{Info: c.Model.ID}.Wrap(err)
+	if err := contentModel.FindBy(e, key, value); err != nil {
+		return *c, merrors.ContentFindByError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	if contentModel.Content == "" {
-		return *c, merrors.NilContentError{Package: "types", Struct: "Content", Function: "FindBy"}.Wrap(fmt.Errorf("nil content error")).BubbleCode()
+		return *c, merrors.NilContentError{Package: "types", Struct: "Content", Function: "FindBy"}.New("nil content error").BubbleCode()
 	}
 	d := c.FromModel(contentModel)
 	return d, nil
 }
 
-func (c Content) List(ctx context.Context) ([]Content, error) {
+func (c Content) List(e echo.Context) ([]Content, error) {
+	GetLogger(3).Flogger("types.Content.List Called")
 	contentModel := models.Content{}
-	contentModels, err := contentModel.List(ctx)
+	contentModel.Model.ContentType = c.Model.ContentType
+	contentModels, err := contentModel.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
 	}
 	contents := make([]Content, 0)
 	for _, model := range contentModels {
@@ -145,11 +169,11 @@ func (c Content) List(ctx context.Context) ([]Content, error) {
 	return contents, nil
 }
 
-func (c Content) ListBy(ctx context.Context, key string, value interface{}) ([]Content, error) {
+func (c Content) ListBy(e echo.Context, key string, value interface{}) ([]Content, error) {
 	contentModel := models.Content{}
-	contentModels, err := contentModel.ListBy(ctx, key, value)
+	contentModels, err := contentModel.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: fmt.Sprintf("content type: %s, filter: %s:%v", c.Model.ContentType, key, value)}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: fmt.Sprintf("content type: %s, filter: %s:%v", c.Model.ContentType, key, value)}.Wrap(err).Log()
 	}
 	contents := make([]Content, 0)
 	for _, model := range contentModels {
@@ -160,12 +184,11 @@ func (c Content) ListBy(ctx context.Context, key string, value interface{}) ([]C
 	return contents, nil
 }
 
-func (c Content) Delete(ctx context.Context) error {
+func (c Content) Delete(e echo.Context) error {
 	contentModel := models.Content{}
 	contentModel.Model.ID = c.Model.ID
-	contentModel.ID = c.ID
-	if err := contentModel.Delete(ctx); err != nil {
-		return merrors.ContentModelDeleteError{}.Wrap(err)
+	if err := contentModel.Delete(e); err != nil {
+		return merrors.ContentModelDeleteError{}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -184,11 +207,16 @@ func (c Content) ToModel() models.Content {
 	return m
 }
 
-func (c *Content) FromType(m ITable) error {
+func (c *Content) FromType(m ITable, model Model) error {
 	b, err := json.Marshal(m)
 	if err != nil {
-		return merrors.JSONMarshallingError{Info: m.GetContentType()}.Wrap(err)
+		return merrors.JSONMarshallingError{Info: m.GetContentType()}.Wrap(err).Log()
 	}
+	c.Model = model
 	c.Content = string(b)
 	return nil
+}
+
+func (c Content) UnrestrictedCustomQuery(e echo.Context, write bool, q string, vars ...any) ([]Content, error) {
+	return c.CustomQuery(e, write, q, vars...)
 }

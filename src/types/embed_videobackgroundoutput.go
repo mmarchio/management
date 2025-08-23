@@ -9,7 +9,6 @@ import (
 
 type VideoBackgroundOutput struct {
 	EmbedModel
-	ID 				VideoBackgroundOutputID `json:"id"`
 	StatsModel 		Stats `json:"stats_model"`
 	FilesArrayModel []File `json:"files_array_model"`
 }
@@ -40,7 +39,7 @@ func (c VideoBackgroundOutput) Marshal(ctx context.Context) (string, error) {
 }
 
 func (c VideoBackgroundOutput) New() VideoBackgroundOutput {
-	c.ID = VideoBackgroundOutputID(uuid.NewString())
+	c.EmbedModel.ID = uuid.NewString()
 	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }

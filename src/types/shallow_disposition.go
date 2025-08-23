@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
@@ -17,7 +16,7 @@ func NewShallowDisposition(id *string) ShallowDisposition {
 	c.ShallowModel.ContentType = "shallowdisposition"
 	c, _ = ValidateShallowDisposition(c)
 	return c
-} 
+}
 
 func NewShallowDispositionModelContent() models.ShallowContent {
 	c := models.ShallowContent{}
@@ -33,14 +32,13 @@ func NewShallowDispositionTypeContent() ShallowContent {
 
 type ShallowDisposition struct {
 	ShallowModel
-	ID 						DispositionID 	`json:"id"`
-	Name 					string 			`form:"name" json:"name"`
-	MinDuration 			int64 			`form:"min_duration" json:"min_duration"`
-	MaxDuration 			int64 			`form:"max_duration" json:"max_duration"`
-	AdvertisementDuration 	int64 			`form:"advertisement_duration" json:"advertisement_duration"`
-	EntitlementsModel 		string 			`form:"entitlements" json:"entitlements_model"`
-	VerificationModel 		string 			`form:"verification" json:"verification_model"`
-	BypassModel 			string 			`form:"bypass" json:"bypass_model"`
+	Name                  string `form:"name" json:"name"`
+	MinDuration           int64  `form:"min_duration" json:"min_duration"`
+	MaxDuration           int64  `form:"max_duration" json:"max_duration"`
+	AdvertisementDuration int64  `form:"advertisement_duration" json:"advertisement_duration"`
+	EntitlementsModel     string `form:"entitlements" json:"entitlements_model"`
+	VerificationModel     string `form:"verification" json:"verification_model"`
+	BypassModel           string `form:"bypass" json:"bypass_model"`
 }
 
 func (c ShallowDisposition) ToContent() (*Content, error) {
@@ -48,45 +46,42 @@ func (c ShallowDisposition) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
 }
 
-func (c ShallowDisposition) Expand(ctx context.Context) (*Disposition, error) {
+func (c ShallowDisposition) Expand(e echo.Context) (*Disposition, error) {
 	r := Disposition{}
 	r.Model.ID = c.ShallowModel.ID
 	r.Model.CreatedAt = c.ShallowModel.CreatedAt
 	r.Model.UpdatedAt = c.ShallowModel.UpdatedAt
 	r.Model.ContentType = c.ShallowModel.ContentType
-	r.ID = DispositionID(c.ID)
 	r.Name = c.Name
 	r.MinDuration = c.MinDuration
 	r.MaxDuration = c.MaxDuration
 	r.AdvertisementDuration = c.AdvertisementDuration
 	entitlements := ShallowEntitlements{}
 	entitlements.ShallowModel.ID = c.EntitlementsModel
-	entitlementsModel, err := entitlements.Expand(ctx);
+	entitlementsModel, err := entitlements.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	r.EntitlementsModel = *entitlementsModel
 	steps := ShallowSteps{}
 	steps.ShallowModel.ID = c.VerificationModel
-	steps.ID = StepsID(c.VerificationModel)
 	steps.ShallowModel.ContentType = "shallowverification"
-	verificationModel, err := steps.Expand(ctx)
+	verificationModel, err := steps.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	r.VerificationModel = *verificationModel
 	steps.ShallowModel.ID = c.BypassModel
-	steps.ID = StepsID(c.BypassModel)
 	steps.ContentType = "shallowbypass"
-	bypassModel, err := steps.Expand(ctx)
+	bypassModel, err := steps.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	r.BypassModel = *bypassModel
 	return &r, nil
@@ -98,81 +93,80 @@ func (c *ShallowDisposition) New(id *string) {
 	} else {
 		c.ShallowModel.ID = uuid.NewString()
 	}
-	c.ID = DispositionID(c.ShallowModel.ID)
 	c.ShallowModel.CreatedAt = time.Now()
 	c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 	c.BypassModel = ""
 	c.VerificationModel = ""
 }
 
-func (c ShallowDisposition) List(ctx context.Context) ([]ShallowDisposition, error) {
+func (c ShallowDisposition) List(e echo.Context) ([]ShallowDisposition, error) {
 	content := NewDispositionModelContent()
-	contents, err := content.List(ctx)
+	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]ShallowDisposition, 0)
 	for _, model := range contents {
 		cut := NewShallowDisposition(nil)
 		cut, err = cut.Unmarshal(model.Content)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
 }
 
-func (c ShallowDisposition) ListBy(ctx context.Context, key string, value interface{}) ([]ShallowDisposition, error) {
+func (c ShallowDisposition) ListBy(e echo.Context, key string, value interface{}) ([]ShallowDisposition, error) {
 	content := NewShallowDispositionModelContent()
-	contents, err := content.ListBy(ctx, key, value)
+	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]ShallowDisposition, 0)
 	for _, model := range contents {
 		cut := ShallowDisposition{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowDisposition", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowDisposition", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
 }
 
-func (c *ShallowDisposition) Get(ctx context.Context) error {
+func (c *ShallowDisposition) Get(e echo.Context) error {
 	content := NewShallowDispositionTypeContent()
 	content.ShallowModel.ContentType = "disposition"
 	content.ShallowModel.ID = c.ShallowModel.ID
-	content, err := content.Get(ctx)
+	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Disposition", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Disposition", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c ShallowDisposition) Set(ctx context.Context) error {
+func (c ShallowDisposition) Set(e echo.Context, update bool) error {
 	content := NewShallowDispositionTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.ShallowModel)
 	content.ShallowModel.ID = c.ShallowModel.ID
-	err := content.Set(ctx)
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c ShallowDisposition) Delete(ctx context.Context) error {
+func (c ShallowDisposition) Delete(e echo.Context) error {
 	content := NewShallowDispositionTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.ShallowModel)
 	content.ShallowModel.ID = c.ShallowModel.ID
-	if err := content.Delete(ctx); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+	if err := content.Delete(e); err != nil {
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -185,28 +179,14 @@ func (c ShallowDisposition) GetContentType() string {
 	return c.ShallowModel.ContentType
 }
 
-func (c ShallowDisposition) SetID() (ShallowDisposition, error) {
-	var err error
-	c.ID = DispositionID(c.ShallowModel.ID)
-	if err != nil {
-		return c, merrors.IDSetError{Info: "shallow_disposition"}.Wrap(err)
-	}
-	return c, nil
-}
-
 func (c ShallowDisposition) Unmarshal(j string) (ShallowDisposition, error) {
 	model := models.ShallowDisposition{}
 	model.ShallowModel.ContentType = "disposition"
 	if err := json.Unmarshal([]byte(j), &model); err != nil {
-		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "Disposition", Function: "Unmarshal"}.Wrap(err)
+		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "Disposition", Function: "Unmarshal"}.Wrap(err).Log()
 	}
 	c.ShallowModel.FromModel(model.ShallowModel)
 
-	d, err := c.SetID()
-	if err != nil {
-		return c, merrors.IDSetError{Info: "disposition"}.Wrap(err)
-	}
-	c = d
 	c.Name = model.Name
 	c.MinDuration = model.MinDuration
 	c.MaxDuration = model.MaxDuration
