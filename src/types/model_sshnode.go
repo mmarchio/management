@@ -12,16 +12,15 @@ import (
 
 type SSHNode struct {
 	Model
-	ID 			string `json:"id"`
-	Name 		string `form:"name" json:"name"`
-	Command 	string `form:"command" json:"command"`
-	User 		string `form:"user" json:"user"`
-	Host 		string `form:"host" json:"host"`
-	WorkflowID  WorkflowID `form:"workflow_id" json:"workflow_id"`
-	Type 		string `form:"type" json:"type"`
-	Enabled 	bool   `json:"enabled"`
-	Bypass 		bool   `json:"bypass"`
-	Output 		string `form:"output" json:"output"`
+	Name       string     `form:"name" json:"name"`
+	Command    string     `form:"command" json:"command"`
+	User       string     `form:"user" json:"user"`
+	Host       string     `form:"host" json:"host"`
+	WorkflowID WorkflowID `form:"workflow_id" json:"workflow_id"`
+	Type       string     `form:"type" json:"type"`
+	Enabled    bool       `json:"enabled"`
+	Bypass     bool       `json:"bypass"`
+	Output     string     `form:"output" json:"output"`
 }
 
 func (c SSHNode) Pack() []shallowmodel {
@@ -42,7 +41,7 @@ func (c SSHNode) Pack() []shallowmodel {
 	return sms
 }
 
-func (c SSHNode) Validate() params {
+func (c SSHNode) Validate() SSHNode {
 	valid := true
 	if !c.Model.Validate() {
 		valid = false
@@ -115,13 +114,13 @@ func (c *SSHNode) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"SSHNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct: "SSHNode", Function: "FromMSI"}.Wrap(err).Log()
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"SSHNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct: "SSHNode", Function: "FromMSI"}.Wrap(err).Log()
 		}
 	}
 	if ct, ok := msi["ContentType"].(string); ok {
@@ -145,11 +144,11 @@ func (c *SSHNode) Get(e echo.Context) error {
 	content.Model.ContentType = "sshnode"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -162,22 +161,21 @@ func NewSSHNodeTypeContent() Content {
 
 func (c SSHNode) Delete(e echo.Context) error {
 	content := NewSSHNodeTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.Model)
 	content.Model.ID = c.Model.ID
 	content.ID = c.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err).Log()
 	}
 	wf := NewWorkflow(nil)
 	wf.Model.ID = c.WorkflowID.String()
-	wf.ID = c.WorkflowID
 	if err := wf.Get(e); err != nil {
-		return merrors.ContentGetError{}.Wrap(err)
+		return merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	wf.CutNode(c.Model.ID)
 	wf.CutNodeOrder(c.Model.ID)
-	if err := wf.Set(e); err != nil {
-		return merrors.ContentSetError{}.Wrap(err)
+	if err := wf.Set(e, false); err != nil {
+		return merrors.ContentSetError{}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -208,18 +206,18 @@ func NewSSHNode(id *string) SSHNode {
 	return c
 }
 
-func (c SSHNode) Set(e echo.Context) error {
+func (c SSHNode) Set(e echo.Context, update bool) error {
 	c.Validate()
 	if !c.Model.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
 	}
 	content := NewSSHNodeTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.Model)
 	content.Model.ID = c.Model.ID
 	content.ID = c.Model.ID
-	err := content.Set(e)
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -229,14 +227,14 @@ func (c SSHNode) List(e echo.Context) ([]SSHNode, error) {
 	content.Model.ContentType = "sshnode"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]SSHNode, 0)
 	for _, model := range contents {
 		cut := SSHNode{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SSHNode", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SSHNode", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -248,16 +246,20 @@ func (c SSHNode) ListBy(e echo.Context, key string, value interface{}) ([]SSHNod
 	content.Model.ContentType = "sshnode"
 	list, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: fmt.Sprintf("{\"%s\":\"%s\"}", key, value), Package: "types", Struct: "SSHNode", Function: "ListBy"}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: fmt.Sprintf("{\"%s\":\"%s\"}", key, value), Package: "types", Struct: "SSHNode", Function: "ListBy"}.Wrap(err).Log()
 	}
 	cuts := make([]SSHNode, 0)
 	for _, model := range list {
 		cut := SSHNode{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SSHNode", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "SSHNode", Function: "ListBy"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
 	return cuts, nil
+}
+
+func (c SSHNode) Exec(e echo.Context, jobrun *JobRun, step *Step) error {
+	return nil
 }

@@ -59,12 +59,13 @@ func NewOllamaResponse(id *string) OllamaResponse {
 
 
 func (c ShallowOllamaResponse) Get(e echo.Context, mode string) (*OllamaResponse, *ShallowOllamaResponse, error) {
-	content := Content{ID: c.Model.ID}
+	content := Content{}
+	content.Model.ID = c.Model.ID
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if mode == "shallow" {
 		return nil, &c, nil

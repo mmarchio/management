@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
@@ -15,7 +16,7 @@ func NewShallowComfyUITemplate(id *string) ShallowComfyUITemplate {
 	c.ShallowModel.New(id, &ct)
 	c.ShallowModel.ContentType = "shallowcomfyuitemplate"
 	return c
-} 
+}
 
 func NewShallowComfyUIModelContent() models.ShallowContent {
 	c := models.ShallowContent{}
@@ -31,11 +32,10 @@ func NewShallowComfyUITypeContent() ShallowContent {
 
 type ShallowComfyUITemplate struct {
 	ShallowModel
-	ID 			ComfyUITemplateID 	`form:"id" json:"id"`
-	Name 		string 			`form:"name" json:"name"`
-	Endpoint 	string 		`form:"enpoint" json:"endpoint"`
-	Base 		string 			`form:"base"json:"base"`
-	Template 	string 		`form:"template" json:"template"`
+	Name     string `form:"name" json:"name"`
+	Endpoint string `form:"enpoint" json:"endpoint"`
+	Base     string `form:"base"json:"base"`
+	Template string `form:"template" json:"template"`
 }
 
 func (c ShallowComfyUITemplate) ToContent() (*Content, error) {
@@ -43,7 +43,7 @@ func (c ShallowComfyUITemplate) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -54,10 +54,10 @@ func (c ShallowComfyUITemplate) Expand(e echo.Context) (*ComfyUITemplate, error)
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -71,8 +71,7 @@ func (c ShallowComfyUITemplate) Expand(e echo.Context) (*ComfyUITemplate, error)
 }
 
 func (c *ShallowComfyUITemplate) New() {
-	c.ID = c.ID.New()
-	c.ShallowModel.ID = c.ID.String()
+	c.ShallowModel.ID = uuid.NewString()
 	c.ShallowModel.CreatedAt = time.Now()
 	c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 }
@@ -81,14 +80,14 @@ func (c ShallowComfyUITemplate) List(e echo.Context) ([]ShallowComfyUITemplate, 
 	content := NewShallowComfyUIModelContent()
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]ShallowComfyUITemplate, 0)
 	for _, model := range contents {
 		cut := NewShallowComfyUITemplate(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowComfyUITemplate", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowComfyUITemplate", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -99,14 +98,14 @@ func (c ShallowComfyUITemplate) ListBy(e echo.Context, key string, value interfa
 	content := NewShallowComfyUIModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]ShallowComfyUITemplate, 0)
 	for _, model := range contents {
 		cut := NewShallowComfyUITemplate(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowComfyUITemplate", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowComfyUITemplate", Function: "ListBy"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -119,31 +118,31 @@ func (c *ShallowComfyUITemplate) Get(e echo.Context) error {
 	content.ShallowModel.ContentType = "shallowcomfyuitemplate"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyUITemplate", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowComfyUITemplate", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c ShallowComfyUITemplate) Set(e echo.Context) error {
+func (c ShallowComfyUITemplate) Set(e echo.Context, update bool) error {
 	content := NewShallowComfyUITypeContent()
-	content.FromType(c)
-	err := content.Set(e)
+	content.FromType(c, c.ShallowModel)
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
 
 func (c ShallowComfyUITemplate) Delete(e echo.Context) error {
 	content := NewShallowComfyUITypeContent()
-	content.FromType(c)
+	content.FromType(c, c.ShallowModel)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -163,27 +162,13 @@ func (c ShallowComfyUITemplate) GetTable() string {
 func (c ShallowComfyUITemplate) Unmarshal(j string) (ShallowComfyUITemplate, error) {
 	model := models.ShallowComfyUITemplate{}
 	if err := json.Unmarshal([]byte(j), &model); err != nil {
-		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "ShallowComfyUITemplate", Function: "Unmarshal"}.Wrap(err)
+		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "ShallowComfyUITemplate", Function: "Unmarshal"}.Wrap(err).Log()
 	}
 	c.ShallowModel.FromModel(model.ShallowModel)
 
-	d, err := c.SetID()
-	if err != nil {
-		return c, merrors.IDSetError{Info: "disposition"}.Wrap(err)
-	}
-	c = d
 	c.Name = model.Name
 	c.Endpoint = model.Endpoint
 	c.Base = model.Base
 	c.Template = model.Template
-	return c, nil
-} 
-
-func (c ShallowComfyUITemplate) SetID() (ShallowComfyUITemplate, error) {
-	var err error
-	c.ID = ComfyUITemplateID(c.ShallowModel.ID)
-	if err != nil {
-		return c, merrors.IDSetError{Info: "disposition"}.Wrap(err)
-	}
 	return c, nil
 }

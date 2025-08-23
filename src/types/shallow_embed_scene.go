@@ -10,7 +10,6 @@ import (
 
 type ShallowScene struct {
 	ShallowModel
-	ID 					SceneID `json:"id"`
 	Start 				time.Time `json:"start"`
 	End 				time.Time `json:"end"`
 	SceneNumber 		int64 `json:"scene_number"`
@@ -24,7 +23,7 @@ func (c ShallowScene) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -35,10 +34,10 @@ func (c ShallowScene) Expand(e echo.Context) (*Scene, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -54,7 +53,7 @@ func (c ShallowScene) Expand(e echo.Context) (*Scene, error) {
 		sf.ShallowModel.ID = id
 		f, err := sf.Expand(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		r.FilesArrayModel = append(r.FilesArrayModel, *f)
 	}
@@ -62,7 +61,7 @@ func (c ShallowScene) Expand(e echo.Context) (*Scene, error) {
 	sf.ShallowModel.ID = c.SceneFileModel
 	f, err := sf.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	r.SceneFileModel = *f
 	return &r, nil	

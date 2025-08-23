@@ -16,11 +16,12 @@ func RegisterSystemPromptsRoutes(e *echo.Echo) {
 	g.POST("/save/:id", HandleSystemPromptSave)
 	g.GET("/list", HandleSystemPromptsList)
 	g.GET("/:id", HandleSystemPromptsGet)
+	g.GET("/edit/:id", HandleSystemPromptsEdit)
 	g.GET("/delete/:id", HandleSystemPromptDelete)
 }
 
 func HandleAPIGetSystemPrompt(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIGetSystemPrompt called")
+	GetLogger(4).Flogger("HandleAPIGetSystemPrompt called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewSystemPrompt(&id)
 		if err := entity.Get(c); err != nil {
@@ -33,19 +34,23 @@ func HandleAPIGetSystemPrompt(c echo.Context) error {
 
 func HandleAPISetSystemPrompt(c echo.Context) error {
 	var err error
-	GetLogger().Flogger("HandleAPISetSystemPrompt called")
+	var update bool
+	GetLogger(4).Flogger("HandleAPISetSystemPrompt called")
+	if id := c.Param("id"); id != "" {
+		update = true
+	}
 	entity := types.NewSystemPrompt(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if err = entity.Set(c); err != nil {
+	if err = entity.Set(c, update); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, entity)
 }
 
 func HandleAPIListSystemPrompt(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIListSystemPrompt called")
+	GetLogger(4).Flogger("HandleAPIListSystemPrompt called")
 	prompt := types.NewSystemPrompt(nil)
 	prompts, err := prompt.List(c)
 	if err != nil {
@@ -55,36 +60,33 @@ func HandleAPIListSystemPrompt(c echo.Context) error {
 }
 
 func HandleSystemPrompts(c echo.Context) error {
-	GetLogger().Flogger("HandleSystemPrompts called")
-	dt := DisplaySystemPrompt{
-		SystemPrompt: types.SystemPrompt{},
-		DisplayType: "none",
-		Menu: Menu{
-			Href: "systemprompts",
-			Title: "System Prompt",
-		},
-	}
+	GetLogger(4).Flogger("HandleSystemPrompts called")
+	dt := DisplaySystemPrompt{}
+	dt.Init(c, "none")
 	return c.Render(http.StatusOK, "systemprompts.tpl", dt)
 }
 
 func HandleSystemPromptsNew(c echo.Context) error {
-	GetLogger().Flogger("HandleSystemPromptsNew called")
-	dt := DisplaySystemPrompt{
-		SystemPrompt: types.SystemPrompt{},
-		DisplayType: "new",
-		Menu: Menu{
-			Href: "systemprompts",
-			Title: "System Prompt",
-		},
-	}
+	GetLogger(4).Flogger("HandleSystemPromptsNew called")
+	dt := DisplaySystemPrompt{}
+	dt.Init(c, "new")
+	return c.Render(http.StatusOK, "systemprompts.tpl", dt)
+}
+
+func HandleSystemPromptsEdit(c echo.Context) error {
+	GetLogger(4).Flogger("HandleSystemPromptsEdit called")
+	dt := DisplaySystemPrompt{}
+	dt.Init(c, "edit")
 	return c.Render(http.StatusOK, "systemprompts.tpl", dt)
 }
 
 func HandleSystemPromptSave(c echo.Context) error {
 	var err error
 	var prompt types.SystemPrompt
-	GetLogger().Flogger("HandleSystemPromptSave called")
+	var update bool
+	GetLogger(4).Flogger("HandleSystemPromptSave called")
 	if id := c.Param("id"); id != "" {
+		update = true
 		prompt = types.NewSystemPrompt(&id)
 		if err := prompt.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
@@ -98,64 +100,35 @@ func HandleSystemPromptSave(c echo.Context) error {
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
-	if err = prompt.Set(c); err != nil {
+	if err = prompt.Set(c, update); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
-
-	dt := DisplaySystemPrompt{
-		SystemPrompt: types.SystemPrompt{},
-		DisplayType: "new",
-		Menu: Menu{
-			Href: "systemprompts",
-			Title: "System Prompt",
-		},
-	}
-	return c.Render(http.StatusCreated, "systemprompts.tpl", dt)
+	return HandleSystemPromptsList(c)
 }
 
 func HandleSystemPromptsList(c echo.Context) error {
-	var err error
-	GetLogger().Flogger("HandleSystemPromptsList called")
-	prompt := types.NewSystemPrompt(nil)
-	prompts, err := prompt.List(c)
-	if err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-	}
-
-	dt := DisplaySystemPrompt{
-		SystemPrompt: types.SystemPrompt{},
-		List: prompts,
-		DisplayType: "list",
-		Menu: Menu{
-			Href: "systemprompts",
-			Title: "System Prompt",
-		},
-	}
+	GetLogger(4).Flogger("HandleSystemPromptsList called")
+	dt := DisplaySystemPrompt{}
+	dt.Init(c, "list")
 	return c.Render(http.StatusOK, "systemprompts.tpl", dt)
 }
 
 func HandleSystemPromptsGet(c echo.Context) error {
-	GetLogger().Flogger("HandleSystemPromptsGet called")
+	GetLogger(4).Flogger("HandleSystemPromptsGet called")
 	if id := c.Param("id"); id != "" {
 		prompt := types.NewSystemPrompt(&id)
 		if err := prompt.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		dt := DisplaySystemPrompt{
-			SystemPrompt: types.SystemPrompt{},
-			DisplayType: "new",
-			Menu: Menu{
-				Href: "systemprompts",
-				Title: "System Prompt",
-			},
-		}
+		dt := DisplaySystemPrompt{}
+		dt.Init(c, "new")
 		return c.Render(http.StatusOK, "systemprompts.tpl", dt)
 	}
 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 }
 
 func HandleSystemPromptDelete(c echo.Context) error {
-	GetLogger().Flogger("HandleSystemPromptDelete called")
+	GetLogger(4).Flogger("HandleSystemPromptDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewSystemPrompt(&id)
 		if err := entity.Delete(c); err != nil {

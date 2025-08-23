@@ -12,7 +12,6 @@ import (
 
 type ShallowStats struct {
 	ShallowModel
-	ID 				StatsID `json:"stats_id"`
 	Start 			time.Time `json:"start"`
 	End 			time.Time `json:"end"`
 	Input 			string `json:"input"`
@@ -27,7 +26,7 @@ func (c ShallowStats) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -43,7 +42,6 @@ func (c ShallowStats) Expand(e echo.Context) (*Stats, error) {
 	r.Start = c.Start
 	r.End = c.End
 	r.Input = c.Input
-	r.Output = c.Output
 	r.Duration = c.Duration
 	f := File{}
 	fs := make([]File, 0)
@@ -52,10 +50,10 @@ func (c ShallowStats) Expand(e echo.Context) (*Stats, error) {
 		sf.ShallowModel.ID = id
 		sc, err := sf.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &f); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		fs = append(fs, f)
 	}
@@ -75,9 +73,9 @@ func (c ShallowStats) Marshal(e echo.Context) (string, error) {
 
 func (c ShallowStats) New(id *string) ShallowStats {
 	if id != nil {
-		c.ID = StatsID(*id)
+		c.ShallowModel.ID = *id
 	} else {
-		c.ID = StatsID(uuid.NewString())
+		c.ShallowModel.ID = uuid.NewString()
 	}
 	c.Status = "queued"
 	c.CreatedAt = time.Now()

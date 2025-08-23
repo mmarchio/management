@@ -389,12 +389,13 @@ func (c ShallowContext) SetPublishSocialYoutubeModel(e echo.Context, id string) 
 }
 
 func (c ShallowContext) Get(e echo.Context, mode string) (*Context, *ShallowContext, error) {
-	content := Content{ID: c.ShallowModel.ID}
+	content := Content{}
+	content.Model.ID = c.ShallowModel.ID
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if mode == "shallow" {
 		return nil, &c, nil
@@ -805,52 +806,56 @@ func (c Context) Marshal(e echo.Context) (string, error) {
 }
 
 func (c *Context) Get(e echo.Context) (*Context, error) {
-	ctx := GetLogger().Flogger("Get called").Ctx
-	db := database.GetPQDatabase(ctx)
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
 	defer db.Close()
-	tx := database.GetPQTx(ctx)
-	var j string
-	err := tx.QueryRow("SELECT status_context FROM job_status WHERE id = $1", c.JobRunID).Scan(&j)
+	tx, err := db.Begin()
 	if err != nil {
-		e := merrors.ContextGetError{DB: db}.Wrap(err)
+		return nil, merrors.DBConnectionError{DB: db}.Wrap(err).Log()
+	}
+	var j string
+	err = tx.QueryRow("SELECT status_context FROM job_status WHERE id = $1", c.JobRunID).Scan(&j)
+	if err != nil {
+		e := merrors.ContextGetError{DB: db}.Wrap(err).Log()
 		return nil, &e
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, merrors.TransactionCommitError{DB: db}.Wrap(err)
+		return nil, merrors.TransactionCommitError{DB: db}.Wrap(err).Log()
 	}
-	ctx = c.SetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextSetError{DB: db}.Wrap(err)
+		return nil, merrors.ContextSetError{DB: db}.Wrap(err).Log()
 	}
 	return c, nil
 }
 
 func (c Context) Set(e echo.Context) (*Context, error) {
-	ctx := GetLogger().Flogger("Set called").Ctx
-	db := database.GetPQDatabase(ctx)
+	GetLogger(4).Flogger("Set called")
+	db := database.GetPQDatabase()
 	defer db.Close()
-	tx := database.GetPQTx(ctx)
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, merrors.DBConnectionError{}.Wrap(err).Log()
+	}
 	j, err := c.Marshal(e)
 	if err != nil {
 		tx.Rollback()
-		e := merrors.ContextSetError{DB: db}.Wrap(err)
+		e := merrors.ContextSetError{DB: db}.Wrap(err).Log()
 		return nil, &e
 	}
 	_, err = tx.Exec("UPDATE job_status SET status_context = $1 WHERE id = $2", j, c.JobRunID)
 	if err != nil {
 		tx.Rollback()
-		e := merrors.ContextSetError{DB: db}.Wrap(err)
+		e := merrors.ContextSetError{DB: db}.Wrap(err).Log()
 		return nil, &e
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, merrors.TransactionCommitError{DB: db}.Wrap(err)
+		return nil, merrors.TransactionCommitError{DB: db}.Wrap(err).Log()
 	}
-	ctx = c.SetCtx(e)
 	return &c, nil
 }
 
 func (c Context) GetCtx(e echo.Context) (*Context, error) {
-	ctx := GetLogger().Flogger("GetCtx called").Ctx
+	ctx := GetLogger(4).Flogger("GetCtx called").Ctx
 	eInterface := ctx.Value(contextKey)
 	if innerContext, ok := eInterface.(Context); ok {
 		return &innerContext, nil
@@ -861,7 +866,7 @@ func (c Context) GetCtx(e echo.Context) (*Context, error) {
 }
 
 func (c Context) SetCtx(e echo.Context) context.Context {
-	ctx := GetLogger().Flogger("SetCtx called").Ctx
+	ctx := GetLogger(4).Flogger("SetCtx called").Ctx
 	ctx = context.WithValue(ctx, contextKey, c)
 	return ctx
 }

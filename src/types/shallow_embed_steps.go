@@ -10,7 +10,6 @@ import (
 
 type ShallowSteps struct {
 	ShallowModel
-	ID 									StepsID `json:"id"`
 	GetResearchOutputModel				string `json:"get_research_output_model"`
 	GetResearchPromptModel				string `json:"get_research_prompt_model"`
 	ScreenwritingStartModel 			string `json:"screenwriting_start_model"`
@@ -35,7 +34,7 @@ func (c ShallowSteps) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -47,7 +46,7 @@ func (c ShallowSteps) Expand(e echo.Context) (*Steps, error) {
 		t.ShallowModel.ID = c
 		tog, err := t.Expand(e)
 		if err != nil {
-			return merrors.ContentGetError{}.Wrap(err)
+			return merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if tog != nil {
 			r = tog
@@ -122,7 +121,7 @@ func (c ShallowSteps) Marshal(e echo.Context) (string, error) {
 func (c *ShallowSteps) New(parent ITable, contentType string) (string, error) {
 	embedBytes, err := json.Marshal(c)
 	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(err)
+		return "", merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	return string(embedBytes), nil
 }
@@ -135,18 +134,8 @@ func (c ShallowSteps) GetID() string {
 	return c.ShallowModel.ID
 }
 
-func (c *ShallowSteps) SetID() error {
-	var err error
-	c.ID = StepsID(c.ShallowModel.ID)
-	if err != nil {
-		return merrors.IDSetError{Info: "steps"}.Wrap(err)
-	}
-	return nil
-}
-
 func (c ShallowSteps) FromModel(model models.ShallowSteps) ShallowSteps {
 	c.ShallowModel.FromModel(model.ShallowModel)
-	c.SetID()
 	c.GetResearchOutputModel = model.GetResearchOutputModel
 	c.GetResearchPromptModel = model.GetResearchPromptModel
 	c.ScreenwritingStartModel = model.ScreenwritingStartModel

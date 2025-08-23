@@ -1,4 +1,87 @@
 {
+    "newsteps": {
+        "get_research_topics_prompt": {
+            "type": "ollama",
+            "status": "done"
+        },
+        "get_research_topics_output": {
+            "type": "ollama",
+            "status": "done"
+        },
+        "get_research_prompt": {
+            "type": "ollama",
+            "status": "done"
+        },
+        "get_research_research_output": {
+            "type": "ollama",
+            "status": "done"
+        },
+        "get_research_audio_monolog_prompt": {
+            "type": "ollama",
+            "status": "done"
+        },
+        "get_research_audio_monolog_output": {
+            "type": "ollama",
+            "status": "done"
+        },
+        "get_thumbnail_prompt": {
+            "type": "ollama",
+            "status": "done"
+        },
+        "get_background_images_prompt": {
+            "type": "ollama",
+            "status": "done"
+        },
+        "generate_thumbnail_output": {
+            "type": "comfy",
+            "status": "done"
+        },
+        "generate_background_images_output": {
+            "type": "comfy",
+            "status": "pending"
+        },
+        "generate_audio": {
+            "type": "comfy",
+            "status": "pending"
+        },
+        "generate_lipsync": {
+            "type": "comfy",
+            "status": "pending"
+        },
+        "generate_backgrounds": {
+            "type": "comfy",
+            "status": "pending"
+        },
+        "ffmpeg_post_processing": {
+            "type": "local",
+            "status": "pending"
+        },
+        "ffmpeg_merge": {
+            "type": "local",
+            "status": "pending"
+        },
+        "publish_youtube": {
+            "type": "publish",
+            "status": "pending"
+        },
+        "publish_rumble": {
+            "type": "publish",
+            "status": "pending"
+        },
+        "publish_tiktok": {
+            "type": "publish",
+            "status": "pending"
+        },
+        "publish_facebook": {
+            "type": "publish",
+            "status": "pending"
+        },
+        "publish_patreon": {
+            "type": "publish",
+            "status": "pending"
+        }
+        
+    },
     "context": {
         "id": "",
         "prompt": "",

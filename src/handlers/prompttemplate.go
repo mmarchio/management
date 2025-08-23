@@ -22,7 +22,7 @@ func RegisterPromptTemplateRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetPromptTemplate(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIGetPromptTemplate called")
+	GetLogger(4).Flogger("HandleAPIGetPromptTemplate called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewPromptTemplate(&id)
 		if err := entity.Get(c); err != nil {
@@ -35,23 +35,23 @@ func HandleAPIGetPromptTemplate(c echo.Context) error {
 
 func HandleAPISetPromptTemplate(c echo.Context) error {
 	var err error
-	GetLogger().Flogger("HandleAPISetPromptTemplate called")
+	var update bool
+	GetLogger(4).Flogger("HandleAPISetPromptTemplate called")
 	entity := types.NewPromptTemplate(nil)
+	if id := c.Param("id"); id != "" {
+		update = true
+	}
 	if err = c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	entity, err = entity.SetID()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	if err = entity.Set(c); err != nil {
+	if err = entity.Set(c, update); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, entity)
 }
 
 func HandleAPIListPromptTemplate(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIListPromptTemplate called")
+	GetLogger(4).Flogger("HandleAPIListPromptTemplate called")
 	prompt := types.NewPromptTemplate(nil)
 	prompts, err := prompt.List(c)
 	if err != nil {
@@ -61,7 +61,7 @@ func HandleAPIListPromptTemplate(c echo.Context) error {
 }
 
 func HandlePromptTemplates(c echo.Context) error {
-	GetLogger().Flogger("HandlePromptTemplates called")
+	GetLogger(4).Flogger("HandlePromptTemplates called")
 	dt := DisplayPromptTemplate{
 		PromptTemplate: types.PromptTemplate{},
 		DisplayType: "new",
@@ -74,7 +74,7 @@ func HandlePromptTemplates(c echo.Context) error {
 }
 
 func HandlePromptTemplatesNew(c echo.Context) error {
-	GetLogger().Flogger("HandlePromptTemplatesNew called")
+	GetLogger(4).Flogger("HandlePromptTemplatesNew called")
 	ctx := types.Context{}
 	b, err := json.MarshalIndent(ctx, "", "  ")
 	if err != nil {
@@ -93,11 +93,14 @@ func HandlePromptTemplatesNew(c echo.Context) error {
 }
 
 func HandlePromptTemplatesEdit(c echo.Context) error {
-	GetLogger().Flogger("HandlePromptTemplatesNew called")
+	GetLogger(4).Flogger("HandlePromptTemplatesNew called")
 	ctx := types.Context{}
 	entity := types.NewPromptTemplate(nil)
 	if id := c.Param("id"); id != "" {
 		entity = types.NewPromptTemplate(&id)
+		if err := entity.Get(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		}
 	}
 	b, err := json.MarshalIndent(ctx, "", "  ")
 	if err != nil {
@@ -118,22 +121,20 @@ func HandlePromptTemplatesEdit(c echo.Context) error {
 func HandlePromptTemplateSave(c echo.Context) error {
 	var err error
 	var entity types.PromptTemplate
-	GetLogger().Flogger("HandlePromptTemplateSave called")
+	var update bool
+	GetLogger(4).Flogger("HandlePromptTemplateSave called")
 	entity = types.NewPromptTemplate(nil)
 	if id := c.Param("id"); id != "" {
+		update = true
 		entity = types.NewPromptTemplate(&id)
 	}
 	if err = c.Bind(&entity); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandlePromptTemplateSave"}.Wrap(err))
 	}
-	entity, err = entity.SetID()
-	if err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-	}
 	if c.FormValue("vars") != "" {
 		entity.Vars = c.FormValue("vars")
 	}
-	if err = entity.Set(c); err != nil {
+	if err = entity.Set(c, update); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
 	return HandlePromptTemplateList(c)
@@ -141,7 +142,7 @@ func HandlePromptTemplateSave(c echo.Context) error {
 
 func HandlePromptTemplateList(c echo.Context) error {
 	var err error
-	GetLogger().Flogger("HandlePromptTemplateList called")
+	GetLogger(4).Flogger("HandlePromptTemplateList called")
 	entity := types.NewPromptTemplate(nil)
 	entities, err := entity.List(c)
 	if err != nil {
@@ -161,7 +162,7 @@ func HandlePromptTemplateList(c echo.Context) error {
 }
 
 func HandlePromptTemplatesGet(c echo.Context) error {
-	GetLogger().Flogger("HandlePromptTemplatesGet called")
+	GetLogger(4).Flogger("HandlePromptTemplatesGet called")
 	if cutid := c.Param("id"); cutid != "" {
 		entity := types.NewPromptTemplate(&cutid)
 		if err := entity.Get(c); err != nil {
@@ -181,7 +182,7 @@ func HandlePromptTemplatesGet(c echo.Context) error {
 }
 
 func HandlePromptTemplatesDelete(c echo.Context) error {
-	GetLogger().Flogger("HandlePromptTemplatesDelete called")
+	GetLogger(4).Flogger("HandlePromptTemplatesDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewPromptTemplate(&id)
 		if err := entity.Delete(c); err != nil {

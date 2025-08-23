@@ -20,7 +20,7 @@ type Steps struct {
 	GenerateAudioModel 					Toggle `json:"generate_audio_model"`
 	GenerateLipsyncModel 				Toggle `json:"generate_lipsync_model"`
 	GenerateThumbnailsModel 			Toggle `json:"generate_thumbnails_model"`
-	GenerateBackgroundContextModel Toggle `json:"generate_background_context_model"`
+	GenerateBackgroundContextModel 		Toggle `json:"generate_background_context_model"`
 	GenerateBackgroundModel 			Toggle `json:"generate_background_model"`
 	FFMPEGLipsyncPostModel 				Toggle `json:"ffmpeg_lipsync_post_model"`
 	FFMPEGMergeModel 					Toggle `json:"ffmpeg_merge_model"`

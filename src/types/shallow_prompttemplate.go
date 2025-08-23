@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
@@ -11,10 +12,9 @@ import (
 
 type ShallowPromptTemplate struct {
 	ShallowModel
-	ID 			PromptTemplateID `form:"id" json:"id"`
-	Name 		string `form:"name" json:"name"`
-	Template 	string `form:"template" json:"template"`
-	Vars 		string `form:"vars" json:"vars"`
+	Name     string `form:"name" json:"name"`
+	Template string `form:"template" json:"template"`
+	Vars     string `form:"vars" json:"vars"`
 }
 
 func (c ShallowPromptTemplate) ToContent() (*Content, error) {
@@ -22,7 +22,7 @@ func (c ShallowPromptTemplate) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -37,10 +37,10 @@ func (c ShallowPromptTemplate) Expand(e echo.Context) (*PromptTemplate, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -56,7 +56,7 @@ func NewShallowPromptTemplate(id *string) ShallowPromptTemplate {
 	c.New(id)
 	c.ShallowModel.ContentType = "shallowprompttemplate"
 	return c
-} 
+}
 
 func NewShallowPromptTemplateModelContent() models.ShallowContent {
 	c := models.ShallowContent{}
@@ -70,10 +70,8 @@ func NewShallowPromptTemplateTypeContent() ShallowContent {
 	return c
 }
 
-
 func (c *ShallowPromptTemplate) New(id *string) {
-	c.ID = c.ID.New(id)
-	c.ShallowModel.ID = c.ID.String()
+	c.ShallowModel.ID = uuid.NewString()
 	c.ShallowModel.CreatedAt = time.Now()
 	c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 }
@@ -82,14 +80,14 @@ func (c ShallowPromptTemplate) List(e echo.Context) ([]ShallowPromptTemplate, er
 	content := NewShallowPromptTemplateModelContent()
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]ShallowPromptTemplate, 0)
 	for _, model := range contents {
 		cut := NewShallowPromptTemplate(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowPromptTemplate", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowPromptTemplate", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -100,14 +98,14 @@ func (c ShallowPromptTemplate) ListBy(e echo.Context, key string, value interfac
 	content := NewShallowPromptTemplateModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]ShallowPromptTemplate, 0)
 	for _, model := range contents {
 		cut := NewShallowPromptTemplate(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowPromptTemplate", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowPromptTemplate", Function: "ListBy"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -120,31 +118,31 @@ func (c *ShallowPromptTemplate) Get(e echo.Context) error {
 	content.ShallowModel.ContentType = "shallowprompttemplate"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowPromptTemplate", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowPromptTemplate", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c ShallowPromptTemplate) Set(e echo.Context) error {
+func (c ShallowPromptTemplate) Set(e echo.Context, update bool) error {
 	content := NewShallowPromptTemplateTypeContent()
-	content.FromType(c)
-	err := content.Set(e)
+	content.FromType(c, c.ShallowModel)
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
 
 func (c ShallowPromptTemplate) Delete(e echo.Context) error {
 	content := NewShallowComfyUITypeContent()
-	content.FromType(c)
+	content.FromType(c, c.ShallowModel)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -164,26 +162,11 @@ func (c ShallowPromptTemplate) GetTable() string {
 func (c ShallowPromptTemplate) Unmarshal(j string) (ShallowPromptTemplate, error) {
 	model := models.ShallowPromptTemplate{}
 	if err := json.Unmarshal([]byte(j), &model); err != nil {
-		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "ShallowPromptTemplate", Function: "Unmarshal"}.Wrap(err)
+		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "ShallowPromptTemplate", Function: "Unmarshal"}.Wrap(err).Log()
 	}
 	c.ShallowModel.FromModel(model.ShallowModel)
 
-	d, err := c.SetID()
-	if err != nil {
-		return c, merrors.IDSetError{Info: "ShallowPromptTemplate"}.Wrap(err)
-	}
-	c = d
 	c.Template = model.Template
 	c.Vars = model.Vars
 	return c, nil
-} 
-
-func (c ShallowPromptTemplate) SetID() (ShallowPromptTemplate, error) {
-	var err error
-	c.ID = PromptTemplateID(c.ShallowModel.ID)
-	if err != nil {
-		return c, merrors.IDSetError{Info: "ShallowPromptTemplate"}.Wrap(err)
-	}
-	return c, nil
 }
-

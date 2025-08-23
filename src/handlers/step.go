@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
@@ -23,7 +24,7 @@ func RegisterStepRoutes(e *echo.Echo) {
 
 func HandleAPIGetStep(c echo.Context) error {
 	
-	GetLogger().Flogger("HandleAPIGetStep called")
+	GetLogger(4).Flogger("HandleAPIGetStep called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewStep(&id)
 		if err := entity.Get(c); err != nil {
@@ -36,25 +37,25 @@ func HandleAPIGetStep(c echo.Context) error {
 
 func HandleAPISetStep(c echo.Context) error {
 	var err error
-	GetLogger().Flogger("HandleAPISetStep called")
+	var update bool
+	GetLogger(4).Flogger("HandleAPISetStep called")
+	if id := c.Param("id"); id != "" {
+		update = true
+	}
 	entity := types.NewStep(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	entity, err = entity.SetID()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	if err = entity.Set(c); err != nil {
+	if err = entity.Set(c, update); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, entity)
 }
 
 func HandleAPIListStep(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIListStep called")
+	GetLogger(4).Flogger("HandleAPIListStep called")
 	prompt := types.NewStep(nil)
-	prompts, err := prompt.List(c)
+	prompts, err := prompt.List(c, "order desc")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -62,10 +63,10 @@ func HandleAPIListStep(c echo.Context) error {
 }
 
 func HandleStep(c echo.Context) error {
-	GetLogger().Flogger("HandleSteps called")
+	GetLogger(4).Flogger("HandleSteps called")
 	dt := DisplayStep{
 		Step: types.Step{},
-		DisplayType: "new",
+		DisplayType: "none",
 		Menu: Menu{
 			Href: "step",
 			Title: "Step",
@@ -75,27 +76,9 @@ func HandleStep(c echo.Context) error {
 }
 
 func HandleStepNew(c echo.Context) error {
-	GetLogger().Flogger("HandleStepsNew called")
-	dt := DisplayStep{
-		Step: types.Step{},
-		DisplayType: "new",
-		Menu: Menu{
-			Href: "step",
-			Title: "step",
-		},
-		Enabled: types.Toggle{
-			NamePrefix: "",
-			IdPrefix: "",
-			Suffix: "",
-			Title: "",
-		},
-		Bypass: types.Toggle{
-			NamePrefix: "",
-			IdPrefix: "",
-			Suffix: "",
-			Title: "",
-		},
-	}
+	GetLogger(4).Flogger("HandleStepsNew called")
+	dt := DisplayStep{}
+	dt.Init(c, "new")
 	return c.Render(http.StatusOK, "step.tpl", dt)
 }
 
@@ -105,50 +88,40 @@ func HandleStepEdit(c echo.Context) error {
 		if err := entity.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		dt := DisplayStep{
-			Step: entity,
-			DisplayType: "edit",
-			Menu: Menu{
-				Href: "step",
-				Title: "Step",
-			},
-			Enabled: types.Toggle{
-				ID: entity.Enabled.ID,
-				NamePrefix: entity.Enabled.NamePrefix,
-				IdPrefix: entity.Enabled.IdPrefix,
-				Suffix: entity.Enabled.Suffix,
-				Title: entity.Enabled.Title,
-			},
-			Bypass: types.Toggle{
-				ID: entity.Bypass.ID,
-				NamePrefix: entity.Bypass.NamePrefix,
-				IdPrefix: entity.Bypass.IdPrefix,
-				Suffix: entity.Bypass.Suffix,
-				Title: entity.Bypass.Title,
-			},
-		}
+		dt := DisplayStep{}
+		dt.Init(c, "edit")
 		return c.Render(http.StatusOK, "step.tpl", dt)
 	}
 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
 }
 
 func HandleStepSave(c echo.Context) error {
-	GetLogger().Flogger("HandleStepSave called")
+	GetLogger(4).Flogger("HandleStepSave called")
 	var err error
 	var entity types.Step
+	var update bool
 	if id := c.Param("id"); id != "" {
+		update = true
 		entity = types.NewStep(&id)
+		if err := entity.Get(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+		} 
 	} else {
 		entity = types.NewStep(nil)
 	}
 	if err = c.Bind(&entity); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleStepSave"}.Wrap(err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleStepSave"}.Wrap(err).Log())
 	}
-	entity, err = entity.SetID()
-	if err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	entity.Model.Slug = strings.ReplaceAll(entity.Name, " ", "-")
+	entity.Enabled.Value = false
+	if enabled := c.FormValue("step_enabled"); enabled == "on" {
+		entity.Enabled.Value = true
 	}
-	if err = entity.Set(c); err != nil {
+	entity.Bypass.Value = false
+	if bypass := c.FormValue("step_bypass"); bypass == "on" {
+		entity.Bypass.Value = true
+	}
+	if err = entity.Set(c, update); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
 
@@ -156,40 +129,14 @@ func HandleStepSave(c echo.Context) error {
 }
 
 func HandleStepList(c echo.Context) error {
-	var err error
-	GetLogger().Flogger("HandleStepList called")
-	entity := types.NewStep(nil)
-	entities, err := entity.List(c)
-	if err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-	}
-
-	dt := DisplayStep{
-		Step: types.Step{},
-		List: entities,
-		DisplayType: "list",
-		Menu: Menu{
-			Href: "step",
-			Title: "Step",
-		},
-		Enabled: types.Toggle{
-			NamePrefix: "",
-			IdPrefix: "",
-			Suffix: "",
-			Title: "",
-		},
-		Bypass: types.Toggle{
-			NamePrefix: "",
-			IdPrefix: "",
-			Suffix: "",
-			Title: "",
-		},
-	}
-	return c.Render(http.StatusOK, "prompttemplates.tpl", dt)
+	GetLogger(4).Flogger("HandleStepList called")
+	dt := DisplayStep{}
+	dt.Init(c, "list")
+	return c.Render(http.StatusOK, "step.tpl", dt)
 }
 
 func HandleStepGet(c echo.Context) error {
-	GetLogger().Flogger("HandleStepsGet called")
+	GetLogger(4).Flogger("HandleStepsGet called")
 	if cutid := c.Param("id"); cutid != "" {
 		entity := types.NewStep(&cutid)
 		if err := entity.Get(c); err != nil {
@@ -221,7 +168,7 @@ func HandleStepGet(c echo.Context) error {
 }
 
 func HandleStepDelete(c echo.Context) error {
-	GetLogger().Flogger("HandleStepsDelete called")
+	GetLogger(4).Flogger("HandleStepsDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewStep(&id)
 		if err := entity.Delete(c); err != nil {

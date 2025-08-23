@@ -8,7 +8,6 @@ import (
 
 type ComfyNode struct {
 	Model
-	ID 				string 					`json:"id"`
 	Name 			string 					`form:"name" json:"name"`
 	Prompt          string                  `form:"prompt" json:"prompt"`
 	APIBase 		string 					`form:"api_base" json:"api_base"`
@@ -23,7 +22,6 @@ type ComfyNode struct {
 
 type ShallowComfyNode struct {
 	Model
-	ID 				string 					`json:"id"`
 	Name 			string 					`form:"name" json:"name"`
 	Prompt          string                  `form:"prompt" json:"prompt"`
 	APIBase 		string 					`form:"api_base" json:"api_base"`

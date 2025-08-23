@@ -16,7 +16,7 @@ func NewPrompt(id *string) Prompt {
 	c.Model.ContentType = "prompt"
 	c, _ = ValidatePrompt(c)
 	return c
-} 
+}
 
 func NewPromptModelContent() models.Content {
 	c := models.Content{}
@@ -32,13 +32,13 @@ func NewPromptTypeContent() Content {
 
 type Prompt struct {
 	Model
-	ID 			PromptID 	`json:"id"`
-	Name 		string 		`form:"name" json:"name"`
-	Prompt 		string 		`form:"prompt" json:"prompt"`
-	Domain 		string 		`form:"domain" json:"domain"`
-	Category 	string 		`form:"category" json:"category"`
-	Characters 	[]Character `form:"characters" json:"characters"`
-	SettingsModel 	Settings 	`form:"settings" json:"settings_model"`
+	Name          string      `form:"name" json:"name"`
+	Prompt        string      `form:"prompt" json:"prompt"`
+	Domain        string      `form:"domain" json:"domain"`
+	Category      string      `form:"category" json:"category"`
+	Characters    []Character `form:"characters" json:"characters"`
+	SettingsModel Settings    `form:"settings" json:"settings_model"`
+	WorkflowID	  WorkflowID  `form:"workflow_id" json:"workflow_id"`
 }
 
 func (c Prompt) Pack() []shallowmodel {
@@ -50,6 +50,7 @@ func (c Prompt) Pack() []shallowmodel {
 	sm.Prompt = c.Prompt
 	sm.Domain = c.Domain
 	sm.Category = c.Category
+	sm.WorkflowID = c.WorkflowID.String()
 	sm.SettingsModel = c.SettingsModel.ID
 	sms = append(sms, c.SettingsModel.Pack()...)
 	sms = append(sms, sm)
@@ -62,26 +63,24 @@ func (c *Prompt) New(id *string) {
 	} else {
 		c.Model.ID = uuid.NewString()
 	}
-	c.ID = PromptID(c.Model.ID)
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
 	c.SettingsModel.New()
 }
-
 
 func (c Prompt) List(e echo.Context) ([]Prompt, error) {
 	content := NewPromptModelContent()
 	content.Model.ContentType = "prompt"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
 		cut := NewPrompt(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -92,14 +91,14 @@ func (c Prompt) ListBy(e echo.Context, key string, value interface{}) ([]Prompt,
 	content := NewPromptModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]Prompt, 0)
 	for _, model := range contents {
 		cut := NewPrompt(nil)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Prompt", Function: "ListBy"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -112,32 +111,31 @@ func (c *Prompt) Get(e echo.Context) error {
 	content.Model.ContentType = "prompt"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Prompt", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Prompt", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c Prompt) Set(e echo.Context) error {
+func (c Prompt) Set(e echo.Context, update bool) error {
 	content := NewPromptTypeContent()
-	content.FromType(c)
-	content.Model.ID = c.ID.String()
-	err := content.Set(e)
+	content.FromType(c, c.Model)
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	return nil
 }
 
 func (c Prompt) Delete(e echo.Context) error {
 	content := NewPromptTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.Model)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -146,11 +144,11 @@ func (c Prompt) GetDispositions(e echo.Context) (Prompt, error) {
 	var err error
 	disposition := NewDisposition(nil)
 	if !c.SettingsModel.EmbedModel.CreatedAt.IsZero() && c.SettingsModel.EmbedModel.ContentType == "settings" {
-		
+
 	}
 	c.SettingsModel.TemplateModel.AvailableDispositions, err = disposition.List(e)
 	if err != nil {
-		return c, merrors.ContentListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err)
+		return c, merrors.ContentListError{Package: "types", Struct: "Prompt", Function: "GetDispositions"}.Wrap(err).Log()
 	}
 	return c, nil
 }
@@ -165,15 +163,6 @@ func (c Prompt) GetContentType() string {
 
 func (c Prompt) GetTable() string {
 	return c.Model.Table
-}
-
-func (c Prompt) SetID() (Prompt, error) {
-	var err error
-	c.ID = PromptID(c.Model.ID)
-	if err != nil {
-		return c, merrors.IDSetError{Info: "prompt"}.Wrap(err)
-	}
-	return c, nil
 }
 
 func ValidatePrompt(p Prompt) (Prompt, error) {
@@ -195,7 +184,7 @@ func (c Prompt) Bind(e echo.Context) (Prompt, error) {
 func (c Prompt) Next(e echo.Context) (*models.Context, error) {
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Prompt", Function: "Next"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Prompt", Function: "Next"}.Wrap(err).Log()
 	}
 	return systemContext, nil
 }

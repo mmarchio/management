@@ -12,7 +12,6 @@ import (
 
 type Steps struct {
 	EmbedModel
-	ID 									StepsID `json:"id"`
 	GetResearchOutputModel				Toggle `json:"get_research_output_model"`
 	GetResearchPromptModel				Toggle `json:"get_research_prompt_model"`
 	ScreenwritingStartModel 			Toggle `json:"screenwriting_start_model"`
@@ -33,7 +32,7 @@ type Steps struct {
 }
 
 func (c Steps) IsNil() bool {
-	if c.EmbedModel.IsNil() && c.ID.IsNil() {
+	if c.EmbedModel.IsNil() {
 		return true
 	}
 	return false
@@ -130,7 +129,7 @@ func (c *Steps) New(parent ITable, contentType string) (string, error) {
 	c.PublishMetadataModel.New(*c)
 	embedBytes, err := json.Marshal(c)
 	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(err)
+		return "", merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	return string(embedBytes), nil
 }
@@ -143,19 +142,9 @@ func (c Steps) GetID() string {
 	return c.EmbedModel.ID
 }
 
-func (c *Steps) SetID() error {
-	var err error
-	c.ID = StepsID(c.EmbedModel.ID)
-	if err != nil {
-		return merrors.IDSetError{Info: "steps"}.Wrap(err)
-	}
-	return nil
-}
-
 func (c Steps) FromModel(model models.Steps) Steps {
 	toggle := Toggle{}
 	c.EmbedModel.FromModel(model.Model)
-	c.SetID()
 	c.GetResearchOutputModel = toggle.FromModel(model.GetResearchOutputModel)
 	c.GetResearchPromptModel = toggle.FromModel(model.GetResearchPromptModel)
 	c.ScreenwritingStartModel = toggle.FromModel(model.ScreenwritingStartModel)

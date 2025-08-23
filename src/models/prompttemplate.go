@@ -8,7 +8,6 @@ import (
 
 type PromptTemplate struct {
 	Model
-	ID 			string 	`form:"id" json:"id"`
 	Name		string  `form:"name" json:"name"`
 	Template 	string 	`form:"template" json:"template"`
 	Vars 		string 	`form:"vars" json:"vars"`
@@ -16,7 +15,6 @@ type PromptTemplate struct {
 
 type ShallowPromptTemplate struct {
 	ShallowModel
-	ID 			string 	`form:"id" json:"id"`
 	Name		string  `form:"name" json:"name"`
 	Template 	string 	`form:"template" json:"template"`
 	Vars 		string 	`form:"vars" json:"vars"`

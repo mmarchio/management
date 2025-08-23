@@ -13,10 +13,9 @@ import (
 func NewShallowStep(id, ct *string) ShallowStep {
 	c := ShallowStep{}
 	c.ShallowModel.New(id, ct)
-	c.ID = StepID(c.ShallowModel.ID)
 	c.ShallowModel.ContentType = "systemprompt"
 	return c
-} 
+}
 
 func NewShallowStepModelContent() models.ShallowContent {
 	c := models.ShallowContent{}
@@ -32,13 +31,17 @@ func NewShallowStepTypeContent() ShallowContent {
 
 type ShallowStep struct {
 	ShallowModel
-	ID StepID 					`form:"id" json:"id"`
-	Name string 				`form:"name" json:"name"`
-	Order int 					`form:"order" json:"order"`
-	DispositionID DispositionID `form:"disposition_id" json:"disposition_id"`
-	Stats string				`form:"stats" json:"stats"`
-	Enabled string				`form:"enabled" json:"enabled"`
-	Bypass string				`form:"bypass" json:"bypass"`
+	Name          	string        `form:"name" json:"name"`
+	Order         	int           `form:"order" json:"order"`
+	DispositionID 	DispositionID `form:"disposition_id" json:"disposition_id"`
+	Stats         	string        `form:"stats" json:"stats"`
+	Enabled       	string        `form:"enabled" json:"enabled"`
+	Bypass        	string        `form:"bypass" json:"bypass"`
+	SystemPrompt  	string        `form:"system_prompt" json:"system_prompt"`
+	PromptTemplate	string        `form:"prompt_template" json:"prompt_template"`
+	Node            string        `form:"node" json:"node"`
+	NodeType        string        `form:"node_type" json:"node_type"`
+	WorkflowID      string        `form:"workflow_id" json:"workflow_id"`
 }
 
 func (c ShallowStep) ToContent() (*Content, error) {
@@ -46,7 +49,7 @@ func (c ShallowStep) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -57,33 +60,32 @@ func (c ShallowStep) Expand(e echo.Context) (*Step, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
 	statsInput := Stats{}
-	statsInput.ID = StatsID(c.Stats)
 	statsInput.EmbedModel.ID = c.Stats
 	statsOutput, err := statsInput.Get(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	enabledInput := Toggle{}
 	enabledInput.ID = c.Enabled
 	enabledInput.Model.ID = c.Enabled
 	enabledOutput, err := enabledInput.Get(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	bypassInput := Toggle{}
 	bypassInput.ID = c.Bypass
 	bypassInput.Model.ID = c.Bypass
 	bypassOutput, err := bypassInput.Get(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 
 	r.Model = r.Model.FromShallowModel(c.ShallowModel)
@@ -103,19 +105,17 @@ func (c *ShallowStep) New(id *string) {
 	} else {
 		c.ShallowModel.ID = uuid.NewString()
 	}
-	c.ID = StepID(c.ShallowModel.ID)
 	c.ShallowModel.CreatedAt = time.Now()
 	c.ShallowModel.UpdatedAt = c.ShallowModel.CreatedAt
 	c.ShallowModel.ContentType = "systemprompt"
 }
-
 
 func (c ShallowStep) List(e echo.Context) ([]ShallowStep, error) {
 	content := NewShallowStepModelContent()
 	content.ShallowModel.ContentType = "systemprompt"
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.ShallowModel.ContentType}.Wrap(err).Log()
 	}
 	ct := "shallowsystemprompt"
 	cuts := make([]ShallowStep, 0)
@@ -123,7 +123,7 @@ func (c ShallowStep) List(e echo.Context) ([]ShallowStep, error) {
 		cut := NewShallowStep(nil, &ct)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowStep", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowStep", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -134,7 +134,7 @@ func (c ShallowStep) ListBy(e echo.Context, key string, value interface{}) ([]Sh
 	content := NewShallowStepModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: c.ShallowModel.ContentType}.Wrap(err).Log()
 	}
 	ct := "shallowsystemprompt"
 	cuts := make([]ShallowStep, 0)
@@ -142,7 +142,7 @@ func (c ShallowStep) ListBy(e echo.Context, key string, value interface{}) ([]Sh
 		cut := NewShallowStep(nil, &ct)
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowStep", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "ShallowStep", Function: "ListBy"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -154,42 +154,42 @@ func (c *ShallowStep) FromContent(content *ShallowContent) error {
 		return merrors.ContentToTypeError{}.New("content is nil")
 	}
 	if err := json.Unmarshal([]byte(content.Content), c); err != nil {
-		return merrors.JSONUnmarshallingError{}.Wrap(err)
+		return merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 	}
-	return nil	
+	return nil
 }
 
 func (c *ShallowStep) Get(e echo.Context) error {
 	content, err := c.ShallowModel.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowStep", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "ShallowStep", Function: "Get"}.Wrap(err).Log()
 	}
 	if err := c.FromContent(content); err != nil {
-		return merrors.ContentToTypeError{}.Wrap(err)
+		return merrors.ContentToTypeError{}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c ShallowStep) Set(e echo.Context) error {
+func (c ShallowStep) Set(e echo.Context, update bool) error {
 	content := NewShallowStepTypeContent()
-	content.FromType(c)
-	err := content.Set(e)
+	content.FromType(c, c.ShallowModel)
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
 
 func (c ShallowStep) Delete(e echo.Context) error {
 	content := NewShallowStepTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.ShallowModel)
 	content.ShallowModel.ID = c.ShallowModel.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -204,15 +204,6 @@ func (c ShallowStep) GetContentType() string {
 
 func (c ShallowStep) GetTable() string {
 	return c.ShallowModel.Table
-}
-
-func (c ShallowStep) SetID() (ShallowStep, error) {
-	var err error
-	c.ID = StepID(c.ShallowModel.ID)
-	if err != nil {
-		return c, merrors.IDSetError{Info: "systemprompt"}.Wrap(err)
-	}
-	return c, nil
 }
 
 func (c ShallowStep) IsShallowModel() bool {

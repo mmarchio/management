@@ -20,8 +20,8 @@ func SetEchoCtx(c echo.Context, ctx context.Context) echo.Context {
 	return c
 }
 
-func GetLogger() logger.LoggingContext {
-	r := logger.LoggingContext{}
+func GetLogger(severity int) logger.LoggingContext {
+	r := logger.LoggingContext{Severity: severity}
 	r.Init()
 	return r
 }

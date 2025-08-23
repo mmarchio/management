@@ -1,334 +1,301 @@
 package types
 
-import (
-	"encoding/json"
-	"time"
+// import (
+// 	"encoding/json"
+// 	"time"
 
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
-	merrors "github.com/mmarchio/management/errors"
-	"github.com/mmarchio/management/models"
-)
+// 	"github.com/google/uuid"
+// 	"github.com/labstack/echo/v4"
+// 	merrors "github.com/mmarchio/management/errors"
+// 	"github.com/mmarchio/management/models"
+// )
 
-type params interface {
-	GetName() string
-	GetCommand() string 
-	GetUser() string 
-	GetHost() string 
-	GetModel() string 
-	GetSystemPrompt() string 
-	GetPrompt() string 
-	GetPromptTemplate() string 
-	GetApiBase() string 
-	GetApiTemplate() string 
-	GetType() string
-	Validate() params
-	GetValidated() bool
-}
+// type Node struct {
+// 	Model
+// 	WorkflowID WorkflowID `form:"workflow_id" json:"workflow_id"`
+// 	Name       string     `form:"name" json:"name"`
+// 	Type       string     `form:"type" json:"type"`
+// 	Params     params     `json:"params"`
+// 	Enabled    bool       `json:"enabled"`
+// 	Bypass     bool       `json:"bypass"`
+// 	Output     string     `form:"output" json:"output"`
+// }
 
-type Node struct {
-	Model
-	ID 			NodeID `json:"id"`
-	WorkflowID  WorkflowID `form:"workflow_id" json:"workflow_id"`
-	Name 		string `form:"name" json:"name"`
-	Type 		string `form:"type" json:"type"`
-	Params 		params `json:"params"`
-	Enabled 	bool   `json:"enabled"`
-	Bypass 		bool   `json:"bypass"`
-	Output 		string `form:"output" json:"output"`
-}
+// func (c *Node) Validate() {
+// 	valid := true
+// 	if !c.Model.Validate() {
+// 		GetLogger(3).Flogger("types.node.model failed validation")
+// 		valid = false
+// 	}
+// 	if c.Model.ContentType != "node" {
+// 		GetLogger(3).Flogger("types.node.model.contenttype is wrong")
+// 		valid = false
+// 	}
+// 	if c.Model.IsNil() {
+// 		GetLogger(3).Flogger("types.node.id does not match model")
+// 		valid = false
+// 	}
+// 	if c.WorkflowID.IsNil() {
+// 		GetLogger(3).Flogger("types.node.workflow_id is nil")
+// 		valid = false
+// 	}
+// 	if c.Name == "" {
+// 		GetLogger(3).Flogger("types.node.name is nil")
+// 		valid = false
+// 	}
+// 	if c.Type == "" {
+// 		GetLogger(3).Flogger("types.node.type is nil")
+// 		valid = false
+// 	}
+// 	if c.Params != nil {
+// 		if o, ok := c.Params.(OllamaNode); ok {
+// 			if c.Type != "ollama_node" {
+// 				GetLogger(3).Flogger("type is wrong")
+// 				valid = false
+// 			}
+// 			o.Validate()
+// 			if !o.GetValidated() {
+// 				GetLogger(3).Flogger("types.node.OllamaNode is not valid")
+// 				valid = false
+// 			}
+// 		}
+// 		if o, ok := c.Params.(ComfyNode); ok {
+// 			if c.Type != "comfy_node" {
+// 				GetLogger(3).Flogger("type is wrong")
+// 				valid = false
+// 			}
+// 			o.Validate()
+// 			if !o.GetValidated() {
+// 				GetLogger(3).Flogger("types.node.ComfyNode is not valid")
+// 				valid = false
+// 			}
+// 		}
+// 		if o, ok := c.Params.(SSHNode); ok {
+// 			if c.Type != "ssh_node" {
+// 				GetLogger(3).Flogger("type is wrong")
+// 				valid = false
+// 			}
+// 			o.Validate()
+// 			if !o.GetValidated() {
+// 				GetLogger(3).Flogger("types.node.SSHNode is not valid")
+// 				valid = false
+// 			}
+// 		}
+// 	}
+// 	c.Model.Validated = valid
+// }
 
-func (c *Node) Validate() {
-	valid := true
-	if !c.Model.Validate() {
-		GetLogger().Flogger("types.node.model failed validation")
-		valid = false
-	}
-	if c.Model.ContentType != "node" {
-		GetLogger().Flogger("types.node.model.contenttype is wrong")
-		valid = false
-	}
-	if c.ID.IsNil() || c.ID.String() != c.Model.ID {
-		GetLogger().Flogger("types.node.id does not match model")
-		valid = false
-	}
-	if c.WorkflowID.IsNil() {
-		GetLogger().Flogger("types.node.workflow_id is nil")
-		valid = false
-	}
-	if c.Name == "" {
-		GetLogger().Flogger("types.node.name is nil")
-		valid = false
-	}
-	if c.Type == "" {
-		GetLogger().Flogger("types.node.type is nil")
-		valid = false
-	}
-	if c.Params != nil {
-		if o, ok := c.Params.(OllamaNode); ok {
-			if c.Type != "ollama_node" {
-				GetLogger().Flogger("type is wrong")
-				valid = false
-			}
-			o.Validate()
-			if !o.GetValidated() {
-				GetLogger().Flogger("types.node.OllamaNode is not valid")
-				valid = false
-			}
-		}
-		if o, ok := c.Params.(ComfyNode); ok {
-			if c.Type != "comfy_node" {
-				GetLogger().Flogger("type is wrong")
-				valid = false
-			}
-			o.Validate()
-			if !o.GetValidated() {
-				GetLogger().Flogger("types.node.ComfyNode is not valid")
-				valid = false
-			}
-		}
-		if o, ok := c.Params.(SSHNode); ok {
-			if c.Type != "ssh_node" {
-				GetLogger().Flogger("type is wrong")
-				valid = false
-			}
-			o.Validate()
-			if !o.GetValidated() {
-				GetLogger().Flogger("types.node.SSHNode is not valid")
-				valid = false
-			}
-		}
-	}
-	c.Model.Validated = valid
-}
+// func NewNode(id *string) Node {
+// 	c := Node{}
+// 	c.New(id)
+// 	c.Model.ContentType = "node"
+// 	c, _ = ValidateNode(c)
+// 	return c
+// }
 
-func NewNode(id *string) Node {
-	c := Node{}
-	c.New(id)
-	c.Model.ContentType = "node"
-	c, _ = ValidateNode(c)
-	return c
-}
+// func NewNodeModelContent() models.Content {
+// 	c := models.Content{}
+// 	c.Model.ContentType = "node"
+// 	return c
+// }
 
-func NewNodeModelContent() models.Content {
-	c := models.Content{}
-	c.Model.ContentType = "node"
-	return c
-}
+// func NewNodeTypeContent() Content {
+// 	c := Content{}
+// 	c.Model.ContentType = "node"
+// 	return c
+// }
 
-func NewNodeTypeContent() Content {
-	c := Content{}
-	c.Model.ContentType = "node"
-	return c
-}
+// func (c *Node) New(id *string) {
+// 	if id != nil {
+// 		c.Model.ID = *id
+// 	} else {
+// 		c.Model.ID = uuid.NewString()
+// 	}
+// 	c.Model.CreatedAt = time.Now()
+// 	c.Model.UpdatedAt = c.Model.CreatedAt
+// }
 
-func (c *Node) New(id *string) {
-	if id != nil {
-		c.Model.ID = *id
-	} else {
-		c.Model.ID = uuid.NewString()
-	}
-	c.ID = NodeID(c.Model.ID)
-	c.Model.CreatedAt = time.Now()
-	c.Model.UpdatedAt = c.Model.CreatedAt
-}
+// func (c Node) List(e echo.Context) ([]Node, error) {
+// 	content := NewNodeModelContent()
+// 	content.Model.ContentType = "node"
+// 	contents, err := content.List(e)
+// 	if err != nil {
+// 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
+// 	}
+// 	cuts := make([]Node, 0)
+// 	for _, model := range contents {
+// 		cut := NewNode(nil)
+// 		msi := make(map[string]interface{})
+// 		err = json.Unmarshal([]byte(model.Content), &msi)
+// 		if err != nil {
+// 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "List"}.Wrap(err).Log()
+// 		}
+// 		cut.FromMSI(msi)
+// 		cuts = append(cuts, cut)
+// 	}
+// 	return cuts, nil
+// }
 
-func (c Node) List(e echo.Context) ([]Node, error) {
-	content := NewNodeModelContent()
-	content.Model.ContentType = "node"
-	contents, err := content.List(e)
-	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
-	}
-	cuts := make([]Node, 0)
-	for _, model := range contents {
-		cut := NewNode(nil)
-		msi := make(map[string]interface{})
-		err = json.Unmarshal([]byte(model.Content), &msi)
-		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "List"}.Wrap(err)
-		}
-		cut.FromMSI(msi)
-		cuts = append(cuts, cut)
-	}
-	return cuts, nil
-}
+// func (c Node) ListBy(e echo.Context, key string, value interface{}) ([]Node, error) {
+// 	content := NewNodeModelContent()
+// 	contents, err := content.ListBy(e, key, value)
+// 	if err != nil {
+// 		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
+// 	}
+// 	cuts := make([]Node, 0)
+// 	for _, model := range contents {
+// 		cut := Node{}
+// 		msi := make(map[string]interface{})
+// 		err = json.Unmarshal([]byte(model.Content), &msi)
+// 		if err != nil {
+// 			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "ListBy"}.Wrap(err).Log()
+// 		}
+// 		cut.FromMSI(msi)
+// 		cuts = append(cuts, cut)
+// 	}
+// 	return cuts, nil
+// }
 
-func (c Node) ListBy(e echo.Context, key string, value interface{}) ([]Node, error) {
-	content := NewNodeModelContent()
-	contents, err := content.ListBy(e, key, value)
-	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
-	}
-	cuts := make([]Node, 0)
-	for _, model := range contents {
-		cut := Node{}
-		msi := make(map[string]interface{})
-		err = json.Unmarshal([]byte(model.Content), &msi)
-		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "node", Function: "ListBy"}.Wrap(err)
-		}
-		cut.FromMSI(msi)
-		cuts = append(cuts, cut)
-	}
-	return cuts, nil
-}
+// func (c *Node) Get(e echo.Context) error {
+// 	content := NewNodeTypeContent()
+// 	content.Model.ID = c.Model.ID
+// 	content.Model.ContentType = "node"
+// 	content, err := content.Get(e)
+// 	if err != nil {
+// 		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err).Log()
+// 	}
+// 	msi := make(map[string]interface{})
+// 	err = json.Unmarshal([]byte(content.Content), &msi)
+// 	if err != nil {
+// 		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err).Log()
+// 	}
+// 	if err := c.FromMSI(msi); err != nil {
+// 		return merrors.JSONUnmarshallingError{Info: "from msi", Package: "types", Struct: "node", Function: "Get"}.Wrap(err).Log()
+// 	}
+// 	return nil
+// }
 
-func (c *Node) Get(e echo.Context) error {
-	content := NewNodeTypeContent()
-	content.Model.ID = c.Model.ID
-	content.Model.ContentType = "node"
-	content, err := content.Get(e)
-	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
-	}
-	msi := make(map[string]interface{})
-	err = json.Unmarshal([]byte(content.Content), &msi)
-	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
-	}
-	if err := c.FromMSI(msi); err != nil {
-		return merrors.JSONUnmarshallingError{Info: "from msi", Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
-	}
-	return nil
-}
+// func (c Node) Set(e echo.Context, update bool) error {
+// 	c.Validate()
+// 	if !c.Model.Validated {
+// 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
+// 	}
+// 	content := NewNodeTypeContent()
+// 	content.FromType(c, c.Model)
+// 	err := content.Set(e, update)
+// 	if err != nil {
+// 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err).Log()
+// 	}
+// 	return nil
+// }
 
-func (c Node) Set(e echo.Context) error {
-	c.Validate()
-	if !c.Model.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
-	}
-	content := NewNodeTypeContent()
-	content.FromType(c)
-	content.Model.ID = c.ID.String()
-	content.ID = c.ID.String()
-	err := content.Set(e)
-	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
-	}
-	return nil
-}
+// func (c Node) Delete(e echo.Context) error {
+// 	content := NewNodeTypeContent()
+// 	content.FromType(c, c.Model)
+// 	content.Model.ID = c.Model.ID
+// 	if err := content.Delete(e); err != nil {
+// 		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err).Log()
+// 	}
+// 	return nil
+// }
 
-func (c Node) Delete(e echo.Context) error {
-	content := NewNodeTypeContent()
-	content.FromType(c)
-	content.Model.ID = c.Model.ID
-	content.ID = c.ID.String()
-	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
-	}
-	return nil
-}
+// func (c Node) GetID() string {
+// 	return c.Model.ID
+// }
 
-func (c Node) GetID() string {
-	return c.Model.ID
-}
+// func (c Node) GetContentType() string {
+// 	return c.Model.ContentType
+// }
 
-func (c Node) GetContentType() string {
-	return c.Model.ContentType
-}
+// func (c Node) GetTable() string {
+// 	return c.Model.Table
+// }
 
-func (c Node) GetTable() string {
-	return c.Model.Table
-}
+// func ValidateNode(p Node) (Node, error) {
+// 	var err error
+// 	return p, err
+// }
 
-func (c Node) SetID() (Node, error) {
-	var err error
-	c.ID = NodeID(c.Model.ID)
-	if err != nil {
-		return c, merrors.IDSetError{Info: "node"}.Wrap(err)
-	}
-	return c, nil
-}
+// func (c Node) Bind(e echo.Context) (Node, error) {
+// 	var err error
+// 	return c, err
+// }
 
-func ValidateNode(p Node) (Node, error) {
-	var err error
-	return p, err
-}
+// func (c Node) Next(e echo.Context) (*models.Context, error) {
+// 	systemContext, err := models.Context{}.GetCtx(e)
+// 	if err != nil {
+// 		return nil, merrors.ContextGetError{Package: "types", Struct: "Node", Function: "Next"}.Wrap(err).Log()
+// 	}
+// 	return systemContext, nil
+// }
 
-func (c Node) Bind(e echo.Context) (Node, error) {
-	var err error
-	return c, err
-}
-
-func (c Node) Next(e echo.Context) (*models.Context, error) {
-	systemContext, err := models.Context{}.GetCtx(e)
-	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Node", Function: "Next"}.Wrap(err)
-	}
-	return systemContext, nil
-}
-
-func (c *Node) FromMSI(msi map[string]interface{}) error {
-	var err error
-	if id, ok := msi["id"].(string); ok {
-		c.Model.ID = id
-	}
-	if createdAt, ok := msi["CreatedAt"].(string); ok {
-		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
-		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
-		}
-	}
-	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
-		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
-		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"ComfyNode", Function: "FromMSI"}.Wrap(err)
-		}
-	}
-	if contentType, ok := msi["ContentType"].(string); ok {
-		c.Model.ContentType = contentType
-	}
-	if id, ok := msi["ID"].(string); ok {
-		c.ID = NodeID(id)
-	}
-	if name, ok := msi["Name"].(string); ok {
-		c.Name = name
-	}
-	if name, ok := msi["name"].(string); ok {
-		c.Name = name
-	}
-	if tp, ok := msi["type"].(string); ok {
-		c.Type = tp
-	}
-	if bypass, ok := msi["bypass"].(bool); ok {
-		c.Bypass = bypass
-	}
-	if wfid, ok := msi["workflow_id"].(string); ok {
-		c.WorkflowID = WorkflowID(wfid)
-	}
-	if enabled, ok := msi["enabled"].(bool); ok {
-		c.Enabled = enabled
-	}
-	if createdAt, ok := msi["CreatedAt"].(string); ok {
-		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
-		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
-		}
-	}
-	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
-		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
-		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"Node", Function: "FromMSI"}.Wrap(err)
-		}
-	}
-	if contentType, ok := msi["ContentType"].(string); ok {
-		c.Model.ContentType = contentType
-	}
-	if c.Type == "ollama_node" {
-		params := OllamaNode{}
-		params.FromMSI(msi)
-		c.Params = params
-	}
-	if c.Type == "comfy_node" {
-		params := ComfyNode{}
-		params.FromMSI(msi)
-		c.Params = params
-	}
-	if c.Type == "ssh_node" {
-		params := SSHNode{}
-		params.FromMSI(msi)
-		c.Params = params
-	}
-	return nil
-}
+// func (c *Node) FromMSI(msi map[string]interface{}) error {
+// 	var err error
+// 	if id, ok := msi["id"].(string); ok {
+// 		c.Model.ID = id
+// 	}
+// 	if createdAt, ok := msi["CreatedAt"].(string); ok {
+// 		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+// 		if err != nil {
+// 			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct: "Node", Function: "FromMSI"}.Wrap(err).Log()
+// 		}
+// 	}
+// 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
+// 		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
+// 		if err != nil {
+// 			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct: "ComfyNode", Function: "FromMSI"}.Wrap(err).Log()
+// 		}
+// 	}
+// 	if contentType, ok := msi["ContentType"].(string); ok {
+// 		c.Model.ContentType = contentType
+// 	}
+// 	if name, ok := msi["Name"].(string); ok {
+// 		c.Name = name
+// 	}
+// 	if name, ok := msi["name"].(string); ok {
+// 		c.Name = name
+// 	}
+// 	if tp, ok := msi["type"].(string); ok {
+// 		c.Type = tp
+// 	}
+// 	if bypass, ok := msi["bypass"].(bool); ok {
+// 		c.Bypass = bypass
+// 	}
+// 	if wfid, ok := msi["workflow_id"].(string); ok {
+// 		c.WorkflowID = WorkflowID(wfid)
+// 	}
+// 	if enabled, ok := msi["enabled"].(bool); ok {
+// 		c.Enabled = enabled
+// 	}
+// 	if createdAt, ok := msi["CreatedAt"].(string); ok {
+// 		c.Model.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+// 		if err != nil {
+// 			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct: "Node", Function: "FromMSI"}.Wrap(err).Log()
+// 		}
+// 	}
+// 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
+// 		c.Model.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
+// 		if err != nil {
+// 			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct: "Node", Function: "FromMSI"}.Wrap(err).Log()
+// 		}
+// 	}
+// 	if contentType, ok := msi["ContentType"].(string); ok {
+// 		c.Model.ContentType = contentType
+// 	}
+// 	if c.Type == "ollama_node" {
+// 		params := OllamaNode{}
+// 		params.FromMSI(msi)
+// 		c.Params = params
+// 	}
+// 	if c.Type == "comfy_node" {
+// 		params := ComfyNode{}
+// 		params.FromMSI(msi)
+// 		c.Params = params
+// 	}
+// 	if c.Type == "ssh_node" {
+// 		params := SSHNode{}
+// 		params.FromMSI(msi)
+// 		c.Params = params
+// 	}
+// 	return nil
+// }

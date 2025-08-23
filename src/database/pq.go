@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/mmarchio/management/config"
@@ -30,44 +31,45 @@ func generateConnectionString() string {
 }
 
 func GetPQContext(ctx context.Context) context.Context {
-	if GetPQDatabase(ctx) != nil {
-		return ctx
-	}
-	dburl := generateConnectionString()
-	conn, err := sql.Open("postgres", dburl)
-	if err != nil {
-		panic(fmt.Errorf("database connection error: %w", merrors.DBConnectionError{DB: conn}.Wrap(err)))
-	}
+	conn := GetPQDatabase()
 	ctx = SetContextPQ(ctx, conn)
 	ctx = SetContextPQTx(ctx, conn)
 	return ctx
 }
 
-func GetPQDatabase(ctx context.Context) *sql.DB {
-	v := ctx.Value(DBKey)
-	if db, ok := v.(*sql.DB); ok {
-		return db
+func GetPQDatabase() *sql.DB {
+	dburl := generateConnectionString()
+	conn, err := sql.Open("postgres", dburl)
+	if err != nil {
+		panic(fmt.Errorf("database connection error: %w", merrors.DBConnectionError{DB: conn}.Wrap(err)))
 	}
-	return nil
+	conn.SetConnMaxIdleTime(time.Duration(1*time.Second))
+	return conn
 }
 
 func GetPQTx(ctx context.Context) *sql.Tx {
-	v := ctx.Value(DBTXKey)
-	if tx, ok := v.(*sql.Tx); ok {
-		return tx
-	} else {
-		ctx = GetPQContext(ctx)
-		return GetPQTx(ctx)
-	}
+	// v := ctx.Value(DBTXKey)
+	// if tx, ok := v.(*sql.Tx); ok {
+	// 	return tx
+	// } else {
+	// 	ctx = GetPQContext(ctx)
+	// 	return GetPQTx(ctx)
+	// }
 	return nil
 }
 
 func SetContextPQ(ctx context.Context, conn *sql.DB) context.Context {
+	if _, ok := ctx.Value(DBKey).(*sql.DB); ok {
+		return ctx
+	}
 	ctx = context.WithValue(ctx, DBKey, conn)
 	return ctx
 }
 
 func SetContextPQTx(ctx context.Context, conn *sql.DB) context.Context {
+	if _, ok := ctx.Value(DBTXKey).(*sql.Tx); ok {
+		return ctx
+	}
 	tx, err := conn.Begin()
 	if err != nil {
 		panic(err)
@@ -76,7 +78,7 @@ func SetContextPQTx(ctx context.Context, conn *sql.DB) context.Context {
 }
 
 func GetContextPQ(ctx context.Context) (context.Context, *sql.DB) {
-	return GetPQContext(ctx), GetPQDatabase(ctx)
+	return GetPQContext(ctx), GetPQDatabase()
 }
 
 func ClearDB(ctx context.Context) context.Context {

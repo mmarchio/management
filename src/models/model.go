@@ -73,10 +73,14 @@ func (c *ShallowModel) Init() {
 }
 
 func (c Model) Get(e echo.Context, table ITable) (ITable, error) {
-	ctx := GetLogger().Flogger("Get called").Ctx
-	db := database.GetPQDatabase(ctx)
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
 	q := fmt.Sprintf("SELECT %s FROM content WHERE id = $1", c.Columns)
 	rows, err := db.Query(q, c.ID)
+	if err != nil {
+		return nil, merrors.DBQueryError{}.Wrap(err).Log()
+	}
+	defer rows.Close()
 	var t ITable
 	for rows.Next() {
 		t, err = table.Scan(e, rows)
@@ -88,10 +92,13 @@ func (c Model) Get(e echo.Context, table ITable) (ITable, error) {
 }
 
 func (c Model) Set(e echo.Context, table ITable) error {
-	ctx := GetLogger().Flogger("Get called").Ctx
-	db := database.GetPQDatabase(ctx)
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
 	defer db.Close()
-	tx := database.GetPQTx(ctx)
+	tx, err := db.Begin()
+	if err != nil {
+		return merrors.DBConnectionError{DB: db}.Wrap(err).Log()
+	}
 	q := fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s) ON CONFLICT(id) %s",
 		c.Columns,
@@ -108,28 +115,27 @@ func (c Model) Set(e echo.Context, table ITable) error {
 		return merrors.DBQueryError{DB: db}.New("err: %w\nq: %s", err, q)
 	}
 	if err := tx.Commit(); err != nil {
-		return merrors.TransactionCommitError{DB: db}.Wrap(err)
+		return merrors.TransactionCommitError{DB: db}.Wrap(err).Log()
 	}
-	GetLogger().Flogger("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
+	GetLogger(4).Flogger("set successful\nq: %s\n\nvalues: %#v\n\n", q, values)
 	return nil
 }
 
 func (c Model) List(e echo.Context, table Content) ([]Content, error) {
-	ctx := GetLogger().Flogger("Get called").Ctx
-	db := database.GetPQDatabase(ctx)
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
 	r := make([]Content, 0)
 	textOut := strings.Replace(c.Columns, "id", "id::text", 1)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE content_type = $1", textOut)
 	rows, err := db.Query(q, table.Model.ContentType)
 	if err != nil {
-		GetLogger().Flogger(err.Error())
-		return nil, merrors.SQLQueryError{Info: "model list", DB: db}.Wrap(err)
+		return nil, merrors.SQLQueryError{Info: "model list", DB: db}.Wrap(err).Log()
 	}
+	defer rows.Close()
 	for rows.Next() {
 		itable, err := table.Scan(e, rows)
 		if err != nil {
-			GetLogger().Flogger(err.Error())
-			return nil, merrors.DBContentScanError{Info: "model list", DB: db}.Wrap(err)
+			return nil, merrors.DBContentScanError{Info: "model list", DB: db}.Wrap(err).Log()
 		}
 		r = append(r, itable)
 	}
@@ -137,14 +143,15 @@ func (c Model) List(e echo.Context, table Content) ([]Content, error) {
 }
 
 func (c Model) ListBy(e echo.Context, table ITable, column string, value string) ([]ITable, error) {
-	ctx := GetLogger().Flogger("Get called").Ctx
-	db := database.GetPQDatabase(ctx)
+	GetLogger(4).Flogger("Get called")
+	db := database.GetPQDatabase()
 	r := make([]ITable, 0)
 	q := fmt.Sprintf("SELECT %s FROM content WHERE %s = $1", c.Columns, column)
 	rows, err := db.Query(q, value)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		itable, err := table.Scan(e, rows)
 		if err != nil {

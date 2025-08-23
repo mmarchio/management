@@ -9,7 +9,6 @@ import (
 
 type VideoTransparencyOutput struct {
 	EmbedModel
-	ID 				VideoTransparencyOutputID `json:"id"`
 	StatsModel 		Stats `json:"stats_model"`
 	FilesArrayModel []File `json:"files_array_model"`
 }
@@ -40,7 +39,7 @@ func (c VideoTransparencyOutput) Marshal(ctx context.Context) (string, error) {
 }
 
 func (c VideoTransparencyOutput) New() VideoTransparencyOutput {
-	c.ID = VideoTransparencyOutputID(uuid.NewString())
+	c.EmbedModel.ID = uuid.NewString()
 	c.StatsModel = c.StatsModel.New(nil)
 	return c
 }

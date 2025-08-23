@@ -9,7 +9,6 @@ import (
 
 type ShallowNodeOrder struct {
 	ShallowModel
-	ID NodeOrderID `form:"id" json:"id"`
 	WorkflowID WorkflowID `form:"workflow_id" json:"workflow_id"`
 	NodeID string `form:"node_id" json:"node_id"`
 	NodeType string `form:"node_type" json:"node_type"`
@@ -21,7 +20,7 @@ func (c ShallowNodeOrder) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -32,10 +31,10 @@ func (c ShallowNodeOrder) Expand(e echo.Context) (*NodeOrder, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}

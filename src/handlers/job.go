@@ -18,7 +18,7 @@ func RegisterJobRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetJob(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIGetJob called")
+	GetLogger(4).Flogger("HandleAPIGetJob called")
 	if id := c.Param("id"); id != "" {
 		job := types.NewJob(&id)
 		if err := job.Get(c); err != nil {
@@ -30,7 +30,7 @@ func HandleAPIGetJob(c echo.Context) error {
 }
 
 func HandleAPIListJob(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIListJob called")
+	GetLogger(4).Flogger("HandleAPIListJob called")
 	job := types.NewJob(nil)
 	jobs, err := job.List(c)
 	if err != nil {
@@ -40,19 +40,23 @@ func HandleAPIListJob(c echo.Context) error {
 }
 
 func HandleAPISaveJob(c echo.Context) error {
-	GetLogger().Flogger("HandleAPISaveJob called")
+	GetLogger(4).Flogger("HandleAPISaveJob called")
+	var update bool
+	if id := c.Param("id"); id != "" {
+		update = true
+	}
 	job := types.NewJob(nil)
 	if err := c.Bind(&job); err != nil {
 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISaveJob"}.Wrap(err))
 	}
-	if err := job.Set(c); err != nil {
+	if err := job.Set(c, update); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, job)
 }
 
 func HandleJobs(c echo.Context) error {
-	GetLogger().Flogger("HandleJobs called")
+	GetLogger(4).Flogger("HandleJobs called")
 	dt := DisplayJob{
 		Job: types.Job{},
 		DisplayType: "none",
@@ -65,7 +69,7 @@ func HandleJobs(c echo.Context) error {
 }
 
 func HandleJobsList(c echo.Context) error {
-	GetLogger().Flogger("HandleJobsList called")
+	GetLogger(4).Flogger("HandleJobsList called")
 	job := types.NewJob(nil)
 	list, err := job.List(c)
 	if err != nil {
@@ -84,7 +88,7 @@ func HandleJobsList(c echo.Context) error {
 }
 
 func HandleJobsDelete(c echo.Context) error {
-	GetLogger().Flogger("HandleJobsDelete called")
+	GetLogger(4).Flogger("HandleJobsDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJob(&id)
 		if err := entity.Delete(c); err != nil {
@@ -96,7 +100,7 @@ func HandleJobsDelete(c echo.Context) error {
 }
 
 func HandlerJobWorkflowAdd(c echo.Context) error {
-	GetLogger().Flogger("HandlerJobWorkflowAdd called")
+	GetLogger(4).Flogger("HandlerJobWorkflowAdd called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewJob(&id)
 		if err := entity.Get(c); err != nil {
@@ -121,22 +125,24 @@ func HandlerJobWorkflowAdd(c echo.Context) error {
 }
 
 func HandleJobSave(c echo.Context) error {
-	GetLogger().Flogger("HandleJobSave called")
+	GetLogger(4).Flogger("HandleJobSave called")
+	var update bool
+	entity := types.NewJob(nil)
 	if id := c.Param("id"); id != "" {
+		update = true
 		entity := types.NewJob(&id)
 		if err := entity.Get(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
-		if err := c.Bind(&entity); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		if entity.WorkflowID.IsNil() && c.FormValue("workflow_id") != "" {
-			entity.WorkflowID = types.WorkflowID(c.FormValue("workflow_id"))
-		}
-		if err := entity.Set(c); err != nil {
-			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-		}
-		return HandleJobsList(c)
 	}
-	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")
+	if err := c.Bind(&entity); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	if entity.WorkflowID.IsNil() && c.FormValue("workflow_id") != "" {
+		entity.WorkflowID = types.WorkflowID(c.FormValue("workflow_id"))
+	}
+	if err := entity.Set(c, update); err != nil {
+		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+	}
+	return HandleJobsList(c)
 }

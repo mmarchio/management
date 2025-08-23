@@ -3,6 +3,8 @@ package merrors
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/mmarchio/management/logger"
 )
 
 type Merror struct {
@@ -13,6 +15,7 @@ type Merror struct {
 	Function string
 	Wrapped  error
 	Code     ErrorCode
+	CalledBy string
 	DB 		*sql.DB
 }
 
@@ -27,6 +30,12 @@ type ErrorCode int16
 //Echo Errors
 type EchoBindError Merror
 
+func GetLogger(severity int) logger.LoggingContext {
+	r := logger.LoggingContext{Depth: 3, Severity: severity}
+	r.Init()
+	return r
+}
+
 func (c EchoBindError) New(s string, vars ...any) EchoBindError {
 	c = c.Wrap(fmt.Errorf(s, vars...))
 
@@ -38,7 +47,12 @@ func (c EchoBindError) Wrap(err error) EchoBindError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("EchoBindError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("EchoBindError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c EchoBindError) Log() EchoBindError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -64,7 +78,12 @@ func (c DBConnectionError) Wrap(err error) DBConnectionError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBConnectionError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBConnectionError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c DBConnectionError) Log() DBConnectionError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -89,7 +108,12 @@ func (c DBQueryError) Wrap(err error) DBQueryError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBConnectionError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBConnectionError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c DBQueryError) Log() DBQueryError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -114,7 +138,12 @@ func (c DBContentScanError) Wrap(err error) DBContentScanError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBContentScanError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBContentScanError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c DBContentScanError) Log() DBContentScanError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -139,7 +168,12 @@ func (c DBTransactionCommitError) Wrap(err error) DBTransactionCommitError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBTransactionCommitError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBTransactionCommitError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c DBTransactionCommitError) Log() DBTransactionCommitError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -164,7 +198,12 @@ func (c SQLDeleteErorr) Wrap(err error) SQLDeleteErorr {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("SQLDeleteErorr", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("SQLDeleteErorr", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c SQLDeleteErorr) Log() SQLDeleteErorr {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -189,7 +228,12 @@ func (c SQLQueryError) Wrap(err error) SQLQueryError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("SQLQueryError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("SQLQueryError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c SQLQueryError) Log() SQLQueryError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -214,7 +258,12 @@ func (c TransactionCommitError) Wrap(err error) TransactionCommitError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("TransactionCommitError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("TransactionCommitError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c TransactionCommitError) Log() TransactionCommitError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -239,7 +288,12 @@ func (c DBPrepareStatementError) Wrap(err error) DBPrepareStatementError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBPrepareStatementError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBPrepareStatementError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c DBPrepareStatementError) Log() DBPrepareStatementError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -264,7 +318,12 @@ func (c DBStatementQueryQueryError) Wrap(err error) DBStatementQueryQueryError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBStatementQueryQueryError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("DBStatementQueryQueryError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c DBStatementQueryQueryError) Log() DBStatementQueryQueryError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -290,7 +349,12 @@ func (c JSONUnmarshallingError) Wrap(err error) JSONUnmarshallingError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("JSONUnmarshallingError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("JSONUnmarshallingError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c JSONUnmarshallingError) Log() JSONUnmarshallingError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -315,7 +379,12 @@ func (c JSONMarshallingError) Wrap(err error) JSONMarshallingError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("JSONMarshallingError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("JSONMarshallingError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c JSONMarshallingError) Log() JSONMarshallingError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -341,7 +410,12 @@ func (c IDSetError) Wrap(err error) IDSetError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("IDSetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("IDSetError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c IDSetError) Log() IDSetError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -367,7 +441,12 @@ func (c ContextSetError) Wrap(err error) ContextSetError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContextSetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContextSetError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContextSetError) Log() ContextSetError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -392,7 +471,12 @@ func (c ContextGetError) Wrap(err error) ContextGetError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContextGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContextGetError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContextGetError) Log() ContextGetError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -419,7 +503,12 @@ func (c ContentGetError) Wrap(err error) ContentGetError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentGetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentGetError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentGetError) Log() ContentGetError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -444,7 +533,12 @@ func (c ContentSetError) Wrap(err error) ContentSetError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentSetError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentSetError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentSetError) Log() ContentSetError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -469,7 +563,12 @@ func (c ContentListError) Wrap(err error) ContentListError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentListError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentListError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentListError) Log() ContentListError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -494,7 +593,12 @@ func (c ContentListByError) Wrap(err error) ContentListByError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentListByError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentListByError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentListByError) Log() ContentListByError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -519,7 +623,12 @@ func (c ContentModelDeleteError) Wrap(err error) ContentModelDeleteError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentModelDeleteError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentModelDeleteError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentModelDeleteError) Log() ContentModelDeleteError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -544,7 +653,12 @@ func (c ContentFindByError) Wrap(err error) ContentFindByError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentFindByError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentFindByError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentFindByError) Log() ContentFindByError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -569,7 +683,12 @@ func (c ContentValidationError) Wrap(err error) ContentValidationError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentValidationError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentValidationError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentValidationError) Log() ContentValidationError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -594,7 +713,12 @@ func (c NilContentError) Wrap(err error) NilContentError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("NilContentError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("NilContentError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c NilContentError) Log() NilContentError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -635,7 +759,12 @@ func (c ContentCustomQueryError) Wrap(err error) ContentCustomQueryError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentCustomQueryError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentCustomQueryError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentCustomQueryError) Log() ContentCustomQueryError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -676,7 +805,12 @@ func (c ContentDeleteError) Wrap(err error) ContentDeleteError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentDeleteError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentDeleteError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentDeleteError) Log() ContentDeleteError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -717,7 +851,12 @@ func (c MSIConversionError) Wrap(err error) MSIConversionError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("MSIConversionError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("MSIConversionError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c MSIConversionError) Log() MSIConversionError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -758,7 +897,12 @@ func (c HTTPRequestError) Wrap(err error) HTTPRequestError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("HTTPRequestError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("HTTPRequestError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c HTTPRequestError) Log() HTTPRequestError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -799,7 +943,12 @@ func (c SetContextError) Wrap(err error) SetContextError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("SetContextError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("SetContextError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c SetContextError) Log() SetContextError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -840,7 +989,12 @@ func (c ContentToTypeError) Wrap(err error) ContentToTypeError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentToTypeError) Log() ContentToTypeError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -881,7 +1035,12 @@ func (c ContentToTypeGetError) Wrap(err error) ContentToTypeGetError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentToTypeGetError) Log() ContentToTypeGetError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -922,7 +1081,12 @@ func (c ContentToTypeSetError) Wrap(err error) ContentToTypeSetError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentToTypeSetError) Log() ContentToTypeSetError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -963,7 +1127,12 @@ func (c ContentToTypeListError) Wrap(err error) ContentToTypeListError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentToTypeListError) Log() ContentToTypeListError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -1004,7 +1173,12 @@ func (c ContentToTypeListByError) Wrap(err error) ContentToTypeListByError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentToTypeListByError) Log() ContentToTypeListByError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -1045,7 +1219,12 @@ func (c ContentToTypeFindByError) Wrap(err error) ContentToTypeFindByError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentToTypeError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentToTypeFindByError) Log() ContentToTypeFindByError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -1086,7 +1265,12 @@ func (c JPATHError) Wrap(err error) JPATHError {
         c.DB.Close()
     }
 	c.Wrapped = err
-	c.Err = fmt.Errorf("%s: %w\n", ErrString("JPATHError", c.Info, c.Package, c.Struct, c.Function, c.Err), c.Wrapped)
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("JPATHError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c JPATHError) Log() JPATHError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
 	return c
 }
 
@@ -1117,6 +1301,349 @@ func (c JPATHError) BubbleCode() JPATHError {
 	return c
 }
 
+type ParseContent Merror
+
+func (c ParseContent) New(s string, vars ...any) ParseContent {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c ParseContent) Wrap(err error) ParseContent {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ParseContent", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ParseContent) Log() ParseContent {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c ParseContent) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c ParseContent) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c ParseContent) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c ParseContent) BubbleCode() ParseContent {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type WebsocketDialError Merror
+
+func (c WebsocketDialError) New(s string, vars ...any) WebsocketDialError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c WebsocketDialError) Wrap(err error) WebsocketDialError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("WebsocketDialError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c WebsocketDialError) Log() WebsocketDialError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c WebsocketDialError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c WebsocketDialError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c WebsocketDialError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c WebsocketDialError) BubbleCode() WebsocketDialError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type WebsocketWriteError Merror
+
+func (c WebsocketWriteError) New(s string, vars ...any) WebsocketWriteError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c WebsocketWriteError) Wrap(err error) WebsocketWriteError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("WebsocketWriteError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c WebsocketWriteError) Log() WebsocketWriteError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c WebsocketWriteError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c WebsocketWriteError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c WebsocketWriteError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c WebsocketWriteError) BubbleCode() WebsocketWriteError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type WebsocketReadError Merror
+
+func (c WebsocketReadError) New(s string, vars ...any) WebsocketReadError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c WebsocketReadError) Wrap(err error) WebsocketReadError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("WebsocketReadError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c WebsocketReadError) Log() WebsocketReadError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c WebsocketReadError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c WebsocketReadError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c WebsocketReadError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c WebsocketReadError) BubbleCode() WebsocketReadError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type ContentCheckError Merror
+
+func (c ContentCheckError) New(s string, vars ...any) ContentCheckError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c ContentCheckError) Wrap(err error) ContentCheckError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("ContentCheckError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c ContentCheckError) Log() ContentCheckError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c ContentCheckError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c ContentCheckError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c ContentCheckError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c ContentCheckError) BubbleCode() ContentCheckError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type NodeExecError Merror
+
+func (c NodeExecError) New(s string, vars ...any) NodeExecError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c NodeExecError) Wrap(err error) NodeExecError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("NodeExecError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c NodeExecError) Log() NodeExecError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c NodeExecError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c NodeExecError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c NodeExecError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c NodeExecError) BubbleCode() NodeExecError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type CurlError Merror
+
+func (c CurlError) New(s string, vars ...any) CurlError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c CurlError) Wrap(err error) CurlError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("CurlError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c CurlError) Log() CurlError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c CurlError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c CurlError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c CurlError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c CurlError) BubbleCode() CurlError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
 type WrappedError interface {
 	Wrap(*sql.DB, error)
 	ErrorCode(int16)
@@ -1124,7 +1651,7 @@ type WrappedError interface {
 	Error() string
 }
 
-func ErrString(Type, Info, Package, Struct, Function string, Err error) string {
+func ErrString(Type, Info, Package, Struct, Function, CalledBy string, Err error) string {
 	errString := fmt.Sprintf("%s\n", Type)
 	errString += fmt.Sprintf("Info: %s\n", Info)
 	if Package != "" {
@@ -1135,6 +1662,9 @@ func ErrString(Type, Info, Package, Struct, Function string, Err error) string {
 	}
 	if Function != "" {
 		errString += fmt.Sprintf("Function: %s\n", Function)
+	}
+	if CalledBy != "" {
+		errString += fmt.Sprintf("CalledBy: %s\n", CalledBy)
 	}
 	return errString
 }

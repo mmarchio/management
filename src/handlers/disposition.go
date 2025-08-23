@@ -20,7 +20,7 @@ func RegisterDispositionRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetDisposition(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIGetDisposition called")
+	GetLogger(4).Flogger("HandleAPIGetDisposition called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewDisposition(&id)
 		if err := entity.Get(c); err != nil {
@@ -33,17 +33,21 @@ func HandleAPIGetDisposition(c echo.Context) error {
 
 func HandleAPISetDisposition(c echo.Context) error {
 	var err error
-	GetLogger().Flogger("HandleAPISetDisposition called")
+	var update bool
+	var id string
+	GetLogger(4).Flogger("HandleAPISetDisposition called")
+	if id = c.FormValue("id"); id != "" {
+		update = true
+	}
+	if id = c.Param("id"); id != "" {
+		update = true
+	}
 	entity := types.NewDisposition(nil)
 	if err := c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, merrors.EchoBindError{Package: "handlers", Function: "HandleAPISetDisposition"}.Wrap(err))
 	}
 	entity.Model.ID = c.FormValue("id")
-	entity, err = entity.SetID()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	err = entity.Set(c)
+	err = entity.Set(c, update)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -51,7 +55,7 @@ func HandleAPISetDisposition(c echo.Context) error {
 }
 
 func HandleAPIListDisposition(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIListDisposition called")
+	GetLogger(4).Flogger("HandleAPIListDisposition called")
 	disposition := types.NewDisposition(nil)
 	dispositions, err := disposition.List(c)
 	if err != nil {
@@ -61,7 +65,7 @@ func HandleAPIListDisposition(c echo.Context) error {
 }
 
 func HandleDispositions(c echo.Context) error {
-	GetLogger().Flogger("HandleDispositions called")
+	GetLogger(4).Flogger("HandleDispositions called")
 	dt := DisplayDisposition{
 		DisplayType: "none",
 		Menu: Menu{
@@ -73,7 +77,7 @@ func HandleDispositions(c echo.Context) error {
 }
 
 func HandleDispositionsNew(c echo.Context) error {
-	GetLogger().Flogger("HandleDispositionsNew called")
+	GetLogger(4).Flogger("HandleDispositionsNew called")
 	dt := DisplayDisposition{
 		Disposition: types.Disposition{},
 		DisplayType: "new",
@@ -87,7 +91,7 @@ func HandleDispositionsNew(c echo.Context) error {
 }
 
 func HandleDispositionGet(c echo.Context) error {
-	GetLogger().Flogger("HandleDispositionGet called")
+	GetLogger(4).Flogger("HandleDispositionGet called")
 	if id := c.Param("id"); id != "" {
 		disposition := types.NewDisposition(&id)
 		if err := disposition.Get(c); err != nil {
@@ -107,7 +111,7 @@ func HandleDispositionGet(c echo.Context) error {
 }
 
 func HandleDispositionsList(c echo.Context) error {
-	GetLogger().Flogger("HandleDispositionsList called")
+	GetLogger(4).Flogger("HandleDispositionsList called")
 	disposition := types.NewDisposition(nil)
 	dispositions, err := disposition.List(c)
 	if err != nil {
@@ -128,8 +132,12 @@ func HandleDispositionsList(c echo.Context) error {
 
 func HandleDispositionsSave(c echo.Context) error {
 	var err error
-	GetLogger().Flogger("HandleDispositionsSave called")
+	var update bool
+	GetLogger(4).Flogger("HandleDispositionsSave called")
 	entity := types.NewDisposition(nil)
+	if id := c.Param("id"); id != "" {
+		update = true
+	}	
 	if err := c.Bind(&entity); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleDispositionsSave"}.Wrap(err))
 	}
@@ -137,7 +145,7 @@ func HandleDispositionsSave(c echo.Context) error {
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error)
 	}
-	if err = entity.Set(c); err != nil {
+	if err = entity.Set(c, update); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err)
 	}
 	
@@ -153,7 +161,7 @@ func HandleDispositionsSave(c echo.Context) error {
 }
 
 func HandleDispositionsDelete(c echo.Context) error {
-	GetLogger().Flogger("HandleDispositionsDelete called")
+	GetLogger(4).Flogger("HandleDispositionsDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewDisposition(&id)
 		entity.Model.ID = c.Param("id")

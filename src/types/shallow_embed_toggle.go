@@ -12,7 +12,6 @@ import (
 
 type ShallowToggle struct {
 	ShallowModel
-	ID 			string `json:"id"`
 	NamePrefix 	string `json:"name_prefix"`
 	IdPrefix 	string `json:"id_suffix"`
 	Suffix 		string `json:"suffix"`
@@ -25,7 +24,7 @@ func (c ShallowToggle) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -36,11 +35,11 @@ func (c ShallowToggle) Expand(e echo.Context) (*Toggle, error) {
 	if c.CreatedAt.IsZero() {
 		m, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		c.ShallowModel = m.ShallowModel
 		if err := json.Unmarshal([]byte(m.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}

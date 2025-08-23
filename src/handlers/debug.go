@@ -33,7 +33,6 @@ func HandleDebugContentView(c echo.Context) error {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err)
 		}
 		jobrun.Model.ID = entity.Model.ID
-		jobrun.ID = types.RunID(jobrun.Model.ID)
 		jobrun.ContentType = "jobrun"
 		
 	}

@@ -11,7 +11,6 @@ import (
 
 type Workflow struct {
 	Model
-	ID 			string 			`form:"id" json:"id"`
 	Name 		string 			`form:"name" json:"name"`
 	ComfyNodes 	[]ComfyNode 	`form:"comfy_nodes" json:"comfy_nodes"`
 	OllamaNodes []OllamaNode 	`form:"ollama_nodes" json:"ollama_nodes"`
@@ -21,7 +20,6 @@ type Workflow struct {
 
 type ShallowWorkflow struct {
 	ShallowModel
-	ID 			string 			`form:"id" json:"id"`
 	Name 		string 			`form:"name" json:"name"`
 	ComfyNodes 	[]string 		`form:"comfy_nodes" json:"comfy_nodes"`
 	OllamaNodes []string 		`form:"ollama_nodes" json:"ollama_nodes"`
@@ -29,7 +27,7 @@ type ShallowWorkflow struct {
 	NodeOrder 	map[string]int 	`form:"node_order" json:"node_order"`
 }
 
-func (c ShallowWorkflow) Set(e echo.Context) error {
+func (c ShallowWorkflow) Set(e echo.Context, update bool) error {
 	content := Content{}
 	content.ID = c.ShallowModel.ID
 	content.Model.ID = c.ShallowModel.ID
@@ -39,23 +37,24 @@ func (c ShallowWorkflow) Set(e echo.Context) error {
 	content.Model.UpdatedAt = c.ShallowModel.UpdatedAt
 	b, err := json.Marshal(c)
 	if err != nil {
-		return merrors.JSONMarshallingError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowWorkflow", Function: "Set"}.Wrap(err)
+		return merrors.JSONMarshallingError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowWorkflow", Function: "Set"}.Wrap(err).Log()
 	}
 	content.Content = string(b)
-	if err := content.Set(e); err != nil {
+	if err := content.Set(e, update); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (c ShallowWorkflow) Get(e echo.Context, mode string) (*Workflow, *ShallowWorkflow, error) {
-	content := Content{ID: c.ShallowModel.ID}
+	content := Content{}
+	content.Model.ID = c.ShallowModel.ID
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.ShallowModel.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if mode == "shallow" {
 		if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-			return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+			return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 		}
 		return nil, &c, nil
 	}
@@ -85,7 +84,7 @@ func (c ShallowWorkflow) SetName(e echo.Context, id string) error {
 	c.Name = id
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -97,7 +96,7 @@ func (c ShallowWorkflow) SetComfyNodes(e echo.Context, ids []string) error {
 	c.ComfyNodes = append(c.ComfyNodes, ids...)
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -109,7 +108,7 @@ func (c ShallowWorkflow) AppendComfyNodes(e echo.Context, id string) error {
 	c.ComfyNodes = append(c.ComfyNodes, id)
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -121,7 +120,7 @@ func (c ShallowWorkflow) SetOllamaNodes(e echo.Context, ids []string) error {
 	c.OllamaNodes = append(c.OllamaNodes, ids...)
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -133,7 +132,7 @@ func (c ShallowWorkflow) AppendOllamaNodes(e echo.Context, id string) error {
 	c.OllamaNodes = append(c.OllamaNodes, id)
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -145,7 +144,7 @@ func (c ShallowWorkflow) SetSSHNodes(e echo.Context, ids []string) error {
 	c.SSHNodes = append(c.SSHNodes, ids...)
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -157,7 +156,7 @@ func (c ShallowWorkflow) AppendSSHNodes(e echo.Context, id string) error {
 	c.SSHNodes = append(c.SSHNodes, id)
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -168,7 +167,7 @@ func (c ShallowWorkflow) SetNodeOrder(e echo.Context, no map[string]int) error {
 	c.NodeOrder = no
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -179,7 +178,7 @@ func (c ShallowWorkflow) SetNodeOrderIndex(e echo.Context, id string, v int) err
 	c.NodeOrder[id] = v
 	c.ShallowModel.UpdatedAt = time.Now()
 	if c.ShallowModel.ID != "" {
-		if err := c.Set(e); err != nil {
+		if err := c.Set(e, true); err != nil {
 			return err
 		}
 	}
@@ -203,42 +202,42 @@ func NewShallowWorkflow(id *string) ShallowWorkflow {
 func (c *Workflow) Validate() {
 	valid := true
 	if !c.Model.Validate() {
-		GetLogger().Flogger("workflow model is not valid")
+		GetLogger(4).Flogger("workflow model is not valid")
 		valid = false
 	}
 	if c.ID != c.Model.ID {
-		GetLogger().Flogger("id does not match model")
+		GetLogger(4).Flogger("id does not match model")
 	}
 	if c.Model.ContentType != "workflow" {
-		GetLogger().Flogger("content type is wrong")
+		GetLogger(4).Flogger("content type is wrong")
 		valid = false
 	}
 	if c.ID == "" {
-		GetLogger().Flogger("id is nil")
+		GetLogger(4).Flogger("id is nil")
 		valid = false
 	}
 	if c.Name == "" {
-		GetLogger().Flogger("name is nil")
+		GetLogger(4).Flogger("name is nil")
 		valid = false
 	}
 	for _, node := range c.ComfyNodes {
 		node.Validate()
 		if !node.Model.Validated {
-			GetLogger().Flogger("node: %s is not valid", node.Model.ID)
+			GetLogger(4).Flogger("node: %s is not valid", node.Model.ID)
 			valid = false
 		}
 	}
 	for _, node := range c.OllamaNodes {
 		node.Validate()
 		if !node.Model.Validated {
-			GetLogger().Flogger("node: %s is not valid\n", node.Model.ID)
+			GetLogger(4).Flogger("node: %s is not valid\n", node.Model.ID)
 			valid = false
 		}
 	}
 	for _, node := range c.SSHNodes {
 		node.Validate()
 		if !node.Model.Validated {
-			GetLogger().Flogger("node: %s is not valid\n", node.Model.ID)
+			GetLogger(4).Flogger("node: %s is not valid\n", node.Model.ID)
 			valid = false
 		}
 	}

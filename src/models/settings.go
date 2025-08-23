@@ -10,7 +10,6 @@ import (
 
 type Settings struct {
 	Model
-	ID 				string `json:"id"`
 	Template 		Template `json:"template_id"`
 	GlobalBypass 	Steps `json:"global_bypass"`
 	Recurring 		Toggle `json:"recurring"`
@@ -21,7 +20,6 @@ type Settings struct {
 
 type ShallowSettings struct {
 	Model
-	ID 				string `json:"id"`
 	Template 		string `json:"template_id"`
 	GlobalBypass 	string `json:"global_bypass"`
 	Recurring 		string `json:"recurring"`

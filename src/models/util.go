@@ -40,8 +40,8 @@ func replaceUUID(input, match, replace string) (string, error) {
     return result, nil
 }
 
-func GetLogger() logger.LoggingContext {
-	r := logger.LoggingContext{}
+func GetLogger(severity int) logger.LoggingContext {
+	r := logger.LoggingContext{Severity: severity}
 	r.Init()
 	return r
 }

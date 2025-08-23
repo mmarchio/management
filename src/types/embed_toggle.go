@@ -15,7 +15,6 @@ import (
 
 type Toggle struct {
 	Model
-	ID 			string `json:"id"`
 	NamePrefix 	string `json:"name_prefix"`
 	IdPrefix 	string `json:"id_suffix"`
 	Suffix 		string `json:"suffix"`
@@ -120,11 +119,11 @@ func (c Toggle) Get(e echo.Context) (*Toggle, error) {
 	input.ID = c.Model.ID
 	output, err := input.Get(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	toggle := c
 	if err := json.Unmarshal([]byte(output.Content), &toggle); err != nil {
-		return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+		return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 	}
 	return &toggle, nil
 }

@@ -8,7 +8,6 @@ import (
 
 type SystemPrompt struct {
 	Model
-	ID string
 	Name string
 	Domain string
 	Prompt string
@@ -16,7 +15,6 @@ type SystemPrompt struct {
 
 type ShallowSystemPrompt struct {
 	Model
-	ID string
 	Name string
 	Domain string
 	Prompt string

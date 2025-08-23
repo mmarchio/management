@@ -75,11 +75,11 @@ func NewShallowContext(prompt Prompt, jobRunID RunID, disposition Disposition) S
 func (c ShallowContext) ToModel() (*models.ShallowContext, error) {
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "ToModel"}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "ToModel"}.Wrap(err).Log()
 	}
 	r := models.ShallowContext{}
 	if err := json.Unmarshal(b, &r); err != nil {
-		return nil, merrors.JSONUnmarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err) 
+		return nil, merrors.JSONUnmarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err).Log() 
 	}
 	return &r, nil
 }
@@ -89,11 +89,11 @@ func (c *ShallowContext) FromModel(ptr *models.ShallowContext) error {
 		e := *ptr
 		b, err := json.Marshal(e)
 		if err != nil {
-			return merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err)
+			return merrors.JSONMarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err).Log()
 		}
 		d := ShallowContext{}
 		if err := json.Unmarshal(b, &d); err != nil {
-			return merrors.JSONUnmarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err)
+			return merrors.JSONUnmarshallingError{Package:"types", Struct:"ShallowContext", Function: "FromModel"}.Wrap(err).Log()
 		}
 		c = &d
 	}
@@ -114,7 +114,7 @@ func GetShallowSystemPrompts(e echo.Context) ([]string, error) {
 	systemPrompt := NewShallowSystemPrompt(nil, &ct)
 	systemPrompts, err := systemPrompt.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err)
+		return nil, merrors.ContentListError{Package: "types", Function: "GetSystemPrompts"}.Wrap(err).Log()
 	}
 	list := make([]string, 0)
 	for _, sp := range systemPrompts {

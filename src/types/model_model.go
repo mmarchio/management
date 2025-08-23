@@ -20,11 +20,16 @@ type Model struct {
 	CreatedAt 	time.Time
 	UpdatedAt 	time.Time
 	ContentType string
+	Slug		string
 	Table 		string
 	Columns 	string
 	Values 		string
 	Conflict 	string
 	Validated   bool
+}
+
+func (c Model) GetEntityModel() Model {
+	return c
 }
 
 func (c Model) IsNil() bool {
@@ -42,14 +47,17 @@ func (c Model) FromShallowModel(m ShallowModel) Model {
 	return c
 }
 
-func (c Model) Validate() bool {
+func (c *Model) Validate() bool {
 	valid := true
 	if c.ID == "" {
+		GetLogger(2).Flogger("model id is nil")
 		valid = false
 	}
 	if c.CreatedAt.IsZero() || c.UpdatedAt.IsZero() {
+		GetLogger(2).Flogger("created_at or updated_at is zero")
 		valid = false
 	}
+	c.Validated = valid
 	return valid
 }
 
@@ -61,24 +69,25 @@ func (c *Model) New(id *string) {
 	}
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = c.CreatedAt
+	c.Columns = "id, created_at, updated_at, content_type, content"
 }
 
 func (c Model) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err).Log()
 	}
 	typesContext.FromModel(systemContext)
 	return &typesContext, nil
 }
 
 func (c Model) SetCtx(e echo.Context) (context.Context, error) {
-	ctx := GetLogger().Flogger("Get called").Ctx
+	ctx := GetLogger(4).Flogger("Get called").Ctx
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err).Log()
 	}
 	ctx = s.SetCtx(e)
 	return ctx, nil
@@ -112,18 +121,18 @@ func (c EmbedModel) GetCtx(e echo.Context) (*Context, error) {
 	typesContext := Context{}
 	systemContext, err := models.Context{}.GetCtx(e)
 	if err != nil {
-		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err)
+		return nil, merrors.ContextGetError{Package: "types", Struct: "Context", Function: "GetCtx"}.Wrap(err).Log()
 	}
 	typesContext.FromModel(systemContext)
 	return &typesContext, nil
 }
 
 func (c EmbedModel) SetCtx(e echo.Context) (context.Context, error) {
-	ctx := GetLogger().Flogger("Get called").Ctx
+	ctx := GetLogger(4).Flogger("Get called").Ctx
 	systemContext := Context{}
 	s, err := systemContext.ToModel()
 	if err != nil {
-		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err)
+		return ctx, merrors.SetContextError{Package:"types", Struct:"Context", Function: "SetCtx"}.Wrap(err).Log()
 	}
 	ctx = s.SetCtx(e)
 	return ctx, nil

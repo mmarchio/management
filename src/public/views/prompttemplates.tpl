@@ -23,6 +23,14 @@
         {{.Context}}
         </pre>
             {{end}}
+            {{if eq .DisplayType "edit"}}
+        <form action="/prompttemplates/save{{if .ID}}/{{.ID}}{{end}}" method="POST" style="float:left; clear:left;">
+        {{template "form.prompttemplate" .}}
+        </form>
+        <pre style="float:right; margin-right: 1000px;">
+        {{.Context}}
+        </pre>
+            {{end}}
             {{if eq .DisplayType "list"}}
         <table>
             <tr>

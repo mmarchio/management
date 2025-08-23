@@ -10,7 +10,6 @@ import (
 
 type Settings struct {
 	EmbedModel
-	ID 					string 		`json:"id"`
 	Name 				string 		`json:"name"`
 	TemplateModel 		Template 	`json:"template_model"`
 	GlobalBypassModel 	Steps 		`json:"global_bypass_model"`

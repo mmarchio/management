@@ -9,7 +9,6 @@ import (
 
 type Template struct {
 	EmbedModel
-	ID 						TemplateID `form:"id" json:"id"`
 	Name 					string `form:"name" json:"name"`
 	DispositionsArrayModel 	[]Disposition `form:"dispositions" json:"dispositions_array_model"`
 	CurrentDisposition 		int64
@@ -17,7 +16,7 @@ type Template struct {
 }
 
 func (c Template) IsNil() bool {
-	if c.EmbedModel.IsNil() && c.ID.IsNil() && c.Name == "" && len(c.DispositionsArrayModel) == 0 && c.CurrentDisposition == 0 && len(c.AvailableDispositions) == 0 {
+	if c.EmbedModel.IsNil() && c.Name == "" && len(c.DispositionsArrayModel) == 0 && c.CurrentDisposition == 0 && len(c.AvailableDispositions) == 0 {
 		return true
 	}
 	return false

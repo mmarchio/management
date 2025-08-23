@@ -10,7 +10,6 @@ import (
 
 type Template struct {
 	Model
-	ID 					string 				`json:"id"`
 	Name 				string 				`json:"name"`
 	Dispositions 		[]Disposition 		`json:"dispositions"`
 	CurrentDisposition 	int64 				`json:"current_disposition"`
@@ -20,7 +19,6 @@ type Template struct {
 
 type ShallowTemplate struct {
 	Model
-	ID 					string 				`json:"id"`
 	Name 				string 				`json:"name"`
 	Dispositions 		[]string			`json:"dispositions"`
 	CurrentDisposition 	int64 				`json:"current_disposition"`

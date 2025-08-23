@@ -11,16 +11,15 @@ import (
 
 type ShallowSSHNode struct {
 	ShallowModel
-	ID 			string `json:"id"`
-	Name 		string `form:"name" json:"name"`
-	Command 	string `form:"command" json:"command"`
-	User 		string `form:"user" json:"user"`
-	Host 		string `form:"host" json:"host"`
-	WorkflowID  WorkflowID `form:"workflow_id" json:"workflow_id"`
-	Type 		string `form:"type" json:"type"`
-	Enabled 	bool   `json:"enabled"`
-	Bypass 		bool   `json:"bypass"`
-	Output 		string `form:"output" json:"output"`
+	Name       string     `form:"name" json:"name"`
+	Command    string     `form:"command" json:"command"`
+	User       string     `form:"user" json:"user"`
+	Host       string     `form:"host" json:"host"`
+	WorkflowID WorkflowID `form:"workflow_id" json:"workflow_id"`
+	Type       string     `form:"type" json:"type"`
+	Enabled    bool       `json:"enabled"`
+	Bypass     bool       `json:"bypass"`
+	Output     string     `form:"output" json:"output"`
 }
 
 func (c ShallowSSHNode) ToContent() (*Content, error) {
@@ -28,7 +27,7 @@ func (c ShallowSSHNode) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -42,7 +41,7 @@ func (c ShallowSSHNode) Expand(e echo.Context) (*SSHNode, error) {
 			return nil, err
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -60,7 +59,7 @@ func (c ShallowSSHNode) Expand(e echo.Context) (*SSHNode, error) {
 	return &r, nil
 }
 
-func (c ShallowSSHNode) Validate() params {
+func (c ShallowSSHNode) Validate() ShallowSSHNode {
 	valid := true
 	if !c.ShallowModel.Validate() {
 		valid = false
@@ -133,13 +132,13 @@ func (c *ShallowSSHNode) FromMSI(msi map[string]interface{}) error {
 	if createdAt, ok := msi["CreatedAt"].(string); ok {
 		c.ShallowModel.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct:"SSHNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "createdAt", Package: "types", Struct: "SSHNode", Function: "FromMSI"}.Wrap(err).Log()
 		}
 	}
 	if updatedAt, ok := msi["UpdatedAt"].(string); ok {
 		c.ShallowModel.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
-			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct:"SSHNode", Function: "FromMSI"}.Wrap(err)
+			return merrors.MSIConversionError{Info: "updatedAt", Package: "types", Struct: "SSHNode", Function: "FromMSI"}.Wrap(err).Log()
 		}
 	}
 	if ct, ok := msi["ContentType"].(string); ok {
@@ -163,28 +162,30 @@ func (c *ShallowSSHNode) Get(e echo.Context) error {
 	content.Model.ContentType = "sshnode"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "node", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func NewShallowSSHNodeTypeContent() Content {
-	c := Content{}
-	c.Model.ContentType = "sshnode"
+func NewShallowSSHNodeTypeContent() ShallowContent {
+	c := ShallowContent{}
+	c.ShallowModel.ContentType = "sshnode"
 	return c
 }
 
 func (c ShallowSSHNode) Delete(e echo.Context) error {
 	content := NewSSHNodeTypeContent()
-	content.FromType(c)
+	content.FromType(c, content.Model)
 	content.Model.ID = c.ShallowModel.ID
-	content.ID = c.ID
+	content.Model.CreatedAt = c.ShallowModel.CreatedAt
+	content.Model.UpdatedAt = c.ShallowModel.UpdatedAt
+	content.Model.ContentType = c.ShallowModel.ContentType
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.ShallowModel.ID, Package: "types", Struct: "sshnode", Function: "delete"}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -215,18 +216,17 @@ func NewShallowSSHNode(id *string) SSHNode {
 	return c
 }
 
-func (c ShallowSSHNode) Set(e echo.Context) error {
+func (c ShallowSSHNode) Set(e echo.Context, update bool) error {
 	c.Validate()
 	if !c.ShallowModel.Validated {
 		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
 	}
-	content := NewSSHNodeTypeContent()
-	content.FromType(c)
-	content.Model.ID = c.ShallowModel.ID
-	content.ID = c.ShallowModel.ID
-	err := content.Set(e)
+	content := NewShallowSSHNodeTypeContent()
+	content.FromType(c, c.ShallowModel)
+	content.ShallowModel = c.ShallowModel
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }

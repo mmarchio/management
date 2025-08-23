@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
@@ -13,7 +14,7 @@ func NewJobStatus() JobStatus {
 	c := JobStatus{}
 	c.Model.ContentType = "comfyuitemplate"
 	return c
-} 
+}
 
 func NewJobStatusModelContent() models.Content {
 	c := models.Content{}
@@ -29,17 +30,15 @@ func NewJobStatusTypeContent() Content {
 
 type JobStatus struct {
 	Model
-	ID 				JobStatusID `json:"id"`
-	JobID 			JobID 		`json:"job_id"`
-	StatusType 		string 		`json:"status_type"`
-	StatusContext 	Context 	`json:"status_context"`
-	CreatedAt 		time.Time 	`json:"created_at"`
-	UpdatedAt 		time.Time 	`json:"updated_at"`
+	JobID         JobID     `json:"job_id"`
+	StatusType    string    `json:"status_type"`
+	StatusContext Context   `json:"status_context"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 func (c *JobStatus) New() {
-	c.ID = c.ID.New()
-	c.Model.ID = c.ID.String()
+	c.Model.ID = uuid.NewString()
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
 }
@@ -48,14 +47,14 @@ func (c JobStatus) List(e echo.Context) ([]JobStatus, error) {
 	content := NewJobStatusModelContent()
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]JobStatus, 0)
 	for _, model := range contents {
 		cut := NewJobStatus()
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobStatus", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobStatus", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -66,14 +65,14 @@ func (c JobStatus) ListBy(e echo.Context, key string, value interface{}) ([]JobS
 	content := NewJobStatusModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListByError{Info: c.Model.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]JobStatus, 0)
 	for _, model := range contents {
 		cut := JobStatus{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobStatus", Function: "ListBy"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "JobStatus", Function: "ListBy"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -86,21 +85,21 @@ func (c *JobStatus) Get(e echo.Context) error {
 	content.Model.ContentType = "jobstatus"
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "JobStatus", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "JobStatus", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
 
 func (c JobStatus) Delete(e echo.Context) error {
 	content := NewJobStatusTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.Model)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	return nil
 }

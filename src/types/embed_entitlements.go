@@ -61,7 +61,7 @@ func (c *Entitlements) New(parent ITable) (string, error) {
 	c.FacebookModel.New(*c)
 	embedBytes, err := json.Marshal(c)
 	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(err)
+		return "", merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	return string(embedBytes), nil
 }

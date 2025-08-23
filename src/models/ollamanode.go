@@ -11,7 +11,6 @@ import (
 
 type OllamaNode struct {
 	Model
-	ID 				string `json:"id"`
 	Name 			string `form:"name" json:"name"`
 	OllamaModel 	string `form:"model" json:"model"`
 	SystemPrompt 	string `form:"system_prompt" json:"system_prompt"`
@@ -27,7 +26,6 @@ type OllamaNode struct {
 
 type ShallowOllamaNode struct {
 	Model
-	ID 				string `json:"id"`
 	Name 			string `form:"name" json:"name"`
 	OllamaModel 	string `form:"model" json:"model"`
 	SystemPrompt 	string `form:"system_prompt" json:"system_prompt"`
@@ -56,12 +54,13 @@ func NewShallowOllamaNode(id *string) ShallowOllamaNode {
 }
 
 func (c ShallowOllamaNode) Get(e echo.Context, mode string) (*OllamaNode, *ShallowOllamaNode, error) {
-	content := Content{ID: c.Model.ID}
+	content := Content{}
+	content.Model.ID = c.Model.ID
 	if err := content.Get(e); err != nil {
-		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.ContentGetError{Info: c.Model.ID, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if err := json.Unmarshal([]byte(content.Content), &c); err != nil {
-		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err)
+		return nil, nil, merrors.JSONUnmarshallingError{Info: content.Content, Package: "models", Struct: "ShallowOllamaNode", Function: "Get"}.Wrap(err).Log()
 	}
 	if mode == "shallow" {
 		return nil, &c, nil

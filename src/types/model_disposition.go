@@ -16,7 +16,7 @@ func NewDisposition(id *string) Disposition {
 	c.Model.ContentType = "disposition"
 	c, _ = ValidateDisposition(c)
 	return c
-} 
+}
 
 func NewDispositionModelContent() models.Content {
 	c := models.Content{}
@@ -32,14 +32,13 @@ func NewDispositionTypeContent() Content {
 
 type Disposition struct {
 	Model
-	ID 						DispositionID 	`json:"id"`
-	Name 					string 			`form:"name" json:"name"`
-	MinDuration 			int64 			`form:"min_duration" json:"min_duration"`
-	MaxDuration 			int64 			`form:"max_duration" json:"max_duration"`
-	AdvertisementDuration 	int64 			`form:"advertisement_duration" json:"advertisement_duration"`
-	EntitlementsModel 		Entitlements 	`form:"entitlements" json:"entitlements_model"`
-	VerificationModel 		Steps 			`form:"verification" json:"verification_model"`
-	BypassModel 			Steps 			`form:"bypass" json:"bypass_model"`
+	Name                  string       `form:"name" json:"name"`
+	MinDuration           int64        `form:"min_duration" json:"min_duration"`
+	MaxDuration           int64        `form:"max_duration" json:"max_duration"`
+	AdvertisementDuration int64        `form:"advertisement_duration" json:"advertisement_duration"`
+	EntitlementsModel     Entitlements `form:"entitlements" json:"entitlements_model"`
+	VerificationModel     Steps        `form:"verification" json:"verification_model"`
+	BypassModel           Steps        `form:"bypass" json:"bypass_model"`
 }
 
 func (c Disposition) Pack() []shallowmodel {
@@ -66,7 +65,6 @@ func (c *Disposition) New(id *string) {
 	} else {
 		c.Model.ID = uuid.NewString()
 	}
-	c.ID = DispositionID(c.Model.ID)
 	c.Model.CreatedAt = time.Now()
 	c.Model.UpdatedAt = c.Model.CreatedAt
 	c.EntitlementsModel.New(c)
@@ -75,17 +73,18 @@ func (c *Disposition) New(id *string) {
 }
 
 func (c Disposition) List(e echo.Context) ([]Disposition, error) {
+	GetLogger(4).Flogger("Disposition List Called")
 	content := NewDispositionModelContent()
 	contents, err := content.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]Disposition, 0)
 	for _, model := range contents {
 		cut := NewDisposition(nil)
 		cut, err = cut.Unmarshal(model.Content)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -93,17 +92,18 @@ func (c Disposition) List(e echo.Context) ([]Disposition, error) {
 }
 
 func (c Disposition) ListBy(e echo.Context, key string, value interface{}) ([]Disposition, error) {
+	GetLogger(4).Flogger("Disposition ListBy Called")
 	content := NewDispositionModelContent()
 	contents, err := content.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err)
+		return nil, merrors.ContentListError{Info: c.Model.ContentType}.Wrap(err).Log()
 	}
 	cuts := make([]Disposition, 0)
 	for _, model := range contents {
 		cut := Disposition{}
 		err = json.Unmarshal([]byte(model.Content), &cut)
 		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{Info: model.Content, Package: "types", Struct: "Disposition", Function: "List"}.Wrap(err).Log()
 		}
 		cuts = append(cuts, cut)
 	}
@@ -111,37 +111,38 @@ func (c Disposition) ListBy(e echo.Context, key string, value interface{}) ([]Di
 }
 
 func (c *Disposition) Get(e echo.Context) error {
+	GetLogger(4).Flogger("Disposition Get Called")
 	content := NewDispositionTypeContent()
 	content.Model.ContentType = "disposition"
 	content.Model.ID = c.Model.ID
 	content, err := content.Get(e)
 	if err != nil {
-		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentGetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	err = json.Unmarshal([]byte(content.Content), c)
 	if err != nil {
-		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Disposition", Function: "Get"}.Wrap(err)
+		return merrors.JSONUnmarshallingError{Info: content.Content, Package: "types", Struct: "Disposition", Function: "Get"}.Wrap(err).Log()
 	}
 	return nil
 }
 
-func (c Disposition) Set(e echo.Context) error {
+func (c Disposition) Set(e echo.Context, update bool) error {
 	content := NewDispositionTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.Model)
 	content.Model.ID = c.Model.ID
-	err := content.Set(e)
+	err := content.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	return nil
 }
 
 func (c Disposition) Delete(e echo.Context) error {
 	content := NewDispositionTypeContent()
-	content.FromType(c)
+	content.FromType(c, c.Model)
 	content.Model.ID = c.Model.ID
 	if err := content.Delete(e); err != nil {
-		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err)
+		return merrors.ContentDeleteError{Info: c.Model.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -154,28 +155,14 @@ func (c Disposition) GetContentType() string {
 	return c.Model.ContentType
 }
 
-func (c Disposition) SetID() (Disposition, error) {
-	var err error
-	c.ID = DispositionID(c.Model.ID)
-	if err != nil {
-		return c, merrors.IDSetError{Info: "disposition"}.Wrap(err)
-	}
-	return c, nil
-}
-
 func (c Disposition) Unmarshal(j string) (Disposition, error) {
 	model := models.Disposition{}
 	model.Model.ContentType = "disposition"
 	if err := json.Unmarshal([]byte(j), &model); err != nil {
-		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "Disposition", Function: "Unmarshal"}.Wrap(err)
+		return c, merrors.JSONUnmarshallingError{Info: j, Package: "types", Struct: "Disposition", Function: "Unmarshal"}.Wrap(err).Log()
 	}
 	c.Model.FromModel(model.Model)
 
-	d, err := c.SetID()
-	if err != nil {
-		return c, merrors.IDSetError{Info: "disposition"}.Wrap(err)
-	}
-	c = d
 	c.Name = model.Name
 	c.MinDuration = model.MinDuration
 	c.MaxDuration = model.MaxDuration

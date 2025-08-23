@@ -49,7 +49,12 @@
             {{if eq .DisplayType "none"}}
             {{end}}
             {{if eq .DisplayType "new"}}
-        <form action="/workflow/save{{if .ID}}/{{.ID}}{{end}}" method="POST">
+        <form action="/workflow/save{{if .ID}}/{{.ID}}{{end}}" method="POST" name="workflow" id="workflow">
+        {{template "form.workflow" .}}
+        </form>
+            {{end}}
+            {{if eq .DisplayType "edit"}}
+        <form action="/workflow/save{{if .ID}}/{{.ID}}{{end}}" method="POST" name="workflow" id="workflow">
         {{template "form.workflow" .}}
         </form>
             {{end}}

@@ -27,10 +27,10 @@ func (c ShallowContent) Expand(e echo.Context) (*Content, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -56,7 +56,7 @@ func (c *ShallowContent) Get(e echo.Context) (ShallowContent, error) {
 	contentModel.ID = c.ID
 	err := contentModel.Get(e)
 	if err != nil {
-		return *c, merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return *c, merrors.ContentGetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	d := c.FromModel(contentModel)
 	return d, nil
@@ -70,7 +70,7 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 		contentModel.ContentType = c.ContentType
 		_, err := contentModel.CustomQuery(e, write, q, vars...)
 		if err != nil {
-			return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err)
+			return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).Log()
 		}
 		return nil, nil
 	}
@@ -80,7 +80,7 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 	contentModel.ContentType = c.ContentType
 	res, err := contentModel.CustomQuery(e, write, q, vars...)
 	if err != nil {
-		return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).BubbleCode()
+		return nil, merrors.ContentCustomQueryError{Info: c.ShallowModel.ID, Package: "types", Struct: "Content", Function: "CustomQuery"}.Wrap(err).Log().BubbleCode()
 	}
 	r := make([]ShallowContent, 0)
 	for _, t := range res {
@@ -90,13 +90,13 @@ func (c ShallowContent) CustomQuery(e echo.Context, write bool, q string, vars .
 	return r, nil
 }
 
-func (c ShallowContent) Set(e echo.Context) error {
+func (c ShallowContent) Set(e echo.Context, update bool) error {
 	contentModel := c.ToModel()
 	contentModel.ShallowModel.ID = c.ShallowModel.ID
 	contentModel.ID = c.ShallowModel.ID
-	err := contentModel.Set(e)
+	err := contentModel.Set(e, update)
 	if err != nil {
-		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err)
+		return merrors.ContentSetError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func (c *ShallowContent) FindBy(e echo.Context, key, value string) (ShallowConte
 	contentModel := models.ShallowContent{}
 	contentModel.ShallowModel.ID = c.ShallowModel.ID
 	if err := contentModel.FindBy(e, key, value); err != nil {
-		return *c, merrors.ContentFindByError{Info: c.ShallowModel.ID}.Wrap(err)
+		return *c, merrors.ContentFindByError{Info: c.ShallowModel.ID}.Wrap(err).Log()
 	}
 	if contentModel.Content == "" {
 		return *c, merrors.NilContentError{Package: "types", Struct: "ShallowContent", Function: "FindBy"}.New("nil content error").BubbleCode()
@@ -119,7 +119,7 @@ func (c ShallowContent) Delete(e echo.Context) error {
 	contentModel.Model.ID = c.ShallowModel.ID
 	contentModel.ID = c.ID
 	if err := contentModel.Delete(e); err != nil {
-		return merrors.ContentModelDeleteError{}.Wrap(err)
+		return merrors.ContentModelDeleteError{}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -142,14 +142,17 @@ func (c ShallowContent) ToModel() models.ShallowContent {
 	return m
 }
 
-func (c *ShallowContent) FromType(m ITable) error {
+func (c *ShallowContent) FromType(m ITable, model ShallowModel) error {
 	b, err := json.Marshal(m)
 	if err != nil {
-		return merrors.JSONMarshallingError{Info: m.GetContentType()}.Wrap(err)
+		return merrors.JSONMarshallingError{Info: m.GetContentType()}.Wrap(err).Log()
 	}
+	c.ShallowModel = model
 	c.Content = string(b)
 	return nil
 }
+
+
 
 func (c ShallowContent) IsShallowModel() bool {
 	return true

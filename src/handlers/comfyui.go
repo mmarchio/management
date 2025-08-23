@@ -19,7 +19,7 @@ func RegisterComfyUITemplatesRoutes(e *echo.Echo) {
 }
 
 func HandleAPIGetComfyUITemplate(e echo.Context) error {
-	GetLogger().Flogger("HandleAPIGetComfyUITemplate called")
+	GetLogger(4).Flogger("HandleAPIGetComfyUITemplate called")
 	if id := e.Param("id"); id != "" {
 		entity := types.NewComfyUITemplate(&id)
 		if err := entity.Get(e); err != nil {
@@ -31,24 +31,24 @@ func HandleAPIGetComfyUITemplate(e echo.Context) error {
 }
 
 func HandleAPISetComfyUITemplate(c echo.Context) error {
-	GetLogger().Flogger("HandleAPISetComfyUITemplate called")
+	GetLogger(4).Flogger("HandleAPISetComfyUITemplate called")
 	var err error
+	var update bool
+	if id := c.Param("id"); id != "" {
+		update = true
+	}
 	entity := types.NewComfyUITemplate(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	entity, err = entity.SetID()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	if err = entity.Set(c); err != nil {
+	if err = entity.Set(c, update); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, entity)
 }
 
 func HandleAPIListComfyUITemplate(c echo.Context) error {
-	GetLogger().Flogger("HandleAPIListComfyUITemplate called")
+	GetLogger(4).Flogger("HandleAPIListComfyUITemplate called")
 	prompt := types.NewComfyUITemplate(nil)
 	prompts, err := prompt.List(c)
 	if err != nil {
@@ -58,7 +58,7 @@ func HandleAPIListComfyUITemplate(c echo.Context) error {
 }
 
 func HandleComfyUITemplates(c echo.Context) error {
-	GetLogger().Flogger("HandleComfyUITemplates called")
+	GetLogger(4).Flogger("HandleComfyUITemplates called")
 	dt := DisplayComfyUITemplate{
 		ComfyUITemplate: types.ComfyUITemplate{},
 		DisplayType: "new",
@@ -71,7 +71,7 @@ func HandleComfyUITemplates(c echo.Context) error {
 }
 
 func HandleComfyUITemplatesNew(c echo.Context) error {
-	GetLogger().Flogger("HandleComfyUITemplatesNew called")
+	GetLogger(4).Flogger("HandleComfyUITemplatesNew called")
 	dt := DisplayComfyUITemplate{
 		ComfyUITemplate: types.ComfyUITemplate{},
 		DisplayType: "new",
@@ -85,16 +85,16 @@ func HandleComfyUITemplatesNew(c echo.Context) error {
 
 func HandleComfyUITemplateSave(c echo.Context) error {
 	var err error
-	GetLogger().Flogger("HandleComfyUITemplateSave called")
+	var update bool
+	GetLogger(4).Flogger("HandleComfyUITemplateSave called")
+	if id := c.Param("id"); id != "" {
+		update = true
+	}
 	entity := types.NewComfyUITemplate(nil)
 	if err = c.Bind(&entity); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfyUITemplateSave"}.Wrap(err))
 	}
-	entity, err = entity.SetID()
-	if err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
-	}
-	if err = entity.Set(c); err != nil {
+	if err = entity.Set(c, update); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
 
@@ -111,7 +111,7 @@ func HandleComfyUITemplateSave(c echo.Context) error {
 
 func HandleComfyUITemplateList(c echo.Context) error {
 	var err error
-	GetLogger().Flogger("HandleComfyUITemplateList called")
+	GetLogger(4).Flogger("HandleComfyUITemplateList called")
 	entity := types.NewComfyUITemplate(nil)
 	entities, err := entity.List(c)
 	if err != nil {
@@ -131,7 +131,7 @@ func HandleComfyUITemplateList(c echo.Context) error {
 }
 
 func HandleComfyUITemplatesGet(c echo.Context) error {
-	GetLogger().Flogger("HandleComfyUITemplatesGet called")
+	GetLogger(4).Flogger("HandleComfyUITemplatesGet called")
 	if cutid := c.Param("id"); cutid != "" {
 		entity := types.NewComfyUITemplate(&cutid)
 		if err := entity.Get(c); err != nil {
@@ -151,7 +151,7 @@ func HandleComfyUITemplatesGet(c echo.Context) error {
 }
 
 func HandleComfyUITemplatesDelete(c echo.Context) error {
-	GetLogger().Flogger("HandleComfyUITemplatesDelete called")
+	GetLogger(4).Flogger("HandleComfyUITemplatesDelete called")
 	if id := c.Param("id"); id != "" {
 		entity := types.NewComfyUITemplate(&id)
 		if err := entity.Delete(c); err != nil {

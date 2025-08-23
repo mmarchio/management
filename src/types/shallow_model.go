@@ -19,12 +19,17 @@ type ShallowModel struct {
 	CreatedAt 	time.Time
 	UpdatedAt 	time.Time
 	ContentType string
+	Slug		string
 	TokenCount 	int64
 	Table 		string
 	Columns 	string
 	Values 		string
 	Conflict 	string
 	Validated   bool
+}
+
+func (c ShallowModel) GetEntityModel() ShallowModel {
+	return c
 }
 
 func (c ShallowModel) FromTypeModel(m Model) ShallowModel {
@@ -99,14 +104,14 @@ func (c ShallowModel) Get(e echo.Context) (*ShallowContent, error) {
 	sc.ShallowModel = c
 	rc, err := sc.Get(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	return &rc, nil
 }
 
-func (c ShallowModel) Set(e echo.Context, content ShallowContent) error {
-	if err := content.Set(e); err != nil {
-		return merrors.ContentSetError{}.Wrap(err)
+func (c ShallowModel) Set(e echo.Context, content ShallowContent, update bool) error {
+	if err := content.Set(e, update); err != nil {
+		return merrors.ContentSetError{}.Wrap(err).Log()
 	}
 	return nil
 }
@@ -115,7 +120,7 @@ func (c ShallowModel) List(e echo.Context) ([]ShallowContent, error) {
 	sc := ShallowContent{}
 	list, err := sc.List(e)
 	if err != nil {
-		return nil, merrors.ContentListError{}.Wrap(err)
+		return nil, merrors.ContentListError{}.Wrap(err).Log()
 	}
 	return list, nil
 }
@@ -124,7 +129,7 @@ func (c ShallowModel) ListBy(e echo.Context, key, value interface{}) ([]*Shallow
 	sc := ShallowContent{}
 	list, err := sc.ListBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentListByError{}.Wrap(err)
+		return nil, merrors.ContentListByError{}.Wrap(err).Log()
 	}
 	return list, nil
 }
@@ -133,7 +138,7 @@ func (c ShallowModel) FindBy(e echo.Context, key, value string) (*ShallowContent
 	sc := ShallowContent{}
 	rc, err := sc.FindBy(e, key, value)
 	if err != nil {
-		return nil, merrors.ContentFindByError{}.Wrap(err)
+		return nil, merrors.ContentFindByError{}.Wrap(err).Log()
 	}
 	return &rc, nil
 }
@@ -142,7 +147,7 @@ func (c ShallowModel) CustomQuery(e echo.Context, write bool, q string, vars []i
 	sc := ShallowContent{}
 	list, err := sc.CustomQuery(e, write, q, vars...)
 	if err != nil {
-		return nil, merrors.ContentCustomQueryError{}.Wrap(err)
+		return nil, merrors.ContentCustomQueryError{}.Wrap(err).Log()
 	}
 	return list, nil
 }

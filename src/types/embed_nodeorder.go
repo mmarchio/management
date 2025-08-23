@@ -7,7 +7,6 @@ import (
 
 type NodeOrder struct {
 	EmbedModel
-	ID NodeOrderID 			`form:"id" json:"id"`
 	WorkflowID WorkflowID 	`form:"workflow_id" json:"workflow_id"`
 	NodeID string 			`form:"node_id" json:"node_id"`
 	NodeType string 		`form:"node_type" json:"node_type"`
@@ -15,7 +14,7 @@ type NodeOrder struct {
 }
 
 func (c NodeOrder) IsNil() bool {
-	if c.ID.IsNil() && c.ID.IsNil() && c.WorkflowID.IsNil() && c.NodeID == "" && c.NodeType == ""{
+	if c.EmbedModel.ID == "" && c.WorkflowID.IsNil() && c.NodeID == "" && c.NodeType == ""{
 		return true
 	}
 	return false

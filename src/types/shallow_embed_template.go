@@ -9,7 +9,6 @@ import (
 
 type ShallowTemplate struct {
 	ShallowModel
-	ID 						TemplateID `form:"id" json:"id"`
 	Name 					string `form:"name" json:"name"`
 	DispositionsArrayModel 	[]string `form:"dispositions" json:"dispositions_array_model"`
 	CurrentDisposition 		int64
@@ -21,7 +20,7 @@ func (c ShallowTemplate) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -32,10 +31,10 @@ func (c ShallowTemplate) Expand(e echo.Context) (*Template, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -49,10 +48,10 @@ func (c ShallowTemplate) Expand(e echo.Context) (*Template, error) {
 		sd.ShallowModel.ID = id
 		sc, err := sd.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}		
 		if err := json.Unmarshal([]byte(sc.Content), &d); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		r.DispositionsArrayModel = append(r.DispositionsArrayModel, d)
 	}
@@ -62,10 +61,10 @@ func (c ShallowTemplate) Expand(e echo.Context) (*Template, error) {
 		sd.ShallowModel.ID = id
 		sc, err := sd.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}		
 		if err := json.Unmarshal([]byte(sc.Content), &d); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		r.AvailableDispositions = append(r.AvailableDispositions, d)
 	}

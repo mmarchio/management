@@ -18,7 +18,12 @@
             {{if eq .DisplayType "none"}}
             {{end}}
             {{if eq .DisplayType "new"}}
-        <form action="/systemprompts/save{{if .ID}}/{{.ID}}{{end}}" method="POST">
+        <form action="/systemprompts/save{{if .ID}}/{{.ID}}{{end}}" method="POST" name="systemprompt" id="systemprompt">
+        {{template "form.systemprompts" .}}
+        </form>
+            {{end}}
+            {{if eq .DisplayType "edit"}}
+        <form action="/systemprompts/save{{if .ID}}/{{.ID}}{{end}}" method="POST" name="systemprompt" id="systemprompt">
         {{template "form.systemprompts" .}}
         </form>
             {{end}}
@@ -33,7 +38,7 @@
             </tr>
             {{range $systemprompt := .List}}
             <tr>
-                <td><a href="/systemprompts/{{$systemprompt.ID}}">{{$systemprompt.ID}}</a></td>
+                <td><a href="/systemprompts/edit/{{$systemprompt.ID}}">{{$systemprompt.ID}}</a></td>
                 <td>{{$systemprompt.Name}}</td>
                 <td>{{$systemprompt.Domain}}</td>
                 <td>{{$systemprompt.Prompt}}</td>

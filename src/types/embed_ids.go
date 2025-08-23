@@ -1,6 +1,9 @@
 package types
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+)
 
 type JobStatusID string
 
@@ -607,6 +610,11 @@ func (c WorkflowID) New(id *string) WorkflowID {
 		return WorkflowID(*id)
 	}
 	return WorkflowID(uuid.NewString())
+}
+
+func (c WorkflowID) CheckType(e echo.Context, id *string) (bool, error) {
+	ent := NewWorkflow(id)
+	return CheckType(e, &ent.Model.ID, &ent.Model.ContentType)
 }
 
 func (c WorkflowID) IsNil() bool {

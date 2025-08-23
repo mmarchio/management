@@ -9,7 +9,6 @@ import (
 
 type ShallowSettings struct {
 	ShallowModel
-	ID 					string 		`json:"id"`
 	Name 				string 		`json:"name"`
 	TemplateModel 		string 		`json:"template_model"`
 	GlobalBypassModel 	string 		`json:"global_bypass_model"`
@@ -23,7 +22,7 @@ func (c ShallowSettings) ToContent() (*Content, error) {
 	m.Model = m.Model.FromShallowModel(c.ShallowModel)
 	b, err := json.Marshal(c)
 	if err != nil {
-		return nil, merrors.JSONMarshallingError{}.Wrap(err)
+		return nil, merrors.JSONMarshallingError{}.Wrap(err).Log()
 	}
 	m.Content = string(b)
 	return &m, nil
@@ -34,10 +33,10 @@ func (c ShallowSettings) Expand(e echo.Context) (*Settings, error) {
 	if c.ShallowModel.CreatedAt.IsZero() && c.ShallowModel.ID != "" {
 		sc, err := c.ShallowModel.Get(e)
 		if err != nil {
-			return nil, merrors.ContentGetError{}.Wrap(err)
+			return nil, merrors.ContentGetError{}.Wrap(err).Log()
 		}
 		if err := json.Unmarshal([]byte(sc.Content), &r); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err)
+			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
 		return &r, nil
 	}
@@ -48,21 +47,21 @@ func (c ShallowSettings) Expand(e echo.Context) (*Settings, error) {
 	st.ShallowModel.ID = c.TemplateModel
 	template, err := st.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	r.TemplateModel = *template
 	sgp := ShallowSteps{}
 	sgp.ShallowModel.ID = c.GlobalBypassModel
 	globalbypass, err := sgp.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	r.GlobalBypassModel = *globalbypass
 	stg := ShallowToggle{}
 	stg.ShallowModel.ID = c.RecurringModel
 	recurring, err := stg.Expand(e)
 	if err != nil {
-		return nil, merrors.ContentGetError{}.Wrap(err)
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
 	}
 	r.RecurringModel = *recurring
 	r.Interval = c.Interval
