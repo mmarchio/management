@@ -132,6 +132,7 @@ func (c Content) CustomQuery(e echo.Context, write bool, q string, vars ...any) 
 func (c Content) Set(e echo.Context, update bool) error {
 	GetLogger(4).Flogger("#######Content Set called#######")
 	contentModel := c.ToModel()
+	contentModel.Model.ID = c.Model.ID
 	err := contentModel.Set(e, update)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err).Log()

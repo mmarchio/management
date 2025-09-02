@@ -3,11 +3,14 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
+	"golang.org/x/crypto/ssh"
 )
 
 type SSHNode struct {
@@ -49,10 +52,7 @@ func (c SSHNode) Validate() SSHNode {
 	if c.Model.ContentType != "sshnode" {
 		valid = false
 	}
-	if c.ID == "" || c.Name == "" || c.Command == "" || c.User == "" || c.Host == "" {
-		valid = false
-	}
-	if c.ID != c.Model.ID {
+	if c.Name == "" || c.Command == "" || c.User == "" || c.Host == "" {
 		valid = false
 	}
 	c.Model.Validated = valid
@@ -207,9 +207,9 @@ func NewSSHNode(id *string) SSHNode {
 }
 
 func (c SSHNode) Set(e echo.Context, update bool) error {
-	c.Validate()
-	if !c.Model.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "node", Function: "set"}.New("validation failed")
+	d := c.Validate()
+	if !d.Model.Validated {
+		return merrors.ContentValidationError{CalledBy: "types.SSHNode.Set"}.New("validation failed").Log()
 	}
 	content := NewSSHNodeTypeContent()
 	content.FromType(c, c.Model)
@@ -261,5 +261,74 @@ func (c SSHNode) ListBy(e echo.Context, key string, value interface{}) ([]SSHNod
 }
 
 func (c SSHNode) Exec(e echo.Context, jobrun *JobRun, step *Step) error {
+	return nil
+}
+
+func (c SSHNode) Call(e echo.Context, jobrun *JobRun, step *Step) error {
+	pvtKeyBytes, err := os.ReadFile("~/.ssh/id_rsa")
+	if err != nil {
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+
+	signer, err := ssh.ParsePrivateKey(pvtKeyBytes)
+	if err != nil {
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+
+	config := &ssh.ClientConfig{
+		User: "n8n",
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	client, err := ssh.Dial("tcp", "172.17.0.1", config)
+	if err != nil {
+		GetLogger(3).Flogger("Failed to dial: %s", err.Error())
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+
+	session, err := client.NewSession()
+	if err != nil {
+		GetLogger(3).Flogger("Failed to create session: %s", err.Error())
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+	defer session.Close()
+
+	modes := ssh.TerminalModes{
+		ssh.ECHO: 0,
+		ssh.TTY_OP_ISPEED: 14400,
+		ssh.TTY_OP_OSPEED: 14400,
+	}
+	if err := session.RequestPty("linux", 80, 40, modes); err != nil {
+		GetLogger(3).Flogger("Failed to create pseudo terminal: %s", err.Error())
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+
+	session.Stdout = os.Stdout
+	session.Stdin = os.Stdin
+	session.Stderr = os.Stderr
+
+	stdout, err := session.StdoutPipe()
+	if err != nil {
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+
+	if err := session.Run(c.Command); err != nil {
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+
+	output, err := io.ReadAll(stdout)
+	if err != nil {
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+
+	err = session.Wait()
+	if err != nil {
+		return merrors.SSHError{}.Wrap(err).Log()
+	}
+
+	GetLogger(3).Flogger("output: %s", string(output))
 	return nil
 }

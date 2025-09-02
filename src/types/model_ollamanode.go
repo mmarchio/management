@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-	"strings"
 	_ "sync"
 	"time"
 
@@ -31,6 +31,7 @@ type OllamaNode struct {
 	Output         PromptGenerationResponse	`form:"output" json:"output"`
 	ContextObject  *Stats
 	Context        *Context
+	Dependencies   []Dependency				`form:"dependencies" json:"dependencies"`
 }
 
 func (c OllamaNode) Pack() []shallowmodel {
@@ -166,6 +167,7 @@ func (c OllamaNode) GetApiBase() string {
 func (c OllamaNode) GetApiTemplate() string {
 	return ""
 }
+
 func (c OllamaNode) GetType() string {
 	return "ollama_node"
 }
@@ -173,6 +175,7 @@ func (c OllamaNode) GetType() string {
 func (c *OllamaNode) ParsePromptTemplate(e echo.Context) error {
 	var err error
 	if c.PromptTemplate != "" {
+		GetLogger(3).Flogger("prompt template value: %s", c.PromptTemplate)
 		if len(c.PromptTemplate) == 36 {
 			id := c.PromptTemplate
 			pt := NewPromptTemplate(&id)
@@ -232,36 +235,36 @@ func (c *OllamaNode) FromMSI(msi map[string]interface{}) error {
 	return nil
 }
 
-func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, step *Step) error {
+func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, step *Step, node OllamaNode) error {
 	GetLogger(4).Flogger("step %d: Call called", step.Order)
 	start := time.Now()
 	if c.OllamaModel == "" {
 		return merrors.NilContentError{}.New("ollamamodel is nil").Log()
 	}
-	onode := c
-	GetLogger(3).Flogger("step %d: Getting OllamaNode instance", step.Order)
-	if err := onode.Get(e); err != nil {
-		return merrors.ContentGetError{}.Wrap(err).Log().Log()
-	}
-	GetLogger(3).Flogger("step %d: Executing preparePrompt", step.Order)
-	prompt, err := onode.preparePrompt(e, jobrun, step)
-	if err != nil {
-		GetLogger(1).Flogger("step %d: error preparing prompt: %s", step.Order, err.Error())
-		return err
-	}
+	// onode := c
+	// GetLogger(3).Flogger("step %d: Getting OllamaNode instance", step.Order)
+	// if err := onode.Get(e); err != nil {
+	// 	return merrors.ContentGetError{}.Wrap(err).Log().Log()
+	// }
+	// GetLogger(3).Flogger("step %d: Executing preparePrompt", step.Order)
+	// prompt, err := onode.preparePrompt(e, jobrun, step)
+	// if err != nil {
+	// 	GetLogger(1).Flogger("step %d: error preparing prompt: %s", step.Order, err.Error())
+	// 	return err
+	// }
 	GetLogger(4).Flogger("step %d: onode retrieved", step.Order)
 	oreq := OllamaRequest{
-		Model:  onode.OllamaModel,
-		Prompt: prompt,
-		System: onode.SystemPrompt,
+		Model:  node.OllamaModel,
+		Prompt: node.Prompt,
+		System: node.SystemPrompt,
 		Format: "json",
 		Stream:    false,
-		KeepAlive: "1h",
+		KeepAlive: "5m",
 		Think: false,
 	}
 	data, err := json.Marshal(oreq)
 	if err != nil {
-		return merrors.JSONMarshallingError{Package: "types", Struct: "OllamaNode", Function: "Call"}.Wrap(err).Log()
+		return merrors.JSONMarshallingError{CalledBy: "types.OllamaNode.Call"}.Wrap(err).Log()
 	}
 	c.ResponseModel = OllamaResponse{}
 	reader := bytes.NewReader(data)
@@ -269,7 +272,9 @@ func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, step *Step) error {
 	if err != nil {
 		return merrors.HTTPRequestError{Package: "types", Struct: "OllamaNode", Function: "Call"}.Wrap(err).Log().Log()
 	}
-	GetLogger(3).Flogger("step %d: Executing worker", step.Order)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
 	resp, err := worker(c, req, step)
 	if err != nil {
 		return err
@@ -277,6 +282,7 @@ func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, step *Step) error {
 	pgr := PromptGenerationResponse{}
 	pgr.Unmarshal(resp.Response, step)
 	pgr.Think = ""
+	GetLogger(3).Flogger("pgr: %#v", pgr)
 	pgrb, err := json.Marshal(pgr)
 	if err != nil {
 		return merrors.JSONMarshallingError{}.Wrap(err).Log()
@@ -286,6 +292,7 @@ func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, step *Step) error {
 	jobrun.ValueCache[fmt.Sprintf("steps[%d].output.topics", step.Order -1)] = pgr.Topics
 	jobrun.ValueCache[fmt.Sprintf("steps[%d].output.prompt", step.Order -1)] = pgr.Prompt
 	jobrun.ValueCache[fmt.Sprintf("steps[%d].output.output", step.Order -1)] = pgr.Output
+	jobrun.ValueCache[fmt.Sprintf("steps[%d].output.segments", step.Order -1)] = pgr.Segments
 
 	c.Output = pgr
 	c.ResponseModel.Done = resp.Done
@@ -298,29 +305,17 @@ func (c *OllamaNode) Call(e echo.Context, jobrun *JobRun, step *Step) error {
 	return nil
 }
 
-func (c OllamaNode) preparePrompt(e echo.Context, jobrun *JobRun, step *Step) (string, error) {
-	var err error
+func (c OllamaNode) PreparePrompt(e echo.Context, jobrun *JobRun, step *Step) (string, error) {
 	prompt := c.Prompt
 	if c.PromptTemplate != "" {
-		pt := PromptTemplate{}
-		pt.Model.ID = c.PromptTemplate
-		GetLogger(3).Flogger("step %d: Getting PromptTemplate", step.Order)
+		pt := NewPromptTemplate(&c.PromptTemplate)
 		if err := pt.Get(e); err != nil {
 			return "", merrors.ContentGetError{}.Wrap(err).Log()
 		}
-		GetLogger(3).Flogger("step %d: Executing Prepare", step.Order)
-		if err := pt.Prepare(e, jobrun); err != nil {
+		if err := pt.PrepareV2(e, jobrun, step); err != nil {
 			return "", merrors.ContentGetError{}.Wrap(err).Log()
 		}
-		varsMSI := make(map[string]interface{})
-		if err := json.Unmarshal([]byte(pt.Vars), &varsMSI); err != nil {
-			return "", merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-		GetLogger(3).Flogger("step %d: Processing Replacements", step.Order)
-		prompt, err = strrep.Strrep(pt.Template, varsMSI)
-		if err != nil {
-			return "", err
-		}
+		prompt = pt.Template
 	}
 	return prompt, nil
 }
@@ -335,11 +330,14 @@ func worker(c *OllamaNode, req *http.Request, step *Step) (*OllamaResponse, erro
 		return nil, merrors.HTTPRequestError{}.Wrap(err).Log()
 	}
 	if resp != nil {
-		GetLogger(4).Flogger("step %d: response received", step.Order)
-		err = json.NewDecoder(resp.Body).Decode(&cresp)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
+			return nil, merrors.HTTPRequestError{}.Wrap(err).Log()	
+		}
+		if err := json.Unmarshal(body, &cresp); err != nil {
 			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 		}
+		GetLogger(3).Flogger("ollama response status code: %d", resp.StatusCode)
 		c.ResponseModel.Response = cresp.Response
 		c.ResponseModel.Done = cresp.Done
 	} else {
@@ -430,19 +428,24 @@ func (c OllamaNode) Exec(e echo.Context, jobrun *JobRun, step *Step) error {
 	if step.Bypass.Value {
 		return nil
 	}
+	pt := NewPromptTemplate(&c.PromptTemplate)
+	if err := pt.Get(e); err != nil {
+		return merrors.ContentGetError{}.Wrap(err).Log()
+	}
+	dep := DependencyMap{}
+	dep.Unmarshal(pt.Values)
 	GetLogger(4).Flogger("step %d: Exec called", step.Order)
 	start := time.Now()
 	if c.SystemPrompt != "" && len(c.SystemPrompt) == 36 {
 		spid := c.SystemPrompt
 		sp := NewSystemPrompt(&spid)
-		GetLogger(3).Flogger("step %d: Getting System Prompt", step.Order)
 		if err := sp.Get(e); err != nil {
 			return err
 		}
 		c.SystemPrompt = sp.Prompt
 	}
 	GetLogger(3).Flogger("step %d: Executing Call", step.Order)
-	if err := c.Call(e, jobrun, step); err != nil {
+	if err := c.Call(e, jobrun, step, c); err != nil {
 		return err
 	}
 
@@ -457,61 +460,7 @@ func (c OllamaNode) Exec(e echo.Context, jobrun *JobRun, step *Step) error {
 	if err := c.Set(e, true); err != nil {
 		return merrors.ContentSetError{}.Wrap(err).Log()
 	}
-	test := Step{}
-	test.Model.ID = step.Model.ID
-	if err := test.Get(e); err != nil {
-		return merrors.ContentGetError{}.Wrap(err).Log()
-	}
 	return nil
-}
-
-type PromptGenerationResponse struct {
-	Think string `json:"think"`
-	Topics []string `json:"topics"`
-	Prompt string `json:"prompt"`
-	Output interface{} `json:"output"`
-}
-
-func (c PromptGenerationResponse) IsNil() bool {
-	if c.Think != "" {
-		return false
-	}
-	if len(c.Topics) > 0 {
-		return false
-	}
-	if c.Prompt != "" {
-		return false
-	}
-	if c.Output != "" {
-		return false
-	}
-	return true
-}
-
-func (c *PromptGenerationResponse) Unmarshal(s string, step *Step) error {
-	GetLogger(3).Flogger("step %d: input: %s", step.Order, s)
-	s = strings.ReplaceAll(s, "'", "&#39")
-	s = strings.Replace(s, "{", "", 1)
-	s = strings.Replace(s, "<think>", "{\"think\":\"", 1)
-	s = strings.Replace(s, "\u003cthink\u003e", "{\"think\":\"", 1)
-	s = strings.Replace(s, "</think>", "\",", 1)
-	s = strings.Replace(s, "\u003c/think\u003e", "\",", 1)
-	// s = strings.ReplaceAll(s, "'", "\\'")
-	s = fmt.Sprintf("{%s", s)
-	GetLogger(3).Flogger("step %d: output: %s", step.Order, s)
-	if err := json.Unmarshal([]byte(s), c); err != nil {
-		return merrors.JSONUnmarshallingError{Info: s}.Wrap(err).Log()
-	}
-	c.Think = ""
-	return nil
-}
-
-func (c PromptGenerationResponse) Marshal() (string, error) {
-	b, err := json.Marshal(c)
-	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(err).Log()
-	}
-	return string(b), nil
 }
 
 func (c OllamaNode) List(e echo.Context) ([]OllamaNode, error) {
@@ -552,3 +501,6 @@ func (c OllamaNode) ListBy(e echo.Context, key string, value interface{}) ([]Oll
 	}
 	return cuts, nil
 }
+
+
+

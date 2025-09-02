@@ -50,41 +50,34 @@ func (c Workflow) ToContent() (*Content, error) {
 	return &m, nil
 }
 
-func (c *Workflow) Validate() {
-	valid := true
+func (c *Workflow) Validate() error {
 	if !c.Model.Validate() {
-		GetLogger(4).Flogger("types.workflow.model is not valid")
-		valid = false
+		return merrors.ContentValidationError{CalledBy: "types.Workflow.Validate"}.New("model validation failed").Log()
 	}
 	if c.Model.IsNil() {
-		GetLogger(4).Flogger("types.workflow.id does not match model")
-		valid = false
+		return merrors.ContentValidationError{CalledBy: "types.Workflow.Validate"}.New("types.workflow.id does not match model").Log()
 	}
 	if c.Name == "" {
-		GetLogger(4).Flogger("types.workflow.name is nil")
-		valid = false
+		return merrors.ContentValidationError{CalledBy: "types.Workflow.Validate"}.New("types.workflow.name is nil").Log()
 	}
 	for _, node := range c.ComfyNodesArrayModel {
-		node.Validate()
-		if !node.Model.Validated {
-			GetLogger(4).Flogger("types.workflow.node[%s] failed validation", node.Model.ID)
-			valid = false
+		d := node.Validate()
+		if !d.Model.Validated {
+			return merrors.ContentValidationError{CalledBy: "types.Workflow.Validate"}.New("types.workflow.node[%s] failed validation", node.Model.ID).Log()
 		}
 	}
 	for _, node := range c.OllamaNodesArrayModel {
 		if !node.ValidateV2() {
-			GetLogger(4).Flogger("types.workflow.node[%s] failed validation", node.Model.ID)
-			valid = false
+			return merrors.ContentValidationError{CalledBy: "types.Workflow.Validate"}.New("types.workflow.node[%s] failed validation", node.Model.ID).Log()
 		}
 	}
 	for _, node := range c.SSHNodesArrayModel {
-		node.Validate()
-		if !node.Model.Validated {
-			GetLogger(4).Flogger("types.workflow.node[%s] failed validation", node.Model.ID)
-			valid = false
+		d := node.Validate()
+		if !d.Model.Validated {
+			return merrors.ContentValidationError{CalledBy: "types.Workflow.Validate"}.New("types.workflow.node[%s] failed validateion", node.Model.ID).Log()
 		}
 	}
-	c.Model.Validated = valid
+	return nil
 }
 
 func NewWorkflow(id *string) Workflow {
@@ -175,13 +168,13 @@ func (c *Workflow) Get(e echo.Context) error {
 }
 
 func (c Workflow) Set(e echo.Context, update bool) error {
-	c.Validate()
-	if !c.Model.Validated {
-		return merrors.ContentValidationError{Package: "types", Struct: "workflow", Function: "set"}.New("validation failed")
+	err := c.Validate()
+	if err != nil {
+		return err
 	}
 	content := NewWorkflowTypeContent(nil)
 	content.FromType(c, c.Model)
-	err := content.Set(e, update)
+	err = content.Set(e, update)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err).Log()
 	}
@@ -274,33 +267,43 @@ func (c *Workflow) CutNode(id string) {
 }
 
 func (c *Workflow) NodeCleanup(e echo.Context) {
+	comfyTracker := make(map[string]interface{})
 	newComfyNodes := make([]ComfyNode, 0)
 	for _, node := range c.ComfyNodesArrayModel {
-		if err := node.Get(e); err != nil {
-			c.CutNodeOrder(node.ID)
-			GetLogger(3).Flogger("err: %s", err.Error())
-			continue
+		if _, ok := comfyTracker[node.Model.ID].(string); !ok {
+			if err := node.Get(e); err != nil {
+				c.CutNodeOrder(node.Model.ID)
+				GetLogger(4).Flogger("err: %s", err.Error())
+				continue
+			}
+			newComfyNodes = append(newComfyNodes, node)
+			comfyTracker[node.Model.ID] = "true"
 		}
-		newComfyNodes = append(newComfyNodes, node)
 	}
 	c.ComfyNodesArrayModel = newComfyNodes
 	newOllamaNodes := make([]OllamaNode, 0)
 	for _, node := range c.OllamaNodesArrayModel {
-		if err := node.Get(e); err != nil {
-			c.CutNodeOrder(node.ID)
-			GetLogger(3).Flogger("err: %s", err.Error())
-			continue
+		if _, ok := comfyTracker[node.Model.ID].(string); !ok {
+			if err := node.Get(e); err != nil {
+				c.CutNodeOrder(node.ID)
+				GetLogger(4).Flogger("err: %s", err.Error())
+				continue
+			}
+			newOllamaNodes = append(newOllamaNodes, node)
+			comfyTracker[node.Model.ID] = "true"
 		}
-		newOllamaNodes = append(newOllamaNodes, node)
 	}
 	c.OllamaNodesArrayModel = newOllamaNodes
 	newSSHNodes := make([]SSHNode, 0)
 	for _, node := range c.SSHNodesArrayModel {
-		if err := node.Get(e); err != nil {
-			c.CutNodeOrder(node.ID)
-			GetLogger(3).Flogger("err: %s", err.Error())
+		if _, ok := comfyTracker[node.Model.ID]; !ok {
+			if err := node.Get(e); err != nil {
+				c.CutNodeOrder(node.ID)
+				GetLogger(4).Flogger("err: %s", err.Error())
+			}
+			newSSHNodes = append(newSSHNodes, node)
+			comfyTracker[node.Model.ID] = "true"
 		}
-		newSSHNodes = append(newSSHNodes, node)
 	}
 	c.SSHNodesArrayModel = newSSHNodes
 }

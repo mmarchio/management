@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	_ "sync"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
@@ -307,6 +308,7 @@ func HandleWorkflowRun(c echo.Context) error {
 }
 
 func HandleJobRunRun(c echo.Context) error {
+	start := time.Now()
 	GetLogger(4).Flogger("HandleJobRunRun called")
 	if entityID := c.Param("id"); entityID != "" {
 		entity := types.NewJobRun(&entityID)
@@ -346,6 +348,9 @@ func HandleJobRunRun(c echo.Context) error {
 		}
 		for _, step := range orderedSteps {
 			if step.Bypass.Value && !step.Stats.Output.IsNil() {
+				entity.ValueCache[fmt.Sprintf("steps[%d].input.title", step.Order-1)] = step.Name
+				entity.ValueCache[fmt.Sprintf("steps[%d].input.nodetype", step.Order-1)] = step.NodeType
+				entity.ValueCache[fmt.Sprintf("steps[%d].input.prompt", step.Order-1)] = "bypass"
 				entity.ValueCache[fmt.Sprintf("steps[%d].output.think", step.Order-1)] = step.Stats.Output.Think
 				entity.ValueCache[fmt.Sprintf("steps[%d].output.prompt", step.Order-1)] = step.Stats.Output.Prompt
 				entity.ValueCache[fmt.Sprintf("steps[%d].output.topics", step.Order-1)] = step.Stats.Output.Topics
@@ -380,8 +385,34 @@ func HandleJobRunRun(c echo.Context) error {
 				}
 				GetLogger(4).Flogger("HandleJobRunRun Executing ollamanode")
 				entity.ValueCache["context.prompt_model.prompt"] = entity.ContextModel.PromptModel.Prompt
+				entity.ValueCache["context.disposition_model.min_duration"] = entity.ContextModel.DispositionModel.MinDuration
+				entity.ValueCache["context.disposition_model.max_duration"] = entity.ContextModel.DispositionModel.MaxDuration
+				GetLogger(3).Flogger("step %d: Executing preparePrompt", step.Order)
+				prompt, err := node.PreparePrompt(c, &entity, &step)
+				if err != nil {
+					GetLogger(1).Flogger("step %d: error preparing prompt: %s", step.Order, err.Error())
+					return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+				}
+				validator := types.StepValidation{}
+				if !validator.ValidateTemplate(prompt) {
+					GetLogger(3).Flogger("step cache: %#v", entity.ValueCache)
+					return c.Render(http.StatusInternalServerError, "error.tpl", merrors.StepValidationError{Info: prompt}.New("template variables not replaced").Log().Error())
+				}
+				entity.ValueCache[fmt.Sprintf("steps[%d].input.prompt", step.Order-1)] = prompt
+				node.Prompt = prompt
 				if err := node.Exec(c, &entity, &step); err != nil {
 					return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+				}
+				if step.Validation != "" {
+					validated, err := validator.Validate(&step)
+					if err != nil {
+						return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+					}
+					if !validated {
+						if err := node.Exec(c, &entity, &step); err != nil {
+							return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
+						}
+					}
 				}
 			case "sshnode":
 				GetLogger(4).Flogger("HandleJobRunRun Unwrapping sshnode")
@@ -396,17 +427,18 @@ func HandleJobRunRun(c echo.Context) error {
 			default:
 			}
 			GetLogger(3).Flogger("Done executing step: %d", step.Order)
+			entity.ValueCache[fmt.Sprintf("steps[%d].input.title", step.Order-1)] = step.Name
+			entity.ValueCache[fmt.Sprintf("steps[%d].input.nodetype", step.Order-1)] = step.NodeType
 			entity.ValueCache[fmt.Sprintf("steps[%d].output.think", step.Order-1)] = step.Stats.Output.Think
 			entity.ValueCache[fmt.Sprintf("steps[%d].output.prompt", step.Order-1)] = step.Stats.Output.Prompt
 			entity.ValueCache[fmt.Sprintf("steps[%d].output.topics", step.Order-1)] = step.Stats.Output.Topics
 			entity.ValueCache[fmt.Sprintf("steps[%d].output.output", step.Order-1)] = step.Stats.Output.Output
-			GetLogger(3).Flogger("entity.ValueCache[steps[%d].output.think]: %s", step.Order-1, step.Stats.Output.Think)
-			GetLogger(3).Flogger("entity.ValueCache[steps[%d].output.prompt]: %s", step.Order-1, step.Stats.Output.Prompt)
-			GetLogger(3).Flogger("entity.ValueCache[steps[%d].output.topics]: %s", step.Order-1, step.Stats.Output.Topics)
-			GetLogger(3).Flogger("entity.ValueCache[steps[%d].output.output]: %s", step.Order-1, step.Stats.Output.Output)
 		}
 		GetLogger(3).Flogger("Done executing all nodes")
+		GetLogger(3).Flogger("Cache Status: %#v", entity.ValueCache)
 	}
+	end := time.Since(start)
+	fmt.Printf("total elapsed time: %s", end.String())
 	return HandleJobRunsList(c)
 }
 

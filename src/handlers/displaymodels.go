@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/mmarchio/management/config"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/types"
 )
@@ -202,6 +203,7 @@ func (c *DisplayWorkflow) Init(e echo.Context, mode string) error {
 	switch c.DisplayType {
 	case "list":
 		c.List, err = c.Workflow.List(e);
+
 		if err != nil {
 			return merrors.ContentListError{CalledBy: "handlers.DisplayWorkflow.Init"}.Wrap(err).Log()
 		}
@@ -226,6 +228,7 @@ func (c *DisplayWorkflow) Init(e echo.Context, mode string) error {
 			if err != nil {
 				return merrors.ContentListError{CalledBy: "handlers.DisplayWorkflow.Init"}.Wrap(err).Log()
 			}
+			c.Workflow.NodeCleanup(e)
 		}
 	default:
 	}
@@ -342,6 +345,7 @@ type DisplayComfyNode struct {
 	Enabled types.Toggle
 	Bypass types.Toggle
 	WorkflowID string
+	Services []ComfyService
 	MSI map[string]interface{}
 }
 
@@ -356,6 +360,11 @@ func (c *DisplayComfyNode) ToMSI() error {
 	}
 	c.MSI = msi
 	return nil
+}
+
+type ComfyService struct {
+	Port int64
+	Title string
 }
 
 func (c *DisplayComfyNode) Init(e echo.Context, mode string) error {
@@ -378,6 +387,23 @@ func (c *DisplayComfyNode) Init(e echo.Context, mode string) error {
 		Suffix: "_enabled",
 		Title: "Bypass",
 	}
+	c.Services = make([]ComfyService, 0)
+	c.Services = append(c.Services, ComfyService{
+		Port: int64(config.ComfyUIClassifyImagePort),
+		Title: "classify image",
+	})
+	c.Services = append(c.Services, ComfyService{
+		Port: int64(config.ComfyUIGenerateAudioPort),
+		Title: "generate audio",
+	})
+	c.Services = append(c.Services, ComfyService{
+		Port: int64(config.ComfyUIGenerateImagePort),
+		Title: "generate image",
+	})
+	c.Services = append(c.Services, ComfyService{
+		Port: int64(config.ComfyUIGenerateLipsyncPort),
+		Title: "generate lipsync",
+	})
 	if wfid := e.Param("workflowid"); wfid != "" {
 		c.WorkflowID = wfid
 	}
@@ -410,6 +436,48 @@ type DisplaySSHNode struct {
 	Bypass types.Toggle
 }
 
+func (c *DisplaySSHNode) Init(e echo.Context, mode string) error {
+	var err error
+	c.Menu = Menu{
+		Href: "ssh",
+		Title: "SSH Node",
+	}
+	c.SSHNode = types.NewSSHNode(nil)
+	c.DisplayType = mode
+	c.Enabled = types.Toggle{
+		NamePrefix: "sshnode",
+		IdPrefix: "sshnode",
+		Suffix: "_enabled",
+		Title: "Enabled",
+	}
+	c.Bypass = types.Toggle{
+		NamePrefix: "sshnode",
+		IdPrefix: "sshnode",
+		Suffix: "_enabled",
+		Title: "Bypass",
+	}
+	switch mode {
+	case "none":
+	case "new":
+	case "edit":
+		if id := e.Param("id"); id != "" {
+			c.SSHNode = types.NewSSHNode(&id)
+			if err := c.SSHNode.Get(e); err != nil {
+				return merrors.ContentGetError{}.Wrap(err).Log()
+			}
+			c.Enabled.Value = c.SSHNode.Enabled
+			c.Bypass.Value = c.SSHNode.Bypass
+		}
+	case "list":
+		c.List, err = c.SSHNode.List(e);
+		if err != nil {
+			return merrors.ContentListError{}.Wrap(err).Log()
+		}
+	default:
+	}
+	return nil
+}
+
 type DisplayStep struct {
 	types.Step
 	Menu
@@ -422,6 +490,7 @@ type DisplayStep struct {
 	SystemPrompts []types.SystemPrompt
 	PromptTemplates []types.PromptTemplate
 	Nodes []Node
+	Dependencies []types.Step
 }
 
 type Node struct {
@@ -451,6 +520,13 @@ func (c *DisplayStep) Init(e echo.Context, mode string) error {
 		Suffix: "bypass",
 		Title: "bypass",
 	}
+	t := types.Step{}
+	t.Model.ContentType = "step"
+	c.Dependencies, err = t.List(e, "order desc")
+	if err != nil {
+		return merrors.ContentListError{}.Wrap(err)
+	}
+	
 	d := types.NewDisposition(nil)
 	c.Dispositions, err = d.List(e)
 	if err != nil {
@@ -509,16 +585,13 @@ func (c *DisplayStep) Init(e echo.Context, mode string) error {
 		})
 	}
 	c.Nodes = nodes
+	dep := types.Step{}
+	dep.Model.ID = "nil"
+	c.Dependency = &dep
 	switch mode {
 	case "list":
-		t := types.Step{}
-		t.Model.ContentType = "step"
-		list, err := t.List(e, "order desc")
-		if err != nil {
-			return merrors.ContentListError{}.Wrap(err)
-		}
 		items := make([]StepListItem, 0)
-		for _, item := range list {
+		for _, item := range c.Dependencies {
 			sli := StepListItem{}
 			sli.Step = item
 			if item.WorkflowID != "" {
@@ -538,14 +611,12 @@ func (c *DisplayStep) Init(e echo.Context, mode string) error {
 				sli.DispositionModel = dp
 			}
 			if item.Node != "" {
-				GetLogger(3).Flogger("item.node: %s", item.Node)
 				content := types.Content{}
 				content.Model.ID = item.Node
 				content, err := content.Get(e)
 				if err != nil {
 					return merrors.ContentGetError{}.Wrap(err).Log()
 				}
-				GetLogger(3).Flogger("content.contenttype: %s", content.ContentType)
 				switch content.ContentType {
 				case "comfynode":
 					n := types.NewComfyNode(&item.Node)
@@ -562,7 +633,6 @@ func (c *DisplayStep) Init(e echo.Context, mode string) error {
 					if err := n.Get(e); err != nil {
 						return merrors.ContentGetError{}.Wrap(err).Log()
 					}
-					GetLogger(3).Flogger("node.id: %s node.name: %s, node.sytemprompt: %s, node.prompttemplate: %s", n.Model.ID, n.Name, n.SystemPrompt, n.PromptTemplate)
 					sli.NodeModel = Node{
 						ID: n.Model.ID,
 						Name: n.Name,
@@ -608,15 +678,23 @@ func (c *DisplayStep) Init(e echo.Context, mode string) error {
 			items = append(items, sli)
 		}
 		c.List = items
-		GetLogger(3).Flogger("c.list: %#v", c.List)
+		sorted := make([]StepListItem, len(c.List))
+		for i := 0; i<len(c.List); i++ {
+			sorted[c.List[i].Order-1] = c.List[i]
+		}
+		c.List = sorted
 	case "new":
 		t := types.NewStep(nil)
+		t.Dependency = &dep
 		c.Step = t
 	case "edit":
 		if id := e.Param("id"); id != "" {
 			t := types.NewStep(&id)
 			if err := t.Get(e); err != nil {
 				return merrors.ContentGetError{}.Wrap(err)
+			}
+			if t.Dependency == nil {
+				t.Dependency = &dep
 			}
 			c.Step = t
 			c.Enabled.Value = c.Step.Enabled.Value

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -65,7 +66,14 @@ func HandleComfySave(c echo.Context) error {
 	GetLogger(4).Flogger("HandleComfySave called")
 	var cn types.ComfyNode
 	var update bool
-	if id := c.Param("id"); id != "" {
+	id := ""
+	if c.Param("id") != "" {
+		id = c.Param("id")
+	}
+	if c.FormValue("id") != "" {
+		id = c.FormValue("id")
+	}
+	if id != "" {
 		update = true
 		ctype := "comfynode"
 		valid, err := types.CheckType(c, &id, &ctype)
@@ -92,7 +100,15 @@ func HandleComfySave(c echo.Context) error {
 		cn.TemplateValues = tv
 	}
 
-	if wfid := c.Param("workflowid"); wfid != "" {
+	wfid := ""
+	if c.Param("workflowid") != "" {
+		wfid = c.Param("workflowid")
+	}
+	if c.FormValue("workflow_id") != "" {
+		wfid = c.FormValue("workflow_id")
+	}
+
+	if wfid != "" {
 		ctype := "workflow"
 		valid, err := types.CheckType(c, &wfid, &ctype)
 		if err != nil {
@@ -114,15 +130,24 @@ func HandleComfySave(c echo.Context) error {
 		cn.WorkflowID = types.WorkflowID(wfid)
 	}
 	cn.Model.Slug = strings.ReplaceAll(cn.Name, " ", "-")
+	// setBool(c, "comfynode_enabled", &cn.Enabled.Value)
 	cn.Enabled.Value = false
 	if enabled := c.FormValue("comfynode_enabled"); enabled == "on" {
 		cn.Enabled.Value = true
 	}
+	// setBool(c, "comfynode_bypass", &cn.Bypass.Value)
 	cn.Bypass.Value = false
 	if bypass := c.FormValue("comfynode_bypass"); bypass == "on" {
 		cn.Bypass.Value = true
 	}
 	GetLogger(3).Flogger("comfynode pre-save: %#v", cn)
+	if service := c.FormValue("service"); service != "" {
+		i, err := strconv.Atoi(service)
+		if err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.ContentSetError{}.New("int conversion error").Log().Error())
+		}
+		cn.ServicePort = int32(i)
+	}
 	if err := cn.Set(c, update); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 	}
@@ -135,7 +160,18 @@ func HandleComfySave(c echo.Context) error {
 		if wf.ComfyNodesArrayModel == nil {
 			wf.ComfyNodesArrayModel = make([]types.ComfyNode, 0)
 		}
-		wf.ComfyNodesArrayModel = append(wf.ComfyNodesArrayModel, cn)
+		exists := false
+		for i, n := range wf.ComfyNodesArrayModel {
+			if n.Model.ID == cn.Model.ID {
+				wf.ComfyNodesArrayModel[i] = cn
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			wf.ComfyNodesArrayModel = append(wf.ComfyNodesArrayModel, cn)
+		}
+		wf.NodeCleanup(c)
 		if err := wf.Set(c, true); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
@@ -323,7 +359,7 @@ func HandleSSHSave(c echo.Context) error {
 	dt.Menu.Title = "SSH Nodes"
 	var cn types.SSHNode
 	var update bool
-	if id := c.Param("id"); id != "" {
+	if id := c.FormValue("id"); id != "" {
 		update = true
 		cn = types.NewSSHNode(&id)
 		if err := cn.Get(c); err != nil {
@@ -335,7 +371,10 @@ func HandleSSHSave(c echo.Context) error {
 		cn = types.NewSSHNode(nil)
 	}
 	if err := c.Bind(&cn); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleComfySave"}.Wrap(err))
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{CalledBy: "handlers.HandleSSHSave"}.Wrap(err).Log())
+	}
+	if wfid := c.Param("id"); wfid != "" {
+		cn.WorkflowID = types.WorkflowID(wfid)
 	}
 	cn.Model.Slug = strings.ReplaceAll(cn.Name, " ", "-")
 	if err := cn.Set(c, update); err != nil {

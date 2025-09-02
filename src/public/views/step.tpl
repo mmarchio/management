@@ -27,22 +27,12 @@
         </select>
     </li>
     <li>
-        {{$system_prompt_id := ""}}
-        {{if .SystemPrompt}}{{$system_prompt_id = .SystemPrompt}}{{end}}
-        <select name="system_prompt" id="system_prompt">
-            <option value="">Select System Prompt</option>
-            {{range .SystemPrompts}}
-            <option value="{{.ID}}"{{if eq .ID $system_prompt_id}} selected="selected"{{end}}>{{.Name}}</option>
-            {{end}}
-        </select>
-    </li>
-    <li>
-        {{$prompt_template_id := ""}}
-        {{if .PromptTemplate}}{{$prompt_template_id = .PromptTemplate}}{{end}}
-        <select name="prompt_template" id="prompt_template">
-            <option value="">Select Prompt Template</option>
-            {{range .PromptTemplates}}
-            <option value="{{.ID}}"{{if eq .ID $prompt_template_id}} selected="selected"{{end}}>{{.Name}}</option>
+        {{$dependency := ""}}
+        {{if .Dependency.Model.ID}}{{$dependency = .Dependency.Model.ID}}{{end}}
+        <select name="dependency" id="dependency">
+            <option value="">select dependency</option>
+            {{range .Dependencies}}
+            <option value="{{.ID}}"{{if eq $dependency .ID}} selected="selected"{{end}}>{{.Name}}</option>
             {{end}}
         </select>
     </li>
@@ -55,6 +45,9 @@
             <option value="{{.ID}}"{{if eq .ID $node_id}} selected="selected"{{end}}>{{.Name}}</option>
             {{end}}
         </select>
+    </li>
+    <li>
+        <textarea name="validation" id="validation" placeholder="validation">{{if .Validation}}{{.Validation}}{{end}}</textarea>
     </li>
     <li>{{template "element.toggle" .Enabled}}</li>
     <li>{{template "element.toggle" .Bypass}}</li>

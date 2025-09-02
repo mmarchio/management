@@ -25,3 +25,10 @@ func GetLogger(severity int) logger.LoggingContext {
 	r.Init()
 	return r
 }
+
+func setBool(c echo.Context, name string, d interface{}) {
+	if b := c.FormValue(name); b == "on" {
+		d = true
+	}
+	d = false
+}

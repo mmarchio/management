@@ -13,18 +13,20 @@ import (
 
 type Step struct {
 	Model
-	Name          	string        `form:"name" json:"name"`
-	Order         	int           `form:"order" json:"order"`
-	DispositionID 	DispositionID `form:"disposition_id" json:"disposition_id"`
-	WorkflowID    	WorkflowID    `form:"workflow_id" json:"workflow_id"`
-	JobID			JobID		  `form:"job_id" json:"job_id"`
-	Stats         	Stats         `form:"stats" json:"stats"`
-	Enabled       	Toggle        `form:"enabled" json:"enabled"`
-	Bypass        	Toggle        `form:"bypass" json:"bypass"`
-	SystemPrompt  	string        `form:"system_prompt" json:"system_prompt"`
-	PromptTemplate	string        `form:"prompt_template" json:"prompt_template"`
-	Node            string        `form:"node" json:"node"`
-	NodeType        string        `form:"node_type" json:"node_type"`
+	Name          	string        	`form:"name" json:"name"`
+	Order         	int           	`form:"order" json:"order"`
+	DispositionID 	DispositionID 	`form:"disposition_id" json:"disposition_id"`
+	WorkflowID    	WorkflowID    	`form:"workflow_id" json:"workflow_id"`
+	JobID			JobID		  	`form:"job_id" json:"job_id"`
+	Stats         	Stats         	`form:"stats" json:"stats"`
+	Enabled       	Toggle        	`form:"enabled" json:"enabled"`
+	Bypass        	Toggle        	`form:"bypass" json:"bypass"`
+	SystemPrompt  	string        	`form:"system_prompt" json:"system_prompt"`
+	PromptTemplate	string        	`form:"prompt_template" json:"prompt_template"`
+	Node            string        	`form:"node" json:"node"`
+	NodeType        string        	`form:"node_type" json:"node_type"`
+	Dependency    	*Step		  	`form:"depencencies" json:"dependencies"`
+	Validation      string			`form:"validation" json:"validation"`
 }
 
 func NewStep(id *string) Step {
@@ -155,6 +157,9 @@ func (c Step) Set(e echo.Context, update bool) error {
 		if c.Order == 0 {
 			c.Order = 1
 		}
+	}
+	if c.Order == 0 {
+		c.Order = len(list)
 	}
 	if err := content.Set(e, update); err != nil {
 		return merrors.ContentSetError{}.Wrap(err).Log().Log()

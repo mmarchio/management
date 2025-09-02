@@ -82,6 +82,7 @@ func HandleWorkflowDelete(c echo.Context) error {
 		if err := entity.Delete(c); err != nil {
 			return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())
 		}
+		entity.NodeCleanup(c)
 		return HandleWorkflowList(c)
 	}
 	return c.Render(http.StatusBadRequest, "error.tpl", "bad request: missing id")

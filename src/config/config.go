@@ -7,3 +7,7 @@ var DBPass = "pguser"
 var DBName = "ideas"
 var DBOptions = "sslmode=disable"
 var ServerPort = 8000
+var ComfyUIGenerateAudioPort = 9000
+var ComfyUIGenerateImagePort = 9003
+var ComfyUIGenerateLipsyncPort = 9002
+var ComfyUIClassifyImagePort = 9001

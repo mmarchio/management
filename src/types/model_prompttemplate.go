@@ -11,13 +11,15 @@ import (
 	"github.com/labstack/echo/v4"
 	merrors "github.com/mmarchio/management/errors"
 	"github.com/mmarchio/management/models"
+	"github.com/mmarchio/management/strrep"
 )
 
 type PromptTemplate struct {
 	Model
-	Name     string `form:"name" json:"name"`
-	Template string `form:"template" json:"template"`
-	Vars     string `form:"vars" json:"vars"`
+	Name     		string `form:"name" json:"name"`
+	Template 		string `form:"template" json:"template"`
+	Vars     		string `form:"vars" json:"vars"`
+	Dependencies 	[]Dependency `form:"dependencies" json:"dependencies"`
 }
 
 func (c PromptTemplate) Pack() []shallowmodel {
@@ -156,6 +158,33 @@ func (c PromptTemplate) Unmarshal(j string) (PromptTemplate, error) {
 	return c, nil
 }
 
+
+func (c PromptTemplate) ParseApiTemplate(step *Step, key string, templateValues interface{}) (string, error) {
+	msi := make(map[string]interface{})
+	if css, ok := templateValues.(ComfyScriptSegment); ok {
+		templateValues = css.Text
+	} else if strings.Contains(key, "dependency") {
+		parts := strings.Split(key, ".")
+		if len(parts) == 2 {
+			switch parts[1] {
+			case "prompt":
+				templateValues = step.Stats.Output.Prompt
+			case "topics":
+				templateValues = step.Stats.Output.Topics
+			case "output":
+				templateValues = step.Stats.Output.Output
+			case "think":
+				templateValues = step.Stats.Output.Think
+			default:
+			}
+		}
+	}
+	
+	msi[key] = templateValues
+	return "", nil
+	// return strrep.Strrep(c.APITemplate, msi)	
+} 
+
 func (c *PromptTemplate) Prepare(e echo.Context, jobrun *JobRun) error {
 	vars := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(c.Vars), &vars); err != nil {
@@ -260,4 +289,65 @@ func (c PromptTemplate) ParseStep(s string, step Step) (interface{}, error) {
 		}
 	}
 	return nil, nil
+}
+
+func (c *PromptTemplate) PrepareV2(e echo.Context, jobrun *JobRun, step *Step) error {
+	var err error
+	if err := json.Unmarshal([]byte(c.Vars), &c); err != nil {
+		return merrors.JSONUnmarshallingError{Info: c.Vars}.Wrap(err).Log()
+	}
+	templateValues := make(map[string]interface{})
+	for _, dep := range c.Dependencies {
+		switch strings.ToLower(dep.Type) {
+		case "string":
+			templateValues[dep.Key] = dep.Source
+			if val := jobrun.GetValueCache(dep.Source); val != nil {
+				templateValues[dep.Key] = val
+			}
+		case "integer":
+			templateValues[dep.Key] = dep.Source
+			if val := jobrun.GetValueCache(dep.Source); val != nil {
+				templateValues[dep.Key] = val
+			}
+		case "bool":
+			templateValues[dep.Key] = dep.Source
+			if val := jobrun.GetValueCache(dep.Source); val != nil {
+				templateValues[dep.Key] = val
+			}
+		case "context":
+			ctxb, err := json.Marshal(jobrun.ContextModel)
+			if err != nil {
+				return merrors.JSONMarshallingError{}.Wrap(err).Log()
+			}
+			if strings.Contains(dep.Source, "context.") {
+				val := strings.Replace(dep.Source, "context.", "$.", 1)
+				templateValues[dep.Key], err = jpath(string(ctxb), val)
+				if err != nil {
+					return merrors.JSONUnmarshallingError{}.Wrap(err).Log().Log()
+				}
+			}
+		case "step":
+			templateValues[dep.Key] = jobrun.GetValueCache(dep.Source)
+		case "dependency":
+			parts := strings.Split(dep.Source, ".")
+			if len(parts) == 2 {
+				switch parts[1] {
+				case "output":
+					templateValues[dep.Key] = step.Stats.Output.Output
+				case "topics":
+					templateValues[dep.Key] = step.Stats.Output.Topics
+				case "prompt":
+					templateValues[dep.Key] = step.Stats.Output.Prompt
+				case "think":
+					templateValues[dep.Key] = step.Stats.Output.Think
+				}
+			}
+		default:
+		}
+	}
+	c.Template, err = strrep.Strrep(c.Template, templateValues)
+	if err != nil {
+		return merrors.ContentSetError{}.Wrap(err).Log()
+	}
+	return nil
 }

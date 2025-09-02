@@ -110,7 +110,7 @@ func HandleStepSave(c echo.Context) error {
 		entity = types.NewStep(nil)
 	}
 	if err = c.Bind(&entity); err != nil {
-		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{Package: "handlers", Function: "HandleStepSave"}.Wrap(err).Log())
+		return c.Render(http.StatusInternalServerError, "error.tpl", merrors.EchoBindError{CalledBy: "handlers.HandleStepSave"}.Wrap(err).Log())
 	}
 	entity.Model.Slug = strings.ReplaceAll(entity.Name, " ", "-")
 	entity.Enabled.Value = false
@@ -120,6 +120,13 @@ func HandleStepSave(c echo.Context) error {
 	entity.Bypass.Value = false
 	if bypass := c.FormValue("step_bypass"); bypass == "on" {
 		entity.Bypass.Value = true
+	}
+	if dependencyID := c.FormValue("dependency"); dependencyID != "" {
+		dep := types.NewStep(&dependencyID)
+		if err := dep.Get(c); err != nil {
+			return c.Render(http.StatusInternalServerError, "error.tpl", merrors.ContentGetError{}.Wrap(err).Log().Error())
+		}
+		entity.Dependency = &dep
 	}
 	if err = entity.Set(c, update); err != nil {
 		return c.Render(http.StatusInternalServerError, "error.tpl", err.Error())

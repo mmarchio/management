@@ -6,7 +6,10 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
+
 	// "os"
 	// "os/exec"
 	"time"
@@ -19,7 +22,7 @@ import (
 	"github.com/mmarchio/management/strrep"
 )
 
-const COMFYRESTBASE string = "http://172.17.0.1:8188"
+const COMFYRESTBASE string = "http://172.17.0.1"
 const COMFYWSBASE string = "ws://172.17.0.1:8188"
 
 func NewComfyModelContent(idPtr *string) models.Content {
@@ -55,6 +58,7 @@ type ComfyNode struct {
 	Enabled 		Toggle  		`json:"enabled"`
 	Bypass 			Toggle			`json:"bypass"`
 	Output 			string 			`form:"output" json:"output"`
+	ServicePort		int32 			`form:"service_port" json:"service_port"`
 	Dependencies	DependencyMap
 }
 
@@ -143,6 +147,7 @@ func (c ComfyNode) GetApiBase() string {
 func (c ComfyNode) GetApiTemplate() string {
 	return c.APITemplate
 }
+
 func (c ComfyNode) GetType() string {
 	return "comfy_node"
 }
@@ -272,7 +277,6 @@ func (c ComfyNode) Set(e echo.Context, update bool) error {
 	content := NewComfyNodeTypeContent()
 	content.FromType(c, c.Model)
 	content.Model.ID = c.Model.ID
-	content.ID = c.Model.ID
 	err := content.Set(e, update)
 	if err != nil {
 		return merrors.ContentSetError{Info: c.Model.ID}.Wrap(err).Log()
@@ -321,59 +325,134 @@ func (c ComfyNode) ListBy(e echo.Context, key string, value interface{}) ([]Comf
 func (c ComfyNode) Exec(e echo.Context, jobrun *JobRun, step *Step) error {
 	var err error
 	clientID := uuid.NewString()
-	GetLogger(3).Flogger("clientID: %s", clientID)
 	c.Dependencies = DependencyMap{}
-	c.Dependencies.Unmarshal(c.TemplateValues)
-	var crd *ComfyResponseData
+	if err := c.Dependencies.Unmarshal(c.TemplateValues); err != nil {
+		return merrors.JSONUnmarshallingError{}.Wrap(err).Log()
+	}
+	if step.Stats.Output.ComfyResponseData == nil {
+		step.Stats.Output.ComfyResponseData = make([]ComfyResponseData, 0)
+	}
 	for _, dep := range c.Dependencies.Dependencies {
 		if dep.Type == "ComfyPrompt" {
 			if err := c.Dependencies.ComfyPrompt.Unmarshal(dep.Source, jobrun); err != nil {
 				return err
 			}
-			crd, err = c.Call(e, jobrun, step, clientID, dep.Key, c.Dependencies.ComfyPrompt)
+			_, err = c.Call(e, jobrun, step, clientID, dep.Key, c.Dependencies.ComfyPrompt)
 			if err != nil {
 				return merrors.NodeExecError{Info: dep.Type, CalledBy: "types.ComfyNode.Exec"}.Wrap(err).Log()
 			}
 		}
-		if dep.Type == "ComfyScript" {
-			GetLogger(3).Flogger("dependencies: %#v", c.Dependencies)
-			GetLogger(3).Flogger("comfyscript: %#v", c.Dependencies.ComfyScript)
-			cs, err := c.Dependencies.ComfyScript.Unmarshal(dep.Source, jobrun)
-			if err != nil {
-				return err
-			}
-			if c.Dependencies.ComfyScript != nil {
-				for _, segment := range c.Dependencies.ComfyScript.Segments {
-					// prompt, err := c.ParseApiTemplate(step, dep.Key, data)
-					// if err != nil {
-					// 	return err
-					// }
-					// GetLogger(3).Flogger("prompt: %s", prompt)
-					crd, err = c.Call(e, jobrun, step, clientID, dep.Key, segment)
-					if err != nil {
-						return merrors.NodeExecError{Info: dep.Type, CalledBy: "types.ComfyNode.Exec"}.Wrap(err).Log()
+		if dep.Type == "ComfyScriptSegment" {
+			cs := ComfyScript{}
+			msi := jobrun.GetValueCache(dep.Source)
+			if pgr, ok := msi.(map[string]interface{}); ok {
+				cs.Segments = make([]ComfyScriptSegment, 0)
+				// if output, ok := segments.(map[string]interface{}); ok {
+				if segmentsSlice, ok := pgr["segments"].([]interface{}); ok {
+					for _, segmentSlice := range segmentsSlice {
+						css := ComfyScriptSegment{}
+						if segmentMSI, ok := segmentSlice.(map[string]interface{}); ok {
+							if text, ok := segmentMSI["text"].(string); ok {
+								css.Text = text
+							}
+							if tm, ok := segmentMSI["time"].(int64); ok {
+								css.Time = tm
+							}
+							cs.Segments = append(cs.Segments, css)
+						}
 					}
+				}
+				// }
+				if len(cs.Segments) > 0 {
+					if err := handleSegments(e, c, cs.Segments, jobrun, step, dep, clientID); err != nil {
+						return err
+					}
+				}
+				// GetLogger(3).Flogger("segments: %#v", segments)
+				// if len(cs.Segments) > 0 {
+				// 	GetLogger(3).Flogger("processing promptgenerationresponse")
+				// 	if err := handleSegments(e, c, cs.Segments, jobrun, step, dep, clientID); err != nil {
+				// 		return err
+				// 	}
+				// }
+			} else {
+				ncs, err := cs.Unmarshal(dep.Source, jobrun)
+				if err != nil {
+					return merrors.ContentGetError{}.Wrap(err).Log()
+				}
+				if &ncs == nil {
+					GetLogger(3).Flogger("comfyscript is nil for step: %s: %#v", step.Name, cs)
+					continue
+				}
+				c.Dependencies.ComfyScript = &ncs
+				if ncs.Segments != nil {
+					if len(ncs.Segments) > 0 {
+						if err := handleSegments(e, c, ncs.Segments, jobrun, step, dep, clientID); err != nil {
+							return err
+						}
+					} else {
+						GetLogger(3).Flogger("segments len: %d", len(ncs.Segments))
+					}
+				} else {
+					GetLogger(3).Flogger("segments nil")
+				} 
+			}
+		}
+		if dep.Type == "ComfyScript" {
+			cs := ComfyScript{}
+			ncs, err := cs.Unmarshal(dep.Source, jobrun)
+			if err != nil {
+				return merrors.ContentGetError{}.Wrap(err).Log()
+			}
+			c.Dependencies.ComfyScript = &ncs
+			if &ncs == nil {
+				GetLogger(3).Flogger("comfyscript is nil for step: %s: %#v", step.Name, cs)
+				continue
+			}
+			if ncs.Segments != nil {
+				if len(ncs.Segments) > 0 {
+					if err := handleSegments(e, c, ncs.Segments, jobrun, step, dep, clientID); err != nil {
+						return err
+					}
+				} else {
+					GetLogger(3).Flogger("segments len: %d", len(ncs.Segments))
 				}
 			} else {
-				for _, segment := range cs.Segments {
-					crd, err = c.Call(e, jobrun, step, clientID, dep.Key, segment)
-					if err != nil {
-						return merrors.NodeExecError{Info: dep.Type, CalledBy: "types.ComfyNode.Exec"}.Wrap(err).Log()
-					}
+				GetLogger(3).Flogger("segments nil")
+			} 
+			if ncs.ComfyResponseData != nil && len(ncs.ComfyResponseData) > 0 {
+				if err := handleComfyResponseData(e, c, ncs.ComfyResponseData, jobrun, step, dep, clientID); err != nil {
+					return err
 				}
-				GetLogger(3).Flogger("comfyscript is nil for step: %s", step.Name)
+			} else {
+				GetLogger(3).Flogger("comfyresponsedata nil: %#v", ncs.ComfyResponseData)
 			}
 		}
 	}
-	crds := make([]ComfyResponseData, 0)
-	if crd != nil {
-		crds = append(crds, *crd)
-		jobrun.ValueCache[fmt.Sprintf("steps[%d].output.prompt", step.Order-1)] = ""
-		jobrun.ValueCache[fmt.Sprintf("steps[%d].output.topics", step.Order-1)] = nil
-		jobrun.ValueCache[fmt.Sprintf("steps[%d].output.output", step.Order-1)] = crds
-		step.Stats.Output.Output = crds
-	}
 
+	return nil
+}
+
+func handleSegments(e echo.Context, c ComfyNode, segments []ComfyScriptSegment, jobrun *JobRun, step *Step, dep Dependency, clientID string) error {
+	var err error
+	for _, segment := range segments {
+		_, err = c.Call(e, jobrun, step, clientID, dep.Key, segment)
+		if err != nil {
+			return merrors.NodeExecError{Info: dep.Type, CalledBy: "types.ComfyNode.Exec"}.Wrap(err).Log()
+		}
+	}
+	return nil
+}
+
+func handleComfyResponseData(e echo.Context, c ComfyNode, cs []ComfyResponseData, jobrun *JobRun, step *Step, dep Dependency, clientID string) error {
+	var err error
+	for _, segment := range cs {
+		filename := fmt.Sprintf("/ComfyUI/output/%s/%s", segment.Outputs.Audio.Subfolder, segment.Outputs.Audio.Filename)
+		_, err = c.Call(e, jobrun, step, clientID, dep.Key, filename)
+		if err != nil {
+			return merrors.NodeExecError{Info: dep.Type, CalledBy: "types.ComfyNode.Exec"}.Wrap(err).Log()
+		}
+	}
 	return nil
 }
 
@@ -400,10 +479,16 @@ func (c ComfyNode) Call(e echo.Context, jobrun *JobRun, step *Step, clientID str
 	if err != nil {
 		return nil, merrors.JSONMarshallingError{CalledBy: "types.ComfyNode.Call"}.Wrap(err).Log()
 	}
-	GetLogger(3).Flogger("payload: %s", string(b))
+
 	crd, err := c.QueuePrompt(b)
 	if err != nil {
 		return nil, merrors.HTTPRequestError{CalledBy: "types.ComfyNode.Call"}.Wrap(err).Log()
+	}
+	if crd != nil {
+		step.Stats.Output.ComfyResponseData = append(step.Stats.Output.ComfyResponseData, *crd)
+		jobrun.ValueCache[fmt.Sprintf("steps[%d].output.comfy_response_data", step.Order-1)] = step.Stats.Output.ComfyResponseData
+	} else {
+		GetLogger(3).Flogger("crd is nil for step: %d", step.Order)
 	}
 	return crd, nil
 }
@@ -419,7 +504,7 @@ func (c ComfyNode) ApiConn(ctx context.Context, uri string) (*websocket.Conn, *h
 }
 
 func (c ComfyNode) QueuePrompt(payload []byte) (*ComfyResponseData, error) {
-	comfyprompturi := fmt.Sprintf("%s/oneapi/v1/execute", COMFYRESTBASE)
+	comfyprompturi := fmt.Sprintf("%s:%d/oneapi/v1/execute", COMFYRESTBASE, c.ServicePort)
 	cp := ComfyPrompt{}
 	if err := json.Unmarshal(payload, &cp); err != nil {
 		return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
@@ -427,28 +512,44 @@ func (c ComfyNode) QueuePrompt(payload []byte) (*ComfyResponseData, error) {
 	
 	oneapi := OneAPI{
 		Workflow: cp.Prompt,
-		Timeout: 300,
+		Timeout: 1200,
 		WaitForResult: true,
 	}
 	pd, err := oneapi.Serialize()
 	if err != nil {
 		return nil, err
 	}
-
 	buf := bytes.NewBuffer([]byte(pd))
 	req, err := http.NewRequest("POST", comfyprompturi, buf)
 	if err != nil {
-		return nil, merrors.HTTPRequestError{CalledBy: "types.ComfyNode.QueuePrompt"}.Wrap(err).Log()
+		return nil, merrors.HTTPRequestError{Info: comfyprompturi, CalledBy: "types.ComfyNode.QueuePrompt"}.Wrap(err).Log()
 	}
 	req.Header.Add("content-type", "application/json")
+	req.Header.Add("accept", "application/json")
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, merrors.HTTPRequestError{CalledBy: "types.ComfyNode.QueuePrompt"}.Wrap(err).Log()
+		return nil, merrors.HTTPRequestError{Info: comfyprompturi, CalledBy: "types.ComfyNode.QueuePrompt"}.Wrap(err).Log()
 	}
+	defer resp.Body.Close()
+	crdm := ComfyResponseDataMap{}
 	crd := ComfyResponseData{}
-	if err := json.NewDecoder(resp.Body).Decode(&crd); err != nil {
-		return nil, merrors.JSONUnmarshallingError{CalledBy: "types.ComfyNode.QueuePrompt"}.Wrap(err).Log()		
+	bf := new(strings.Builder)
+	_, err = io.Copy(bf, resp.Body)
+	if err != nil {
+		return nil, merrors.HTTPRequestError{Info: comfyprompturi}.Wrap(err).Log()
 	}
+	reader := strings.NewReader(bf.String())
+	if err := json.NewDecoder(reader).Decode(&crdm); err != nil {
+		return nil, merrors.JSONUnmarshallingError{Info: bf.String(), CalledBy: "types.ComfyNode.QueuePrompt"}.Wrap(err).Log()		
+	}
+	
+	err = crd.Hydrate(crdm)
+	if err != nil {
+		return nil, merrors.JSONUnmarshallingError{CalledBy: "types.ComfyNode.ComfyResponseData.Hydrate"}.Wrap(err).Log()
+	}
+	GetLogger(3).Flogger("crdm: %#v", crdm)
+	GetLogger(3).Flogger("crd: %#v", crd)
 	return &crd, nil
 }
 
@@ -456,198 +557,27 @@ func (c ComfyNode) ParseApiTemplate(step *Step, key string, templateValues inter
 	msi := make(map[string]interface{})
 	if css, ok := templateValues.(ComfyScriptSegment); ok {
 		templateValues = css.Text
+	} else if strings.Contains(key, "dependency") {
+		parts := strings.Split(key, ".")
+		if len(parts) == 2 {
+			switch parts[1] {
+			case "prompt":
+				templateValues = step.Stats.Output.Prompt
+			case "topics":
+				templateValues = step.Stats.Output.Topics
+			case "output":
+				templateValues = step.Stats.Output.Output
+			case "think":
+				templateValues = step.Stats.Output.Think
+			default:
+			}
+		}
+	}
+	templateMSI := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(c.APITemplate), &templateMSI); err != nil {
+		return "", merrors.JSONUnmarshallingError{Info: c.APITemplate}.Wrap(err).Log()
 	}
 	msi[key] = templateValues
-	GetLogger(3).Flogger("strrep data: %#v", msi)
 	return strrep.Strrep(c.APITemplate, msi)	
 } 
 
-type OneAPI struct {
-	Workflow string `json:"workflow"`
-	Params struct{
-		Prompt string `json:"prompt"`
-	} `json:"params"`
-	WaitForResult bool `json:"wait_for_result"`
-	Timeout int64 `json:"timeout"`
-}
-
-func (c OneAPI) ToMSI() (map[string]interface{}, error) {
-	msi := make(map[string]interface{})
-	b, err := json.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(b, &msi); err != nil {
-		return nil, err
-	}
-	return msi, nil
-}
-
-func (c OneAPI) Serialize() (string, error) {
-	msi, err := c.ToMSI()
-	if err != nil {
-		return "", err
-	}
-
-	workflow := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(c.Workflow), &workflow); err != nil {
-		return "", merrors.JSONUnmarshallingError{Info: c.Workflow}.Wrap(err).Log()
-	}
-	if p, ok := workflow["prompt"].(string); ok {
-		prompt := make(map[string]interface{})
-		if err := json.Unmarshal([]byte(p), &prompt); err != nil {
-			return "", merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-		workflow["prompt"] = prompt
-	}
-	msi["workflow"] = workflow
-	b, err := json.Marshal(msi)
-	if err != nil {
-		return "", merrors.JSONMarshallingError{}.Wrap(err).Log()
-	}
-	return string(b), err
-}
-
-type ComfyMessage struct {
-	Prompt string `json:"prompt"`
-	ClientID string `json:"client_id"`
-}
-
-func (c ComfyMessage) Serialize() ([]byte, error) {
-	msi := make(map[string]interface{})
-	p := make(map[string]interface{})
-	msi["prompt"] = p
-	msi["client_id"] = c.ClientID
-	pd, err := json.Marshal(msi)
-	if err != nil {
-		return nil, err
-	}
-	return pd, nil
-}
-
-type ComfyPrompt struct {
-	Prompt string
-}
-
-func (c *ComfyPrompt) Unmarshal(in interface{}, jobrun *JobRun) error {
-	data := jobrun.GetValueCache(in)
-	GetLogger(3).Flogger("in: %s, data: %#v", in, data)
-	if s, ok := data.(string); ok {
-		if err := json.Unmarshal([]byte(s), c); err != nil {
-			return merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-	}
-	if b, ok := data.([]byte); ok {
-		if err := json.Unmarshal(b, c); err != nil {
-			return merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-	}
-	if m, ok := data.(map[string]interface{}); ok {
-		b, err := json.Marshal(m)
-		if err != nil {
-			return merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-		if b == nil {
-			GetLogger(3).Flogger("nil bytes: source: %s, data: %#v, map: %#v", in, data, m)
-		}
-		t := ComfyPrompt{}
-		if err := json.Unmarshal(b, &t); err != nil {
-			return merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-		c = &t
-	}
-	return nil
-}
-
-type ComfyResonse struct {
-	Type string `json:"type"`
-	Data ComfyResponseData `json:"data"`
-}
-type ComfyResponseData struct {
-	Images []string `json:"images"`
-	ImagesByVar map[string]interface{} `json:"images_by_var"`
-	Outputs map[string]interface{} `json:"outputs"`
-	NodeErrors interface{} `json:"node_errors"`
-	PromptID string `json:"prompt"`
-	Status string `json:"status"`
-}
-
-type ComfyScriptSegment struct {
-	Text string `json:"text"`
-	Time int64 `json:"time"`
-}
-
-type ComfyScript struct {
-	Segments []ComfyScriptSegment `json:"segments"`
-}
-
-func (c *ComfyScript) Unmarshal(in interface{}, jobrun *JobRun) (*ComfyScript, error) {
-	data := jobrun.GetValueCache(in)
-	GetLogger(3).Flogger("data: %#v", data)
-	if s, ok := data.(string); ok {
-		if err := json.Unmarshal([]byte(s), c); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-	}
-	if b, ok := data.([]byte); ok {
-		if err := json.Unmarshal(b, c); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-	}
-	if m, ok := data.(map[string]interface{}); ok {
-		b, err := json.Marshal(m)
-		if err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-		t := ComfyScript{}
-		if err := json.Unmarshal(b, &t); err != nil {
-			return nil, merrors.JSONUnmarshallingError{}.Wrap(err).Log()
-		}
-		c = &t
-		GetLogger(3).Flogger("comfyscript unmarshaled: %#v", c)
-		return &t, nil
-	}
-	return nil, nil
-}
-
-type DependencyMap struct {
-	Dependencies []Dependency
-	ComfyScript *ComfyScript
-	ComfyPrompt *ComfyPrompt
-}
-
-type Dependency struct {
-	Key string `json:"key"`
-	Type string `json:"type"`
-	Source string `json:"source"`
-}
-
-func (c *DependencyMap) Unmarshal(vars string) error {
-	if err := json.Unmarshal([]byte(vars), c); err != nil {
-		return merrors.JSONUnmarshallingError{CalledBy: "types.DependencyMap.Unmarshal"}.Wrap(err).Log()
-	}
-	return nil
-}
-
-func (c DependencyMap) Hydrate(cn *ComfyNode, jobrun *JobRun, step *Step) error {
-	for _, dep := range c.Dependencies {
-		switch dep.Type {
-		case "ComfyScript":
-			cacheVal := jobrun.GetValueCache(dep.Source)
-			if cv, ok := cacheVal.(string); ok {
-				if err := json.Unmarshal([]byte(cv), c.ComfyScript); err != nil {
-					return merrors.JSONUnmarshallingError{Info: cv, CalledBy: "types.DependencyMap.Hydrate"}.Wrap(err).Log()
-				}
-			}
-		case "ComfyPrompt":
-			cacheVal := jobrun.GetValueCache(dep.Source)
-			if cv, ok := cacheVal.(string); ok {
-				if err := json.Unmarshal([]byte(cv), c.ComfyPrompt); err != nil {
-					return merrors.JSONUnmarshallingError{Info: cv, CalledBy: "types.DependencyMap.Hydrate"}.Wrap(err).Log()
-				}
-			}
-		default:
-		}
-	}
-	return nil
-}

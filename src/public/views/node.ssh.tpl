@@ -7,6 +7,7 @@
                     <li>{{template "element.toggle" .Enabled}}</li>
                     <li>{{template "element.toggle" .Bypass}}</li>
                     <li><textarea name="output" id="output" value="" placeholder="output"></textarea></li>
+                    <li>{{template "element.submit" .}}</li>
                 </ul>
  {{end}}
 
@@ -20,12 +21,12 @@
             {{if eq .DisplayType "none"}}
             {{end}}
             {{if eq .DisplayType "new"}}
-            <form action="/node/ssh/save" method="post">
+            <form action="/node/ssh/save{{if .WorkflowID}}/{{.WorkflowID}}{{end}}" method="post" name="sshnode" id="sshnode">
             {{template "form.sshnode" .}}
             </form>
             {{end}}
             {{if eq .DisplayType "edit"}}
-            <form action="/node/ssh/save/{{if .ID}}{{.ID}}{{end}}" method="post">
+            <form action="/node/ssh/save/{{if .ID}}{{.ID}}{{end}}" method="post" name="sshnode" id="sshnode">
             {{template "form.sshnode" .}}
             </form>
             {{end}}

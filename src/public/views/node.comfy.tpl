@@ -1,11 +1,21 @@
 {{define "form.comfynode"}}
-                {{if .WorkflowID}}<input type="hidden" name="workflow_id" value="{{.WorkflowID}}">{{end}}
+                {{if .ComfyNode.WorkflowID}}<input type="hidden" name="workflow_id" value="{{.ComfyNode.WorkflowID}}">{{end}}
                <ul>
-                    <li><input type="text" name="name" id="name" value="{{if .Name}}{{.Name}}{{end}}" placeholder="name"></li>
-                    <li><textarea name="prompt" id="prompt" placeholder="prompt">{{if .Prompt}}{{.Prompt}}{{end}}</textarea></li>
-                    <li><textarea name="api_base" id="api_base" placeholder="api base">{{if .APIBase}}{{.APIBase}}{{end}}</textarea></li>
-                    <li><textarea name="api_template" id="api_template" placeholder="api template">{{if .APITemplate}}{{.APITemplate}}{{end}}</textarea></li>
-                    <li><textarea name="template_values" id="template_values" placeholder="template values">{{if .TemplateValues}}{{.TemplateValues}}{{end}}</textarea></li>
+                    <li><input type="text" name="name" id="name" value="{{if .ComfyNode.Name}}{{.ComfyNode.Name}}{{end}}" placeholder="name"></li>
+                    <li><textarea name="prompt" id="prompt" placeholder="prompt">{{if .ComfyNode.Prompt}}{{.ComfyNode.Prompt}}{{end}}</textarea></li>
+                    <li><textarea name="api_base" id="api_base" placeholder="api base">{{if .ComfyNode.APIBase}}{{.ComfyNode.APIBase}}{{end}}</textarea></li>
+                    <li><textarea name="api_template" id="api_template" placeholder="api template">{{if .ComfyNode.APITemplate}}{{.ComfyNode.APITemplate}}{{end}}</textarea></li>
+                    <li><textarea name="template_values" id="template_values" placeholder="template values">{{if .ComfyNode.TemplateValues}}{{.ComfyNode.TemplateValues}}{{end}}</textarea></li>
+                    <li>
+                        <select name="service" id="service">
+                            <option value="">select service</option>
+                            {{$serviceid := 0}}
+                            {{if .ServicePort}}{{$serviceid = .ServicePort}}{{end}}
+                            {{range .Services}}
+                            <option value="{{.Port}}" {{if eq $serviceid .Port}} selected="selected"{{end}}>{{.Title}}</option>
+                            {{end}}
+                        </select>
+                    </li>
                     <li>{{template "element.toggle" .Enabled}}</li>
                     <li>{{template "element.toggle" .Bypass}}</li>
                     <li><textarea name="output" id="output" value="" placeholder="output"></textarea></li>
@@ -24,12 +34,12 @@
             {{end}}
             {{if eq .DisplayType "new"}}
             <form action="/node/comfy/save{{if .WorkflowID}}/{{.WorkflowID}}{{end}}" method="post" name="comfynode" id="comfynode">
-            {{template "form.comfynode" .ComfyNode}}
+            {{template "form.comfynode" .}}
             </form>
             {{end}}
             {{if eq .DisplayType "edit"}}
-            <form action="/node/comfy/save{{if .WorkflowID}}/{{.WorkflowID}}{{end}}" method="post" name="comfynode" id="comfynode">
-            {{template "form.comfynode" .ComfyNode}}
+            <form action="/node/comfy/save{{if .ID}}/{{.ID}}{{end}}" method="post" name="comfynode" id="comfynode">
+            {{template "form.comfynode" .}}
             </form>
             {{end}}
             {{if eq .DisplayType "list"}}

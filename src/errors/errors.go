@@ -1644,6 +1644,104 @@ func (c CurlError) BubbleCode() CurlError {
 	return c
 }
 
+type SSHError Merror
+
+func (c SSHError) New(s string, vars ...any) SSHError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c SSHError) Wrap(err error) SSHError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("SSHError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c SSHError) Log() SSHError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c SSHError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c SSHError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c SSHError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c SSHError) BubbleCode() SSHError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
+type StepValidationError Merror
+
+func (c StepValidationError) New(s string, vars ...any) StepValidationError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c StepValidationError) Wrap(err error) StepValidationError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("StepValidationError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c StepValidationError) Log() StepValidationError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c StepValidationError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c StepValidationError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c StepValidationError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c StepValidationError) BubbleCode() StepValidationError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
 type WrappedError interface {
 	Wrap(*sql.DB, error)
 	ErrorCode(int16)
