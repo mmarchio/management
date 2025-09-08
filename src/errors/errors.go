@@ -1742,6 +1742,55 @@ func (c StepValidationError) BubbleCode() StepValidationError {
 	return c
 }
 
+type GeneralError Merror
+
+func (c GeneralError) New(s string, vars ...any) GeneralError {
+	c = c.Wrap(fmt.Errorf(s, vars...))
+
+	return c
+}
+
+func (c GeneralError) Wrap(err error) GeneralError {
+	if c.DB != nil {
+        c.DB.Close()
+    }
+	c.Wrapped = err
+	c.Err = fmt.Errorf("%s: %w\n", ErrString("StepValidationError", c.Info, c.Package, c.Struct, c.Function, c.CalledBy, c.Err), c.Wrapped)
+	return c
+}
+
+func (c GeneralError) Log() GeneralError {
+	GetLogger(1).Flogger("err: %s", c.Err.Error())
+	return c
+}
+
+func (c GeneralError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+	return c.Err.Error()
+}
+
+func (c GeneralError) ErrorCode(code int16) {
+	c.Code = ErrorCode(code)
+}
+
+func (c GeneralError) GetCode() ErrorCode {
+	return c.Code
+}
+
+func (c GeneralError) BubbleCode() GeneralError {
+	if c.Code == 0 {
+		c.Code = 500
+	}
+	if e, ok := c.Err.(WrappedError); ok {
+		if e.GetCode() != 500 {
+			c.Code = e.GetCode()
+		}
+	}
+	return c
+}
+
 type WrappedError interface {
 	Wrap(*sql.DB, error)
 	ErrorCode(int16)

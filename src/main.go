@@ -96,6 +96,7 @@ func main() {
 	handlers.RegisterDispositionRoutes(e)
 	handlers.RegisterPromptTemplateRoutes(e)
 	handlers.RegisterStepRoutes(e)
+	handlers.RegisterSeedFinderRoutes(e)
 
 
 	//	e.Use(middleware.Static("/public/static"))

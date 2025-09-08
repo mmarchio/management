@@ -43,6 +43,7 @@ type JobRun struct {
 	Tokens                int64             					`json:"tokens"`
 	LatestStatusType      string            					`json:"latest_status_type"`
 	LatestStatusValue     string            					`json:"latest_status_value"`
+	NodeSeedMap			  map[string]int32						`json:"node_seed"`
 	ValueCache            map[string]interface{}
 }
 

@@ -91,7 +91,8 @@ func HandleWorkflowDelete(c echo.Context) error {
 func HandleWorkflowSave(c echo.Context) error {
 	GetLogger(4).Flogger("HandleWorkflowSave called")
 	var update bool
-	entity := types.NewWorkflow(nil)
+	id := "new"
+	entity := types.NewWorkflow(&id)
 	if wfid := c.Param("id"); wfid != "" {
 		update = true
 		entity := types.NewWorkflow(&wfid)

@@ -28,6 +28,8 @@ type ComfyResponseData struct {
 	NodeErrors interface{} `json:"node_errors"`
 	PromptID string `json:"prompt"`
 	Status string `json:"status"`
+	Videos []string `json:"videos"`
+	Raw string `json:"raw"`
 }
 
 type ComfyResponseDataOutput struct {

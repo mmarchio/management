@@ -44,6 +44,7 @@ type Job struct {
 	Recurring     bool       `json:"recurring"`
 	Interval      int64      `form:"interval" json:"interval"`
 	LastCompleted time.Time  `json:"last_completed"`
+	SeedMap		  map[string]int32 `json:"seed_map"`
 }
 
 func (c Job) Pack() []shallowmodel {

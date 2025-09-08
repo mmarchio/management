@@ -52,6 +52,7 @@ func (c Workflow) ToContent() (*Content, error) {
 
 func (c *Workflow) Validate() error {
 	if !c.Model.Validate() {
+		GetLogger(3).Flogger("workflow: %#v", c)
 		return merrors.ContentValidationError{CalledBy: "types.Workflow.Validate"}.New("model validation failed").Log()
 	}
 	if c.Model.IsNil() {
@@ -82,7 +83,15 @@ func (c *Workflow) Validate() error {
 
 func NewWorkflow(id *string) Workflow {
 	c := Workflow{}
-	c.New(id)
+	if id == nil {
+	} else {
+		idc := *id
+		if idc == "new" {
+			c.New(nil)		
+		} else {
+			c.New(id)
+		}
+	}
 	c.Model.ContentType = "workflow"
 	c, _ = ValidateWorkflow(c)
 	return c

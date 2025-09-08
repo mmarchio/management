@@ -404,6 +404,10 @@ func (c *DisplayComfyNode) Init(e echo.Context, mode string) error {
 		Port: int64(config.ComfyUIGenerateLipsyncPort),
 		Title: "generate lipsync",
 	})
+	c.Services = append(c.Services, ComfyService{
+		Port: int64(config.ComfyUIInterpolationPort),
+		Title: "generate interpolation",
+	})
 	if wfid := e.Param("workflowid"); wfid != "" {
 		c.WorkflowID = wfid
 	}
@@ -711,4 +715,129 @@ type StepListItem struct {
 	SystemPromptModel types.SystemPrompt
 	PromptTemplateModel types.PromptTemplate
 	NodeModel Node
+}
+
+type DisplaySeedFinder struct {
+	Menu
+	DisplayType string
+	Workflows []ShallowEntity
+	Steps []ShallowEntity
+	Nodes []ShallowEntity
+	Jobs []ShallowEntity
+	WorkflowID string
+	StepID string
+	NodeID string
+	JobRun types.JobRun
+	JobID string
+	Step types.Step
+}
+
+func (c *DisplaySeedFinder) Init(e echo.Context, mode string) error {
+	var err error
+	c.Menu = Menu{
+		Href: "seedfinder",
+		Title: "Seed Finder",
+	}
+	c.DisplayType = mode
+	wf := types.NewWorkflow(nil)
+	wflist, err := wf.List(e)
+	if err != nil {
+		return merrors.ContentListError{}.Wrap(err).Log()
+	}
+	c.Workflows = make([]ShallowEntity, 0)
+	for _, n := range wflist {
+		se := ShallowEntity{
+			ID: n.Model.ID,
+			Name: n.Name,
+		}
+		c.Workflows = append(c.Workflows, se)
+	}
+	st := types.NewStep(nil)
+	stlist, err := st.List(e, "")
+	if err != nil {
+		return merrors.ContentListError{}.Wrap(err).Log()
+	}
+	c.Steps = make([]ShallowEntity, 0)
+	for _, n := range stlist {
+		se := ShallowEntity{
+			ID: n.Model.ID,
+			Name: n.Name,
+		}
+		c.Steps = append(c.Steps, se)
+	}
+	c.Nodes = make([]ShallowEntity, 0)
+	cn := types.NewComfyNode(nil)
+	cnlist, err := cn.List(e)
+	if err != nil {
+		return merrors.ContentListError{}.Wrap(err).Log()
+	}
+	for _, n := range cnlist {
+		se := ShallowEntity{
+			ID: n.Model.ID,
+			Name: n.Name,
+		}
+		c.Nodes = append(c.Nodes, se)
+	}
+
+	on := types.NewOllamaNode(nil)
+	onlist, err := on.List(e)
+	if err != nil {
+		return merrors.ContentListError{}.Wrap(err).Log()
+	}
+	for _, n := range onlist {
+		se := ShallowEntity{
+			ID: n.Model.ID,
+			Name: n.Name,
+		}
+		c.Nodes = append(c.Nodes, se)
+	}
+	sn := types.NewSSHNode(nil)
+	snlist, err := sn.List(e)
+	if err != nil {
+		return merrors.ContentListError{}.Wrap(err).Log()
+	}
+	for _, n := range snlist {
+		se := ShallowEntity{
+			ID: n.Model.ID,
+			Name: n.Name,
+		}
+		c.Nodes = append(c.Nodes, se)
+	}
+	id := "new"
+	job := types.NewJob(&id)
+	jlist, err := job.List(e)
+	if err != nil {
+		return merrors.ContentListError{}.Wrap(err).Log()
+	}
+	for _, n := range jlist {
+		pid := n.PromptID.String()
+		p := types.NewPrompt(&pid)
+		if err := p.Get(e); err != nil {
+			return merrors.ContentGetError{}.Wrap(err).Log()
+		}
+		se := ShallowEntity{
+			ID: n.Model.ID,
+			Name: p.Name,
+		}
+		c.Jobs = append(c.Jobs, se)
+	}
+	c.Step = types.NewStep(&id)
+	if jobid := e.FormValue("job_id"); jobid != "" {
+		c.JobID = jobid
+	}
+
+	if stepid := e.FormValue("step_id"); stepid != "" {
+		c.StepID = stepid
+		c.Step = types.NewStep(&c.StepID)
+		if err := c.Step.Get(e); err != nil {
+			return merrors.ContentGetError{}.Wrap(err).Log()
+		}
+	}
+	c.JobRun = types.NewJobRun(&id)
+	return nil
+}
+
+type ShallowEntity struct {
+	ID string
+	Name string
 }

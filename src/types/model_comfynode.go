@@ -329,6 +329,7 @@ func (c ComfyNode) Exec(e echo.Context, jobrun *JobRun, step *Step) error {
 	if err := c.Dependencies.Unmarshal(c.TemplateValues); err != nil {
 		return merrors.JSONUnmarshallingError{}.Wrap(err).Log()
 	}
+
 	if step.Stats.Output.ComfyResponseData == nil {
 		step.Stats.Output.ComfyResponseData = make([]ComfyResponseData, 0)
 	}
@@ -464,7 +465,18 @@ func (c ComfyNode) Call(e echo.Context, jobrun *JobRun, step *Step, clientID str
 	if data == nil {
 		return nil, merrors.NilContentError{}.New("data supplied for interpolation is nil").Log()
 	}
+	jid := step.JobID.String()
+	job := NewJob(&jid)
+	if err := job.Get(e); err != nil {
+		return nil, merrors.ContentGetError{}.Wrap(err).Log()
+	}
+	if seed, ok := job.SeedMap[step.Node]; ok {
+		if d, ok := data.(map[string]interface{}); ok {
+			d["seed"] = seed
+			data = d
+		}
 
+	}
 	prompt, err := c.ParseApiTemplate(step, key, data)
 	if err != nil {
 		return nil, err
@@ -548,8 +560,7 @@ func (c ComfyNode) QueuePrompt(payload []byte) (*ComfyResponseData, error) {
 	if err != nil {
 		return nil, merrors.JSONUnmarshallingError{CalledBy: "types.ComfyNode.ComfyResponseData.Hydrate"}.Wrap(err).Log()
 	}
-	GetLogger(3).Flogger("crdm: %#v", crdm)
-	GetLogger(3).Flogger("crd: %#v", crd)
+	crd.Raw = bf.String()
 	return &crd, nil
 }
 

@@ -11,3 +11,4 @@ var ComfyUIGenerateAudioPort = 9000
 var ComfyUIGenerateImagePort = 9003
 var ComfyUIGenerateLipsyncPort = 9002
 var ComfyUIClassifyImagePort = 9001
+var ComfyUIInterpolationPort = 9004

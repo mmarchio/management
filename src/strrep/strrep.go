@@ -52,7 +52,11 @@ func Strrep(str string, vars map[string]interface{}) (string, error) {
 			str = strings.ReplaceAll(str, fmt.Sprintf("{{%s(d)}}", k), string(d))
 		}
 		if d, ok := v.(int32); ok {
-			str = strings.ReplaceAll(str, fmt.Sprintf("{{%s(d)}}", k), string(d))
+			b := str
+			str = strings.ReplaceAll(str, fmt.Sprintf("{{%s(d)}}", k), fmt.Sprintf("%d", d))
+			if str == b {
+				fmt.Printf("not replacing\n")
+			}
 		}
 		if d, ok := v.(int64); ok {
 			str = strings.ReplaceAll(str, fmt.Sprintf("{{%s(d)}}", k), string(d))

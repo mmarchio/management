@@ -11,5 +11,6 @@
             <li><a href="/workflow">Workflow</a></li>
             <li><a href="/prompttemplates">Prompt Templates</a></li>
             <li><a href="/step">Step</a></li>
+            <li><a href="/seedfinder/configure">Seed Finder</a></li>
         </ul>
 {{end}}
